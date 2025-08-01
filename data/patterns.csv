@@ -1,0 +1,15 @@
+analito,pattern,grupo_decimal
+Eritrocitos,"Eritrócitos\s+([0-9]+,[0-9]+)",1
+Hemoglobina,"Hemoglobina\s+([0-9]+,[0-9]+)",1
+Hematocrito,"Hemat[óo]crito\s+([0-9]+,[0-9]+)",1
+VCM,"VCM\s+([0-9]+,[0-9]+)",1
+HCM,"HCM\s+([0-9]+,[0-9]+)",1
+CHCM,"CHCM\s+([0-9]+,[0-9]+)",1
+RDW,"RDW\s+([0-9]+,[0-9]+)",1
+Leucocitos,"Leucó[cç]itos(?:\s+[0-9]+)?\s+([0-9]+,[0-9]+)",1
+Neutrofilos,"Neutrófilos(?:\s+[0-9]+,[0-9]+)?\s+([0-9]+,[0-9]+)",1
+Eosinofilos,"Eosinófilos(?:\s+[0-9]+,[0-9]+)?\s+([0-9]+,[0-9]+)",1
+Basofilos,"Basófilos(?:\s+[0-9]+,[0-9]+)?\s+([0-9]+,[0-9]+)",1
+Linfocitos,"Linfócitos(?:\s+[0-9]+,[0-9]+)?\s+([0-9]+,[0-9]+)",1
+Monocitos,"Monócitos(?:\s+[0-9]+,[0-9]+)?\s+([0-9]+,[0-9]+)",1
+Plaquetas,Plaquetas\s+([0-9.]+),1
