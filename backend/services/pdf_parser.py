@@ -1,11 +1,15 @@
 import re
 import csv
+import io
 from PyPDF2 import PdfReader
-from typing import List
+from typing import List, Union
 
-def extract_lab_values(pdf_path: str, patterns_path: str = "data/patterns.csv") -> List[dict]:
+def extract_lab_values(pdf_content: Union[str, bytes], patterns_path: str = "data/patterns.csv") -> List[dict]:
     # Extrai texto do PDF
-    reader = PdfReader(pdf_path)
+    if isinstance(pdf_content, bytes):
+        reader = PdfReader(io.BytesIO(pdf_content))
+    else:
+        reader = PdfReader(pdf_content)
     full_text = "\n".join(page.extract_text() for page in reader.pages if page.extract_text())
 
     # Lê os padrões do CSV
