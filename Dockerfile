@@ -15,10 +15,10 @@ RUN pip install --no-cache-dir -r requirements-backend.txt
 # Copiar código da aplicação
 COPY backend/ ./backend/
 COPY data/ ./data/
-COPY .env* ./
+COPY .env* ./ || true
 
-# Expor porta
-EXPOSE $PORT
+# Expor porta (Render define automaticamente)
+EXPOSE 10000
 
 # Comando para iniciar a aplicação
-CMD uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+CMD uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-10000}
