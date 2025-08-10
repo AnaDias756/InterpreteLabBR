@@ -40,6 +40,11 @@ def extract_lab_values(pdf_content: Union[str, bytes], patterns_path: str = "dat
                     # Provavelmente é decimal (ex: 9.480), converte ponto para vírgula
                     valor_str = valor_str.replace(".", ",")
             
+            # Para plaquetas, vírgula é sempre separador de milhares
+            if "," in valor_str and item["analito"].lower() == "plaquetas":
+                # Remove vírgula que é separador de milhares (ex: 292,000 -> 292000)
+                valor_str = valor_str.replace(",", "")
+            
             # Processamento padrão: remove pontos (separadores de milhares) e converte vírgulas para pontos decimais
             valor_processado = valor_str.replace(".", "").replace(",", ".")
             
