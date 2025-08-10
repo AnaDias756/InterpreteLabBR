@@ -28,9 +28,22 @@ def extract_lab_values(pdf_content: Union[str, bytes], patterns_path: str = "dat
     for item in patterns:
         match = re.search(item["pattern"], full_text, re.IGNORECASE | re.DOTALL)
         if match:
-            valor_str = match.group(item["grupo"]).replace(".", "").replace(",", ".")
+            valor_str = match.group(item["grupo"])
+            
+            # Para série branca (leucócitos, neutrófilos, linfócitos) com valores decimais
+            # Se o valor tem ponto e é menor que 100.000, trata como separador decimal
+            if "." in valor_str and item["analito"].lower() in ["leucocitos", "neutrófilos", "linfócitos"]:
+                # Verifica se é um valor decimal (ex: 9.480) vs milhares (ex: 123.456)
+                partes = valor_str.split(".")
+                if len(partes) == 2 and len(partes[1]) == 3 and int(partes[0]) < 100:
+                    # Provavelmente é decimal (ex: 9.480), converte ponto para vírgula
+                    valor_str = valor_str.replace(".", ",")
+            
+            # Processamento padrão: remove pontos (separadores de milhares) e converte vírgulas para pontos decimais
+            valor_processado = valor_str.replace(".", "").replace(",", ".")
+            
             try:
-                valor = float(valor_str)
+                valor = float(valor_processado)
                 resultados.append({
                     "analito": item["analito"],
                     "valor": valor

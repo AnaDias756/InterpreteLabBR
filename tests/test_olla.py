@@ -9,10 +9,10 @@ def test_build_briefing_response():
         "analito": "hemoglobina", 
         "valor": 10.5,
         "resultado": "baixo",
-        "severidade": 2,
+        "severidade": 1,
         "especialidade": "Hematologia",
-        "descricao_achado": "Anemia",
-        "diretriz": "SBHH"
+        "descricao_achado": "Hemoglobina baixo",
+        "diretriz": "Valores de Referência Laboratoriais"
     }]
     specialties = ["Hematologia"]
     response = build_briefing(findings, specialties)

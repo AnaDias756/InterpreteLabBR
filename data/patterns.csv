@@ -6,10 +6,10 @@ vcm,"VCM\s+([0-9]+,[0-9]+)",1
 hcm,"HCM\s+([0-9]+,[0-9]+)",1
 chcm,"CHCM\s+([0-9]+,[0-9]+)",1
 rdw,"RDW\s+([0-9]+,[0-9]+)",1
-leucocitos,"Leucó[cç]itos(?:\s+[0-9]+)?\s+([0-9]+,[0-9]+)",1
-neutrofilos,"Neutrófilos(?:\s+[0-9]+,[0-9]+)?\s+([0-9]+,[0-9]+)",1
-Eosinofilos,"Eosinófilos(?:\s+[0-9]+,[0-9]+)?\s+([0-9]+,[0-9]+)",1
-Basofilos,"Basófilos(?:\s+[0-9]+,[0-9]+)?\s+([0-9]+,[0-9]+)",1
-Linfocitos,"Linfócitos(?:\s+[0-9]+,[0-9]+)?\s+([0-9]+,[0-9]+)",1
-Monocitos,"Monócitos(?:\s+[0-9]+,[0-9]+)?\s+([0-9]+,[0-9]+)",1
+leucocitos,"Leucó[cç]itos\s+[0-9]+\s+([0-9]+[.,][0-9]+)",1
+Neutrófilos,"Neutrófilos\s+[0-9]+,[0-9]+\s+([0-9]+[.,][0-9]+)",1
+Eosinófilos,"Eosinófilos\s+[0-9]+,[0-9]+\s+([0-9]+)",1
+Basófilos,"Basófilos\s+[0-9]+,[0-9]+\s+([0-9]+)",1
+Linfócitos,"Linfócitos\s+[0-9]+,[0-9]+\s+([0-9]+[.,][0-9]+)",1
+Monócitos,"Monócitos\s+[0-9]+,[0-9]+\s+([0-9]+)",1
 Plaquetas,Plaquetas\s+([0-9.]+),1

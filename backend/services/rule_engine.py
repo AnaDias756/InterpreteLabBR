@@ -39,22 +39,22 @@ def apply_rules(lab_values: List[Dict], genero: str, idade: int) -> List[Dict]:
         regra = regras_aplicaveis.sort_values(by='sexo', ascending=False).iloc[0]
 
         # 2. Aplica a regra de forma segura
-        resultado_final = {"resultado": "normal", "severidade": 0}
+        resultado_final = "normal"
         if valor_paciente < regra['limite_inferior']:
-            resultado_final = {"resultado": "baixo", "severidade": int(regra['severidade_baixa'])}
+            resultado_final = "baixo"
         elif valor_paciente > regra['limite_superior']:
-            resultado_final = {"resultado": "alto", "severidade": int(regra['severidade_alta'])}
+            resultado_final = "alto"
 
         # 3. Adiciona à lista de achados apenas se for anormal
-        if resultado_final["resultado"] != "normal":
+        if resultado_final != "normal":
             resultados_analisados.append({
                 "analito": analito_id,
                 "valor": valor_paciente,
-                "resultado": resultado_final["resultado"],
-                "severidade": resultado_final["severidade"],
+                "resultado": resultado_final,
+                "severidade": 1,  # Valor fixo simplificado
                 "especialidade": regra['especialidade'],
-                "descricao_achado": regra['descricao_achado'],
-                "diretriz": regra['diretriz']
+                "descricao_achado": f"{analito_id} {resultado_final}",  # Descrição simples
+                "diretriz": "Valores de Referência Laboratoriais"
             })
 
     return resultados_analisados
