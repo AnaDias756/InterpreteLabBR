@@ -33,9 +33,10 @@ def extract_lab_values(pdf_content: Union[str, bytes], patterns_path: str = "dat
             # Para série branca (leucócitos, neutrófilos, linfócitos) com valores decimais
             # Se o valor tem ponto e é menor que 100.000, trata como separador decimal
             if "." in valor_str and item["analito"].lower() in ["leucocitos", "neutrófilos", "linfócitos"]:
-                # Verifica se é um valor decimal (ex: 9.480) vs milhares (ex: 123.456)
+                # Verifica se é um valor decimal (ex: 9.480) vs milhares (ex: 9.480.100,0)
                 partes = valor_str.split(".")
-                if len(partes) == 2 and len(partes[1]) == 3 and int(partes[0]) < 100:
+                # Se tem apenas um ponto, 3 dígitos após o ponto, e valor antes do ponto < 100
+                if len(partes) == 2 and len(partes[1]) == 3 and int(partes[0]) < 100 and "," not in valor_str:
                     # Provavelmente é decimal (ex: 9.480), converte ponto para vírgula
                     valor_str = valor_str.replace(".", ",")
             
