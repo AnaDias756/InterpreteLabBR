@@ -356,9 +356,19 @@ class MainWindow(QMainWindow):
                 card = ResultCard(finding)
                 self.findings_layout.addWidget(card)
         else:
-            no_findings = QLabel("Nenhum achado laboratorial encontrado.")
+            # Mensagem positiva quando não há achados anormais
+            no_findings = QLabel("🎉 Seus resultados estão dentro da normalidade, Parabéns continue assim!")
             no_findings.setAlignment(Qt.AlignCenter)
-            no_findings.setStyleSheet("color: #6c757d; font-style: italic; padding: 20px;")
+            no_findings.setStyleSheet("""
+                color: #27ae60; 
+                font-weight: bold; 
+                font-size: 16px;
+                padding: 30px;
+                background-color: #d5f4e6;
+                border: 2px solid #27ae60;
+                border-radius: 10px;
+                margin: 20px;
+            """)
             self.findings_layout.addWidget(no_findings)
             
         self.findings_layout.addStretch()
