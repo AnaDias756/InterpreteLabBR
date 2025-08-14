@@ -1,132 +1,219 @@
-# 🩺 InterpreteLab BR
+# 🩺 Interpretador de Laudos Laboratoriais
 
-**Sistema Inteligente de Interpretação de Laudos Laboratoriais**
+[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)](https://fastapi.tiangolo.com)
+[![React](https://img.shields.io/badge/React-18+-blue.svg)](https://reactjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5+-blue.svg)](https://typescriptlang.org)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Um sistema completo para análise automatizada de exames laboratoriais, oferecendo interpretação inteligente, identificação de achados clínicos e sugestões de especialidades médicas.
+> Sistema inteligente para análise e interpretação automatizada de laudos laboratoriais, fornecendo insights médicos e recomendações de especialidades.
 
-## 🚀 Funcionalidades
+## 🎯 Sobre o Projeto
 
-### Backend (API)
-- 📄 **Processamento de PDFs**: Extração inteligente de dados de laudos laboratoriais
-- 🧠 **Análise com IA**: Interpretação automatizada usando modelos de linguagem avançados
-- 🔍 **Detecção de Achados**: Identificação automática de valores alterados e suas implicações
-- 👨‍⚕️ **Sugestão de Especialidades**: Recomendação de especialistas baseada nos achados
-- 📊 **Relatórios Estruturados**: Geração de briefings médicos detalhados
+O **Interpretador de Laudos Laboratoriais** é uma aplicação web que utiliza técnicas de OCR, processamento de linguagem natural e regras médicas para analisar resultados de exames laboratoriais em formato PDF. O sistema identifica valores anômalos, classifica a severidade dos achados e sugere especialidades médicas apropriadas.
 
-### Frontend (Desktop)
-- 🖱️ **Interface Intuitiva**: Drag & drop para upload de PDFs
-- 👤 **Dados do Paciente**: Entrada de informações como gênero e idade
-- ⚡ **Processamento Assíncrono**: Análise em tempo real com barra de progresso
-- 🎨 **Visualização Rica**: Cards coloridos para achados, briefing e especialidades
+### ✨ Funcionalidades Principais
+
+- 📄 **Upload e análise de PDFs** de laudos laboratoriais
+- 🔍 **Extração automática de valores** usando OCR e regex
+- 🧠 **Análise inteligente** com regras médicas especializadas
+- ⚠️ **Classificação de severidade** dos achados (1-5)
+- 👨‍⚕️ **Recomendação de especialidades** médicas
+- 📊 **Interface web moderna** e responsiva
+- 🔄 **API RESTful** para integração
 
 ## 🏗️ Arquitetura
 
 ```
-InterpreteLabBR/
-├── backend/           # API FastAPI
-│   ├── main.py       # Servidor principal
-│   └── services/     # Serviços de processamento
-├── frontend/         # Interface desktop PySide6
-│   └── main.py      # Aplicação principal
-├── data/            # Dados de configuração
-└── tests/           # Testes automatizados
+┌─────────────────┐    HTTP/JSON    ┌─────────────────┐
+│                 │ ◄──────────────► │                 │
+│  Frontend Web   │                  │  Backend API    │
+│  (React + TS)   │                  │   (FastAPI)     │
+│                 │                  │                 │
+└─────────────────┘                  └─────────────────┘
+                                              │
+                                              ▼
+                                     ┌─────────────────┐
+                                     │   Serviços de   │
+                                     │   Processamento │
+                                     │                 │
+                                     │ • PDF Parser    │
+                                     │ • Rule Engine   │
+                                     │ • NLG System    │
+                                     │ • Specialty AI  │
+                                     └─────────────────┘
 ```
 
-## 🌐 Deploy
+## 🚀 Tecnologias
 
-### Backend (Render)
-O backend está implantado em: `https://interpretelabbr.onrender.com`
+### Backend
+- **FastAPI** - Framework web moderno e rápido
+- **Python 3.8+** - Linguagem principal
+- **OCR** - Extração de texto de PDFs
+- **Regex** - Processamento de padrões laboratoriais
+- **Pydantic** - Validação de dados
 
-**Endpoints disponíveis:**
-- `GET /` - Status da API
-- `POST /interpret` - Interpretação de laudos
-- `GET /docs` - Documentação Swagger
+### Frontend
+- **React 18** - Biblioteca de interface
+- **TypeScript** - Tipagem estática
+- **Axios** - Cliente HTTP
+- **React Dropzone** - Upload de arquivos
+- **CSS3** - Estilização moderna
 
-### Frontend (Desktop)
-Distribuição local via executável ou script Python.
+## 📁 Estrutura do Projeto
 
-## 🛠️ Instalação Local
+```
+InterpreteLabBR/
+├── 📁 backend/                 # API FastAPI
+│   ├── main.py                # Aplicação principal
+│   └── services/              # Serviços de processamento
+│       ├── pdf_parser.py      # Extração de dados do PDF
+│       ├── rule_engine.py     # Motor de regras médicas
+│       ├── specialty_selector.py # Seleção de especialidades
+│       └── nlg.py            # Geração de linguagem natural
+├── 📁 frontend-web/           # Interface React
+│   ├── src/
+│   │   ├── components/        # Componentes React
+│   │   ├── services/         # Serviços de API
+│   │   ├── types/           # Tipos TypeScript
+│   │   └── App.tsx          # Componente principal
+│   └── package.json
+├── 📁 data/                   # Dados de configuração
+│   ├── patterns.csv          # Padrões de extração
+│   └── guideline_map.csv     # Mapeamento de diretrizes
+├── requirements-backend.txt   # Dependências Python
+├── .env.example              # Variáveis de ambiente
+└── README.md                 # Este arquivo
+```
+
+## ⚡ Instalação e Execução
 
 ### Pré-requisitos
 - Python 3.8+
-- pip
+- Node.js 18+
+- npm ou yarn
 
-### Backend
+### 🔧 Backend (FastAPI)
+
+1. **Clone o repositório**
 ```bash
-# Instalar dependências
+git clone https://github.com/seu-usuario/InterpreteLabBR.git
+cd InterpreteLabBR
+```
+
+2. **Instale as dependências**
+```bash
 pip install -r requirements-backend.txt
+```
 
-# Configurar variáveis de ambiente
+3. **Configure as variáveis de ambiente**
+```bash
 cp .env.example .env
-# Editar .env com suas configurações
-
-# Executar servidor
-uvicorn backend.main:app --reload
+# Edite o arquivo .env conforme necessário
 ```
 
-### Frontend
+4. **Execute o servidor**
 ```bash
-# Instalar dependências
-pip install -r requirements.txt
-
-# Executar aplicação
-python frontend/main.py
+cd backend
+python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### Execução Simplificada
+### 🌐 Frontend (React)
+
+1. **Navegue para o diretório frontend**
 ```bash
-# Windows - Duplo clique em:
-executar.bat
+cd frontend-web
 ```
 
-## 📋 Uso
-
-1. **Abrir a aplicação** desktop
-2. **Arrastar PDF** do laudo para a área designada
-3. **Preencher dados** do paciente (gênero, idade)
-4. **Clicar em "Analisar"** e aguardar o processamento
-5. **Visualizar resultados**:
-   - **Achados**: Cards com valores alterados
-   - **Briefing**: Interpretação médica detalhada
-   - **Especialidades**: Recomendações de especialistas
-
-## 📦 Distribuição
-
-### Opção 1: Script Simples
-1. Copiar pasta completa do projeto
-2. Executar `executar.bat`
-
-### Opção 2: Executável (PyInstaller)
+2. **Instale as dependências**
 ```bash
-pip install pyinstaller
-pyinstaller --onefile --windowed --name InterpretadorLaudos frontend/main.py
+npm install
 ```
 
-## 🧪 Testes
-
+3. **Execute o servidor de desenvolvimento**
 ```bash
-# Executar todos os testes
-pytest
-
-# Teste específico
-pytest tests/test_pdf_parser.py
+npm start
 ```
 
-## 🔧 Configuração
+### 🎉 Acesso
 
-### Variáveis de Ambiente (.env)
-```env
-# API Configuration
-OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_MODEL=llama3.1:8b
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8000
+- **Documentação da API**: http://localhost:8000/docs
+- **Redoc**: http://localhost:8000/redoc
 
-# Optional: External API keys
-OPENAI_API_KEY=your_key_here
+## 📡 API Endpoints
+
+### `GET /health`
+Verifica o status da API
+
+**Resposta:**
+```json
+{
+  "status": "healthy",
+  "message": "Interpretador de Laudos Laboratoriais está funcionando!"
+}
 ```
 
-### Dados de Configuração
-- `data/patterns.csv`: Padrões de análise laboratorial
-- `data/guideline_map.csv`: Mapeamento de diretrizes médicas
+### `POST /interpret`
+Analisa um laudo laboratorial
+
+**Parâmetros:**
+- `file`: Arquivo PDF do laudo (multipart/form-data)
+- `genero`: Gênero do paciente ("masculino" ou "feminino")
+- `idade`: Idade do paciente (número)
+
+**Resposta:**
+```json
+{
+  "lab_findings": [
+    {
+      "analito": "Hemoglobina",
+      "valor": 10.5,
+      "resultado": "Baixo",
+      "severidade": 3,
+      "especialidade": "Hematologia",
+      "descricao_achado": "Anemia moderada",
+      "diretriz": "Investigar causa da anemia"
+    }
+  ],
+  "recommended_specialties": ["Hematologia", "Clínica Médica"],
+  "patient_briefing": "Resumo dos achados para o paciente..."
+}
+```
+
+## 🎨 Interface do Usuário
+
+A interface web oferece:
+
+- 📤 **Upload intuitivo** com drag & drop
+- 👤 **Formulário de paciente** (gênero e idade)
+- ⚡ **Status da API** em tempo real
+- 📊 **Visualização de resultados** organizada
+- 📱 **Design responsivo** para mobile
+- 🎯 **Feedback visual** durante o processamento
+
+## 🧪 Exemplo de Uso
+
+1. Acesse http://localhost:3000
+2. Faça upload de um PDF de laudo laboratorial
+3. Preencha os dados do paciente (gênero e idade)
+4. Clique em "Analisar Laudo"
+5. Visualize os resultados organizados por:
+   - Achados laboratoriais com severidade
+   - Especialidades recomendadas
+   - Briefing para o paciente
+
+## 🔬 Processamento de Dados
+
+O sistema processa os laudos através de:
+
+1. **Extração OCR** - Converte PDF em texto
+2. **Regex Patterns** - Identifica valores laboratoriais
+3. **Rule Engine** - Aplica regras médicas especializadas
+4. **Classificação** - Determina severidade (1-5)
+5. **NLG** - Gera descrições em linguagem natural
+6. **Specialty AI** - Recomenda especialidades médicas
 
 ## 🤝 Contribuição
 
@@ -138,24 +225,12 @@ OPENAI_API_KEY=your_key_here
 
 ## 📄 Licença
 
-Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
+Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes.
 
-## 🆘 Suporte
+## 👨‍💻 Autor
 
-Para suporte técnico ou dúvidas:
-- Abra uma issue no GitHub
-- Consulte a documentação da API em `/docs`
-
-## 🔄 Atualizações
-
-### v1.0.0
-- ✅ Sistema completo de interpretação
-- ✅ Interface desktop funcional
-- ✅ Deploy em produção (Render)
-- ✅ Processamento de PDFs
-- ✅ Análise com IA
-- ✅ Distribuição local
+Desenvolvido com ❤️ para auxiliar profissionais de saúde na interpretação de laudos laboratoriais.
 
 ---
 
-**Desenvolvido com ❤️ para a comunidade médica brasileira**
+⭐ **Se este projeto foi útil, considere dar uma estrela!**
