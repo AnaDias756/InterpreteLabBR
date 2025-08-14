@@ -1,4 +1,5 @@
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi.middleware.cors import CORSMiddleware  # 🆕 Adicionar
 from pydantic import BaseModel, Field
 from typing import List
 from dotenv import load_dotenv
@@ -31,6 +32,15 @@ app = FastAPI(
     title="Interpretador de Laudos Laboratoriais",
     description="API para analisar resultados de exames e sugerir especialistas.",
     version="1.0.0"
+)
+
+# 🆕 Adicionar CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # React dev server
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 @app.get("/health")

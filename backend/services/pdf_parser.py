@@ -63,6 +63,12 @@ def extract_lab_values(pdf_content: Union[str, bytes], patterns_path: str = "dat
             if "," in valor_str and item["analito"].lower() == "plaquetas":
                 valor_str = valor_str.replace(",", "")
             
+            # Para plaquetas, ponto também pode ser separador de milhares
+            if "." in valor_str and item["analito"].lower() == "plaquetas":
+                partes = valor_str.split(".")
+                if len(partes) == 2 and len(partes[1]) == 3:  # formato xxx.xxx
+                    valor_str = valor_str.replace(".", "")  # 256.108 → 256108
+            
             # Processamento padrão (agora sem conversão desnecessária)
             valor_processado = valor_str.replace(",", ".")  # Apenas vírgula → ponto para decimais
             
