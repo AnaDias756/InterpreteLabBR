@@ -229,7 +229,7 @@ Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICE
 
 ## 👨‍💻 Autor
 
-Desenvolvido com ❤️ para auxiliar profissionais de saúde na interpretação de laudos laboratoriais.
+Desenvolvido com ❤️ para auxiliar pacientes na interpretação de seus laudos laboratoriais.
 
 ---
 
