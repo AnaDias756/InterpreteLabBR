@@ -9,8 +9,7 @@ import {
   initMobileDebugging, 
   MobileDebugger, 
   getDeviceInfo, 
-  detectMobileIssues,
-  isMobileDevice 
+  detectMobileIssues
 } from './utils/mobileDetection';
 import { applyMobileOptimizations } from './utils/mobileOptimizations';
 import './App.css';

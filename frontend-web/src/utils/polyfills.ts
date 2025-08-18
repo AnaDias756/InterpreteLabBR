@@ -499,34 +499,47 @@ if (!Element.prototype.closest) {
 
 // 13. String.prototype.includes Polyfill
 if (!String.prototype.includes) {
-  String.prototype.includes = function(search: string, start: number = 0): boolean {
-    if (typeof start !== 'number') {
-      start = 0;
-    }
-    
-    if (start + search.length > this.length) {
-      return false;
-    } else {
-      return this.indexOf(search, start) !== -1;
-    }
-  };
+  // eslint-disable-next-line no-extend-native
+  Object.defineProperty(String.prototype, 'includes', {
+    value: function(search: string, start: number = 0): boolean {
+      if (typeof start !== 'number') {
+        start = 0;
+      }
+      
+      if (start + search.length > this.length) {
+        return false;
+      } else {
+        return this.indexOf(search, start) !== -1;
+      }
+    },
+    configurable: true,
+    writable: true
+  });
 }
 
 // 14. String.prototype.startsWith Polyfill
 if (!String.prototype.startsWith) {
-  String.prototype.startsWith = function(search: string, pos: number = 0): boolean {
-    return this.substr(pos, search.length) === search;
-  };
+  // eslint-disable-next-line no-extend-native
+  Object.defineProperty(String.prototype, 'startsWith', {
+    value: function(search: string, pos: number = 0): boolean {
+      return this.substr(pos, search.length) === search;
+    },
+    configurable: true,
+    writable: true
+  });
 }
 
 // 15. String.prototype.endsWith Polyfill
 if (!String.prototype.endsWith) {
-  String.prototype.endsWith = function(search: string, length?: number): boolean {
-    if (length === undefined || length > this.length) {
-      length = this.length;
-    }
-    return this.substring(length - search.length, length) === search;
-  };
+  // eslint-disable-next-line no-extend-native
+  Object.defineProperty(String.prototype, 'endsWith', {
+    value: function(search: string, length?: number): boolean {
+      const len = length === undefined || length > this.length ? this.length : length;
+      return this.substring(len - search.length, len) === search;
+    },
+    configurable: true,
+    writable: true
+  });
 }
 
 // Função para verificar suporte a funcionalidades
@@ -584,6 +597,8 @@ export const initPolyfills = (): void => {
 initPolyfills();
 
 // Export default para compatibilidade
-export default {
+const polyfills = {
   initPolyfills
 };
+
+export default polyfills;

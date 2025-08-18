@@ -121,11 +121,6 @@ export const preloadCriticalResources = (): void => {
 
 // Otimização de touch events
 export const optimizeTouchEvents = (): void => {
-  // Adiciona passive listeners para melhor performance
-  const addPassiveListener = (element: Element, event: string, handler: EventListener) => {
-    element.addEventListener(event, handler, { passive: true });
-  };
-  
   // Otimiza eventos de touch comuns
   document.addEventListener('touchstart', () => {}, { passive: true });
   document.addEventListener('touchmove', () => {}, { passive: true });
@@ -328,7 +323,7 @@ export const useMobileOptimizations = () => {
   }, []);
 };
 
-export default {
+const mobileOptimizations = {
   debounce,
   throttle,
   setupLazyLoading,
@@ -340,3 +335,5 @@ export default {
   applyMobileOptimizations,
   MobileMemoryManager
 };
+
+export default mobileOptimizations;
