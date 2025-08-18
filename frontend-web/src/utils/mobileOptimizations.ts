@@ -32,7 +32,7 @@ export const throttle = <T extends (...args: any[]) => any>(
 ): ((...args: Parameters<T>) => void) => {
   let inThrottle: boolean;
   
-  return function executedFunction(...args: Parameters<T>) {
+  return function executedFunction(this: any, ...args: Parameters<T>) {
     if (!inThrottle) {
       func.apply(this, args);
       inThrottle = true;
@@ -100,7 +100,7 @@ export const optimizeScrolling = (): void => {
 
 // Preload de recursos críticos
 export const preloadCriticalResources = (): void => {
-  const criticalResources = [
+  const criticalResources: any[] = [
     // Adicione aqui URLs de recursos críticos
   ];
   
@@ -142,8 +142,10 @@ export class MobileMemoryManager {
     if (this.cache.size >= this.maxCacheSize) {
       // Remove o item mais antigo
       const firstKey = this.cache.keys().next().value;
-      this.cache.delete(firstKey);
-      MobileDebugger.log('Cache limpo por limite de memória', { removedKey: firstKey });
+      if (firstKey !== undefined) {
+        this.cache.delete(firstKey);
+        MobileDebugger.log('Cache limpo por limite de memória', { removedKey: firstKey });
+      }
     }
     
     this.cache.set(key, value);

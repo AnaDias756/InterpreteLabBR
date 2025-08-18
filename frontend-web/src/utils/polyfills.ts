@@ -1,43 +1,132 @@
 // Polyfills para compatibilidade com navegadores móveis antigos
+// Este arquivo garante que funcionalidades modernas funcionem em dispositivos mais antigos
 
-// Polyfill para Array.from (IE/Safari antigo)
-if (!Array.from) {
-  Array.from = function(arrayLike: any, mapFn?: any, thisArg?: any) {
-    const C = this;
-    const items = Object(arrayLike);
-    if (arrayLike == null) {
-      throw new TypeError('Array.from requires an array-like object - not null or undefined');
-    }
-    const mapFunction = mapFn === undefined ? undefined : mapFn;
-    if (typeof mapFunction !== 'undefined' && typeof mapFunction !== 'function') {
-      throw new TypeError('Array.from: when provided, the second argument must be a function');
-    }
-    const len = parseInt(items.length) || 0;
-    const result = typeof C === 'function' ? Object(new C(len)) : new Array(len);
-    let k = 0;
-    while (k < len) {
-      const kValue = items[k];
-      if (mapFunction) {
-        result[k] = typeof thisArg === 'undefined' ? mapFunction(kValue, k) : mapFunction.call(thisArg, kValue, k);
-      } else {
-        result[k] = kValue;
+// 1. IntersectionObserver Polyfill - Para lazy loading de imagens
+if (!('IntersectionObserver' in window)) {
+  // Polyfill simples do IntersectionObserver
+  (window as any).IntersectionObserver = class {
+    private callback: IntersectionObserverCallback;
+    private elements: Element[] = [];
+    public root: Document | Element | null = null;
+    public rootMargin: string = '0px';
+    public thresholds: ReadonlyArray<number> = [0];
+    
+    constructor(callback: IntersectionObserverCallback, options?: IntersectionObserverInit) {
+      this.callback = callback;
+      if (options) {
+        this.root = options.root || null;
+        this.rootMargin = options.rootMargin || '0px';
+        this.thresholds = options.threshold ? 
+          (Array.isArray(options.threshold) ? options.threshold : [options.threshold]) : [0];
       }
-      k++;
     }
-    result.length = len;
+    
+    observe(element: Element): void {
+      this.elements.add(element);
+      // Simula intersecção imediata para fallback
+      setTimeout(() => {
+        const entry = {
+          target: element,
+          isIntersecting: true,
+          intersectionRatio: 1,
+          boundingClientRect: element.getBoundingClientRect(),
+          intersectionRect: element.getBoundingClientRect(),
+          rootBounds: null,
+          time: Date.now()
+        };
+        this.callback([entry as IntersectionObserverEntry], this as any);
+      }, 100);
+    }
+    
+    unobserve(element: Element): void {
+      this.elements.delete(element);
+    }
+    
+    disconnect(): void {
+      this.elements.clear();
+    }
+    
+    takeRecords(): IntersectionObserverEntry[] {
+      return [];
+    }
+  };
+}
+
+// 2. ResizeObserver Polyfill - Para detecção de mudanças de tamanho
+if (!('ResizeObserver' in window)) {
+  (window as any).ResizeObserver = class {
+    private callback: ResizeObserverCallback;
+    private elements: Set<Element> = new Set();
+    private resizeHandler: () => void;
+    
+    constructor(callback: ResizeObserverCallback) {
+      this.callback = callback;
+      this.resizeHandler = () => {
+        const entries: ResizeObserverEntry[] = [];
+        this.elements.forEach(element => {
+          const rect = element.getBoundingClientRect();
+          entries.push({
+            target: element,
+            contentRect: rect,
+            borderBoxSize: [{ inlineSize: rect.width, blockSize: rect.height }],
+            contentBoxSize: [{ inlineSize: rect.width, blockSize: rect.height }],
+            devicePixelContentBoxSize: [{ inlineSize: rect.width, blockSize: rect.height }]
+          } as ResizeObserverEntry);
+        });
+        if (entries.length > 0) {
+          this.callback(entries, this);
+        }
+      };
+    }
+    
+    observe(element: Element): void {
+      if (this.elements.size === 0) {
+        window.addEventListener('resize', this.resizeHandler);
+      }
+      this.elements.add(element);
+    }
+    
+    unobserve(element: Element): void {
+      this.elements.delete(element);
+      if (this.elements.size === 0) {
+        window.removeEventListener('resize', this.resizeHandler);
+      }
+    }
+    
+    disconnect(): void {
+      this.elements.clear();
+      window.removeEventListener('resize', this.resizeHandler);
+    }
+  };
+}
+
+// 3. Array.from Polyfill - Para suporte a conversão de array-like objects
+if (!Array.from) {
+  Array.from = function<T>(arrayLike: ArrayLike<T>, mapFn?: (v: T, k: number) => any): any[] {
+    const result: any[] = [];
+    const length = arrayLike.length;
+    
+    for (let i = 0; i < length; i++) {
+      const value = arrayLike[i];
+      result[i] = mapFn ? mapFn(value, i) : value;
+    }
+    
     return result;
   };
 }
 
-// Polyfill para Object.assign (IE)
-if (typeof Object.assign !== 'function') {
-  Object.assign = function(target: any, ...sources: any[]) {
+// 4. Object.assign Polyfill - Para merge de objetos
+if (!Object.assign) {
+  Object.assign = function(target: any, ...sources: any[]): any {
     if (target == null) {
       throw new TypeError('Cannot convert undefined or null to object');
     }
+    
     const to = Object(target);
+    
     for (let index = 0; index < sources.length; index++) {
       const nextSource = sources[index];
+      
       if (nextSource != null) {
         for (const nextKey in nextSource) {
           if (Object.prototype.hasOwnProperty.call(nextSource, nextKey)) {
@@ -46,17 +135,19 @@ if (typeof Object.assign !== 'function') {
         }
       }
     }
+    
     return to;
   };
 }
 
-// Polyfill para Promise (IE/Android antigo)
-if (typeof Promise === 'undefined') {
-  (window as any).Promise = class Promise {
+// 5. Promise Polyfill - Para suporte a promises em navegadores antigos
+if (!window.Promise) {
+  // Polyfill básico de Promise
+  (window as any).Promise = class {
     private state: 'pending' | 'fulfilled' | 'rejected' = 'pending';
     private value: any;
     private handlers: Array<{ onFulfilled?: Function; onRejected?: Function; resolve: Function; reject: Function }> = [];
-
+    
     constructor(executor: (resolve: Function, reject: Function) => void) {
       try {
         executor(this.resolve.bind(this), this.reject.bind(this));
@@ -64,93 +155,79 @@ if (typeof Promise === 'undefined') {
         this.reject(error);
       }
     }
-
-    private resolve(value: any) {
+    
+    private resolve(value: any): void {
       if (this.state === 'pending') {
         this.state = 'fulfilled';
         this.value = value;
-        this.handlers.forEach(this.handle.bind(this));
+        this.handlers.forEach(handler => this.handle(handler));
         this.handlers = [];
       }
     }
-
-    private reject(reason: any) {
+    
+    private reject(reason: any): void {
       if (this.state === 'pending') {
         this.state = 'rejected';
         this.value = reason;
-        this.handlers.forEach(this.handle.bind(this));
+        this.handlers.forEach(handler => this.handle(handler));
         this.handlers = [];
       }
     }
-
-    private handle(handler: any) {
+    
+    private handle(handler: any): void {
       if (this.state === 'pending') {
         this.handlers.push(handler);
       } else {
-        if (this.state === 'fulfilled' && typeof handler.onFulfilled === 'function') {
-          handler.onFulfilled(this.value);
-        }
-        if (this.state === 'rejected' && typeof handler.onRejected === 'function') {
-          handler.onRejected(this.value);
-        }
+        setTimeout(() => {
+          const callback = this.state === 'fulfilled' ? handler.onFulfilled : handler.onRejected;
+          if (callback) {
+            try {
+              const result = callback(this.value);
+              handler.resolve(result);
+            } catch (error) {
+              handler.reject(error);
+            }
+          } else {
+            if (this.state === 'fulfilled') {
+              handler.resolve(this.value);
+            } else {
+              handler.reject(this.value);
+            }
+          }
+        }, 0);
       }
     }
-
-    then(onFulfilled?: Function, onRejected?: Function) {
-      return new Promise((resolve, reject) => {
-        this.handle({
-          onFulfilled: (value: any) => {
-            if (!onFulfilled) {
-              resolve(value);
-            } else {
-              try {
-                resolve(onFulfilled(value));
-              } catch (error) {
-                reject(error);
-              }
-            }
-          },
-          onRejected: (reason: any) => {
-            if (!onRejected) {
-              reject(reason);
-            } else {
-              try {
-                resolve(onRejected(reason));
-              } catch (error) {
-                reject(error);
-              }
-            }
-          },
-          resolve,
-          reject
-        });
+    
+    then(onFulfilled?: Function, onRejected?: Function): any {
+      return new (window as any).Promise((resolve: Function, reject: Function) => {
+        this.handle({ onFulfilled, onRejected, resolve, reject });
       });
     }
-
-    catch(onRejected: Function) {
+    
+    catch(onRejected: Function): any {
       return this.then(undefined, onRejected);
     }
-
-    static resolve(value: any) {
-      return new Promise(resolve => resolve(value));
+    
+    static resolve(value: any): any {
+      return new (window as any).Promise((resolve: Function) => resolve(value));
     }
-
-    static reject(reason: any) {
-      return new Promise((_, reject) => reject(reason));
+    
+    static reject(reason: any): any {
+      return new (window as any).Promise((resolve: Function, reject: Function) => reject(reason));
     }
   };
 }
 
-// Polyfill para fetch (IE/Android antigo)
+// 6. Fetch Polyfill - Para requisições HTTP em navegadores antigos
 if (!window.fetch) {
-  (window as any).fetch = function(url: string, options: any = {}) {
+  (window as any).fetch = function(url: string, options: any = {}): Promise<any> {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       const method = options.method || 'GET';
       
       xhr.open(method, url);
       
-      // Set headers
+      // Headers
       if (options.headers) {
         Object.keys(options.headers).forEach(key => {
           xhr.setRequestHeader(key, options.headers[key]);
@@ -175,190 +252,254 @@ if (!window.fetch) {
       xhr.onerror = () => reject(new Error('Network error'));
       xhr.ontimeout = () => reject(new Error('Request timeout'));
       
+      // Timeout
       if (options.timeout) {
         xhr.timeout = options.timeout;
       }
       
+      // Send request
       xhr.send(options.body || null);
     });
   };
 }
 
-// Polyfill para requestAnimationFrame
+// 7. Map Polyfill - Para suporte a Map em navegadores antigos
+if (!window.Map) {
+  (window as any).Map = class {
+    private items: Array<[any, any]> = [];
+    
+    constructor(iterable?: Iterable<[any, any]>) {
+      if (iterable) {
+        for (const [key, value] of iterable) {
+          this.set(key, value);
+        }
+      }
+    }
+    
+    set(key: any, value: any): this {
+      const index = this.items.findIndex(([k]) => k === key);
+      if (index >= 0) {
+        this.items[index][1] = value;
+      } else {
+        this.items.push([key, value]);
+      }
+      return this;
+    }
+    
+    get(key: any): any {
+      const item = this.items.find(([k]) => k === key);
+      return item ? item[1] : undefined;
+    }
+    
+    has(key: any): boolean {
+      return this.items.some(([k]) => k === key);
+    }
+    
+    delete(key: any): boolean {
+      const index = this.items.findIndex(([k]) => k === key);
+      if (index >= 0) {
+        this.items.splice(index, 1);
+        return true;
+      }
+      return false;
+    }
+    
+    clear(): void {
+      this.items = [];
+    }
+    
+    get size(): number {
+      return this.items.length;
+    }
+    
+    keys(): IterableIterator<any> {
+      let index = 0;
+      const items = this.items;
+      return {
+        [Symbol.iterator]() { return this; },
+        next() {
+          if (index < items.length) {
+            return { value: items[index++][0], done: false };
+          }
+          return { value: undefined, done: true };
+        }
+      } as IterableIterator<any>;
+    }
+    
+    values(): IterableIterator<any> {
+      let index = 0;
+      const items = this.items;
+      return {
+        [Symbol.iterator]() { return this; },
+        next() {
+          if (index < items.length) {
+            return { value: items[index++][1], done: false };
+          }
+          return { value: undefined, done: true };
+        }
+      } as IterableIterator<any>;
+    }
+    
+    entries(): IterableIterator<[any, any]> {
+      let index = 0;
+      const items = this.items;
+      return {
+        [Symbol.iterator]() { return this; },
+        next() {
+          if (index < items.length) {
+            return { value: items[index++], done: false };
+          }
+          return { value: undefined, done: true };
+        }
+      } as IterableIterator<[any, any]>;
+    }
+    
+    forEach(callback: (value: any, key: any, map: this) => void): void {
+      this.items.forEach(([key, value]) => callback(value, key, this));
+    }
+  };
+}
+
+// 8. Set Polyfill - Para suporte a Set em navegadores antigos
+if (!window.Set) {
+  (window as any).Set = class {
+    private items: any[] = [];
+    
+    constructor(iterable?: Iterable<any>) {
+      if (iterable) {
+        for (const value of iterable) {
+          this.add(value);
+        }
+      }
+    }
+    
+    add(value: any): this {
+      if (!this.has(value)) {
+        this.items.push(value);
+      }
+      return this;
+    }
+    
+    has(value: any): boolean {
+      return this.items.includes(value);
+    }
+    
+    delete(value: any): boolean {
+      const index = this.items.indexOf(value);
+      if (index >= 0) {
+        this.items.splice(index, 1);
+        return true;
+      }
+      return false;
+    }
+    
+    clear(): void {
+      this.items = [];
+    }
+    
+    get size(): number {
+      return this.items.length;
+    }
+    
+    values(): IterableIterator<any> {
+      let index = 0;
+      const items = this.items;
+      return {
+        [Symbol.iterator]() { return this; },
+        next() {
+          if (index < items.length) {
+            return { value: items[index++], done: false };
+          }
+          return { value: undefined, done: true };
+        }
+      } as IterableIterator<any>;
+    }
+    
+    keys(): IterableIterator<any> {
+      return this.values();
+    }
+    
+    entries(): IterableIterator<[any, any]> {
+      let index = 0;
+      const items = this.items;
+      return {
+        [Symbol.iterator]() { return this; },
+        next() {
+          if (index < items.length) {
+            const value = items[index++];
+            return { value: [value, value], done: false };
+          }
+          return { value: undefined, done: true };
+        }
+      } as IterableIterator<[any, any]>;
+    }
+    
+    forEach(callback: (value: any, value2: any, set: this) => void): void {
+      this.items.forEach(value => callback(value, value, this));
+    }
+  };
+}
+
+// 9. requestAnimationFrame Polyfill - Para animações suaves
 if (!window.requestAnimationFrame) {
-  (window as any).requestAnimationFrame = function(callback: FrameRequestCallback) {
-    return setTimeout(callback, 1000 / 60);
+  let lastTime = 0;
+  (window as any).requestAnimationFrame = function(callback: FrameRequestCallback): number {
+    const currTime = new Date().getTime();
+    const timeToCall = Math.max(0, 16 - (currTime - lastTime));
+    const id = window.setTimeout(() => {
+      callback(currTime + timeToCall);
+    }, timeToCall);
+    lastTime = currTime + timeToCall;
+    return id;
   };
 }
 
 if (!window.cancelAnimationFrame) {
-  (window as any).cancelAnimationFrame = function(id: number) {
+  (window as any).cancelAnimationFrame = function(id: number): void {
     clearTimeout(id);
   };
 }
 
-// Polyfill para classList (IE antigo)
-if (!('classList' in document.createElement('_'))) {
-  (function(view: any) {
-    if (!('Element' in view)) return;
-    
-    const classListProp = 'classList';
-    const protoProp = 'prototype';
-    const elemCtrProto = view.Element[protoProp];
-    const objCtr = Object;
-    const strTrim = String[protoProp].trim || function() {
-      return this.replace(/^\s+|\s+$/g, '');
-    };
-    
-    const arrIndexOf = Array[protoProp].indexOf || function(item: any) {
-      let i = 0;
-      const len = this.length;
-      for (; i < len; i++) {
-        if (i in this && this[i] === item) {
-          return i;
-        }
-      }
-      return -1;
-    };
-    
-    const DOMTokenList = function(el: Element) {
-      this.el = el;
-      const classes = el.className.replace(/^\s+|\s+$/g, '').split(/\s+/);
-      for (let i = 0; i < classes.length; i++) {
-        this.push(classes[i]);
-      }
-      this._updateClassName = function() {
-        el.className = this.toString();
-      };
-    };
-    
-    const dtp = DOMTokenList[protoProp] = [];
-    
-    dtp.item = function(i: number) {
-      return this[i] || null;
-    };
-    
-    dtp.contains = function(token: string) {
-      token += '';
-      return arrIndexOf.call(this, token) !== -1;
-    };
-    
-    dtp.add = function() {
-      const tokens = arguments;
-      let i = 0;
-      const l = tokens.length;
-      let token;
-      let updated = false;
-      do {
-        token = tokens[i] + '';
-        if (arrIndexOf.call(this, token) === -1) {
-          this.push(token);
-          updated = true;
-        }
-      } while (++i < l);
-      
-      if (updated) {
-        this._updateClassName();
-      }
-    };
-    
-    dtp.remove = function() {
-      const tokens = arguments;
-      let i = 0;
-      const l = tokens.length;
-      let token;
-      let updated = false;
-      let index;
-      do {
-        token = tokens[i] + '';
-        index = arrIndexOf.call(this, token);
-        while (index !== -1) {
-          this.splice(index, 1);
-          updated = true;
-          index = arrIndexOf.call(this, token);
-        }
-      } while (++i < l);
-      
-      if (updated) {
-        this._updateClassName();
-      }
-    };
-    
-    dtp.toggle = function(token: string, force?: boolean) {
-      token += '';
-      const result = this.contains(token);
-      const method = result ? force !== true && 'remove' : force !== false && 'add';
-      
-      if (method) {
-        this[method](token);
-      }
-      
-      if (force === true || force === false) {
-        return force;
-      } else {
-        return !result;
-      }
-    };
-    
-    dtp.toString = function() {
-      return this.join(' ');
-    };
-    
-    if (objCtr.defineProperty) {
-      const dtp2 = {
-        get: function() {
-          return new DOMTokenList(this);
-        },
-        enumerable: true,
-        configurable: true
-      };
-      try {
-        objCtr.defineProperty(elemCtrProto, classListProp, dtp2);
-      } catch (ex) {
-        if (ex.number === -0x7FF5EC54) {
-          dtp2.enumerable = false;
-          objCtr.defineProperty(elemCtrProto, classListProp, dtp2);
-        }
-      }
-    } else if (objCtr[protoProp].__defineGetter__) {
-      elemCtrProto.__defineGetter__(classListProp, dtp2.get);
-    }
-  })(window);
-}
-
-// Polyfill para addEventListener (IE8)
-if (!Element.prototype.addEventListener) {
-  (Element.prototype as any).addEventListener = function(type: string, listener: EventListener) {
-    (this as any).attachEvent('on' + type, listener);
+// 10. CustomEvent Polyfill - Para eventos customizados
+if (!window.CustomEvent) {
+  (window as any).CustomEvent = function(event: string, params: CustomEventInit = {}): CustomEvent {
+    const evt = document.createEvent('CustomEvent');
+    evt.initCustomEvent(event, !!params.bubbles, !!params.cancelable, params.detail);
+    return evt;
   };
 }
 
-if (!Element.prototype.removeEventListener) {
-  (Element.prototype as any).removeEventListener = function(type: string, listener: EventListener) {
-    (this as any).detachEvent('on' + type, listener);
+// 11. Element.matches Polyfill - Para seletores CSS
+if (!Element.prototype.matches) {
+  Element.prototype.matches = 
+    (Element.prototype as any).matchesSelector ||
+    (Element.prototype as any).mozMatchesSelector ||
+    (Element.prototype as any).msMatchesSelector ||
+    (Element.prototype as any).oMatchesSelector ||
+    (Element.prototype as any).webkitMatchesSelector ||
+    function(this: Element, s: string): boolean {
+      const matches = (this.document || this.ownerDocument).querySelectorAll(s);
+      let i = matches.length;
+      while (--i >= 0 && matches.item(i) !== this) {}
+      return i > -1;
+    };
+}
+
+// 12. Element.closest Polyfill - Para navegação DOM
+if (!Element.prototype.closest) {
+  Element.prototype.closest = function(this: Element, s: string): Element | null {
+    let el: Element | null = this;
+    do {
+      if (el.matches(s)) return el;
+      el = el.parentElement || el.parentNode as Element;
+    } while (el !== null && el.nodeType === 1);
+    return null;
   };
 }
 
-// Polyfill para console (IE antigo)
-if (!window.console) {
-  (window as any).console = {
-    log: function() {},
-    warn: function() {},
-    error: function() {},
-    info: function() {},
-    debug: function() {},
-    trace: function() {},
-    group: function() {},
-    groupEnd: function() {},
-    time: function() {},
-    timeEnd: function() {},
-    clear: function() {}
-  };
-}
-
-// Polyfill para String.prototype.includes
+// 13. String.prototype.includes Polyfill
 if (!String.prototype.includes) {
-  String.prototype.includes = function(search: string, start?: number) {
+  String.prototype.includes = function(search: string, start: number = 0): boolean {
     if (typeof start !== 'number') {
       start = 0;
     }
@@ -371,102 +512,57 @@ if (!String.prototype.includes) {
   };
 }
 
-// Polyfill para Array.prototype.includes
-if (!Array.prototype.includes) {
-  Array.prototype.includes = function(searchElement: any, fromIndex?: number) {
-    return this.indexOf(searchElement, fromIndex) !== -1;
+// 14. String.prototype.startsWith Polyfill
+if (!String.prototype.startsWith) {
+  String.prototype.startsWith = function(search: string, pos: number = 0): boolean {
+    return this.substr(pos, search.length) === search;
   };
 }
 
-// Polyfill para Array.prototype.find
-if (!Array.prototype.find) {
-  Array.prototype.find = function(predicate: (value: any, index: number, obj: any[]) => boolean) {
-    if (this == null) {
-      throw new TypeError('Array.prototype.find called on null or undefined');
+// 15. String.prototype.endsWith Polyfill
+if (!String.prototype.endsWith) {
+  String.prototype.endsWith = function(search: string, length?: number): boolean {
+    if (length === undefined || length > this.length) {
+      length = this.length;
     }
-    if (typeof predicate !== 'function') {
-      throw new TypeError('predicate must be a function');
-    }
-    const list = Object(this);
-    const length = parseInt(list.length) || 0;
-    const thisArg = arguments[1];
-    for (let i = 0; i < length; i++) {
-      const element = list[i];
-      if (predicate.call(thisArg, element, i, list)) {
-        return element;
-      }
-    }
-    return undefined;
-  };
-}
-
-// Polyfill para Array.prototype.findIndex
-if (!Array.prototype.findIndex) {
-  Array.prototype.findIndex = function(predicate: (value: any, index: number, obj: any[]) => boolean) {
-    if (this == null) {
-      throw new TypeError('Array.prototype.findIndex called on null or undefined');
-    }
-    if (typeof predicate !== 'function') {
-      throw new TypeError('predicate must be a function');
-    }
-    const list = Object(this);
-    const length = parseInt(list.length) || 0;
-    const thisArg = arguments[1];
-    for (let i = 0; i < length; i++) {
-      const element = list[i];
-      if (predicate.call(thisArg, element, i, list)) {
-        return i;
-      }
-    }
-    return -1;
-  };
-}
-
-// Polyfill para Number.isNaN
-if (!Number.isNaN) {
-  Number.isNaN = function(value: any) {
-    return typeof value === 'number' && isNaN(value);
-  };
-}
-
-// Polyfill para Number.isFinite
-if (!Number.isFinite) {
-  Number.isFinite = function(value: any) {
-    return typeof value === 'number' && isFinite(value);
+    return this.substring(length - search.length, length) === search;
   };
 }
 
 // Função para inicializar todos os polyfills
 export const initPolyfills = (): void => {
-  // Os polyfills são executados automaticamente quando o módulo é importado
-  console.log('Polyfills inicializados para compatibilidade mobile');
+  console.log('🔧 Polyfills carregados para compatibilidade mobile');
+  
+  // Log dos polyfills aplicados
+  const appliedPolyfills: string[] = [];
+  
+  if (!('IntersectionObserver' in window)) appliedPolyfills.push('IntersectionObserver');
+  if (!('ResizeObserver' in window)) appliedPolyfills.push('ResizeObserver');
+  if (!Array.from) appliedPolyfills.push('Array.from');
+  if (!Object.assign) appliedPolyfills.push('Object.assign');
+  if (!window.Promise) appliedPolyfills.push('Promise');
+  if (!window.fetch) appliedPolyfills.push('fetch');
+  if (!window.Map) appliedPolyfills.push('Map');
+  if (!window.Set) appliedPolyfills.push('Set');
+  if (!window.requestAnimationFrame) appliedPolyfills.push('requestAnimationFrame');
+  if (!window.CustomEvent) appliedPolyfills.push('CustomEvent');
+  if (!Element.prototype.matches) appliedPolyfills.push('Element.matches');
+  if (!Element.prototype.closest) appliedPolyfills.push('Element.closest');
+  if (!String.prototype.includes) appliedPolyfills.push('String.includes');
+  if (!String.prototype.startsWith) appliedPolyfills.push('String.startsWith');
+  if (!String.prototype.endsWith) appliedPolyfills.push('String.endsWith');
+  
+  if (appliedPolyfills.length > 0) {
+    console.log('📱 Polyfills aplicados:', appliedPolyfills.join(', '));
+  } else {
+    console.log('✅ Navegador moderno detectado - nenhum polyfill necessário');
+  }
 };
 
-// Função para verificar suporte a funcionalidades
-export const checkFeatureSupport = (): { [key: string]: boolean } => {
-  return {
-    fetch: typeof fetch !== 'undefined',
-    promise: typeof Promise !== 'undefined',
-    arrayFrom: typeof Array.from !== 'undefined',
-    objectAssign: typeof Object.assign !== 'undefined',
-    classList: 'classList' in document.createElement('div'),
-    addEventListener: 'addEventListener' in document.createElement('div'),
-    requestAnimationFrame: typeof requestAnimationFrame !== 'undefined',
-    console: typeof console !== 'undefined',
-    stringIncludes: typeof String.prototype.includes !== 'undefined',
-    arrayIncludes: typeof Array.prototype.includes !== 'undefined',
-    arrayFind: typeof Array.prototype.find !== 'undefined',
-    numberIsNaN: typeof Number.isNaN !== 'undefined',
-    touchEvents: 'ontouchstart' in window,
-    geolocation: 'geolocation' in navigator,
-    localStorage: (() => {
-      try {
-        return 'localStorage' in window && window.localStorage !== null;
-      } catch (e) {
-        return false;
-      }
-    })()
-  };
-};
+// Auto-inicialização
+initPolyfills();
 
-export default initPolyfills;
+// Export default para compatibilidade
+export default {
+  initPolyfills
+};

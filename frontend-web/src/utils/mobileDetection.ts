@@ -184,7 +184,7 @@ export class MobileDebugger {
 }
 
 // Hook para detectar mudanças de orientação
-export const useOrientationChange = (callback: (orientation: string) => void): void => {
+export const useOrientationChange = (callback: (orientation: string) => void): (() => void) => {
   const handleOrientationChange = () => {
     const newOrientation = window.innerHeight > window.innerWidth ? 'portrait' : 'landscape';
     callback(newOrientation);
