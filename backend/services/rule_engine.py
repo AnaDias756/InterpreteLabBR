@@ -3,7 +3,11 @@ from typing import List, Dict
 
 # O DataFrame com as regras é carregado eficientemente uma única vez.
 try:
-    df_regras = pd.read_csv("../data/guideline_map.csv")
+    import os
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(os.path.dirname(current_dir))
+    guideline_path = os.path.join(project_root, "data", "guideline_map.csv")
+    df_regras = pd.read_csv(guideline_path)
 except FileNotFoundError:
     print("AVISO: Arquivo de regras 'guideline_map.csv' não encontrado.")
     df_regras = pd.DataFrame()

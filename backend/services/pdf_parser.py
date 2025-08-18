@@ -93,7 +93,13 @@ def validate_pdf(pdf_content: Union[str, bytes]) -> tuple[bool, str]:
     except Exception as e:
         return False, f"Erro inesperado na validação: {str(e)}"
 
-def extract_lab_values(pdf_content: Union[str, bytes], patterns_path: str = "../data/patterns.csv") -> List[dict]:
+def extract_lab_values(pdf_content: Union[str, bytes], patterns_path: str = None) -> List[dict]:
+    # Determinar caminho absoluto do arquivo patterns.csv
+    if patterns_path is None:
+        import os
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(os.path.dirname(current_dir))
+        patterns_path = os.path.join(project_root, "data", "patterns.csv")
     logger.info("🔍 Iniciando extração de valores laboratoriais")
     
     # Validar PDF primeiro

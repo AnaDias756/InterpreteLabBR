@@ -64,7 +64,7 @@ app.add_middleware(
 @app.get("/health")
 async def health_check():
     """Endpoint para verificar se a API está funcionando."""
-    return {"status": "healthy", "message": "API está funcionando corretamente"}
+    return {"status": "healthy", "message": "API esta funcionando corretamente"}
 
 @app.post("/interpret", response_model=InterpretationResponse)
 async def interpret_results(
