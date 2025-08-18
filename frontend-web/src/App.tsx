@@ -5,6 +5,14 @@ import ResultsDisplay from './components/ResultsDisplay';
 import LoadingSpinner from './components/LoadingSpinner';
 import { interpretLab, getApiStatus } from './services/api';
 import { InterpretationResponse, PatientData } from './types';
+import { 
+  initMobileDebugging, 
+  MobileDebugger, 
+  getDeviceInfo, 
+  detectMobileIssues,
+  isMobileDevice 
+} from './utils/mobileDetection';
+import { applyMobileOptimizations } from './utils/mobileOptimizations';
 import './App.css';
 
 function App() {
@@ -19,17 +27,43 @@ function App() {
   const [apiStatus, setApiStatus] = useState<'checking' | 'online' | 'offline' | 'slow'>('checking');
   const [apiMessage, setApiMessage] = useState<string>('Verificando conexão...');
   const [connectionAttempts, setConnectionAttempts] = useState(0);
+  const [deviceInfo] = useState(() => getDeviceInfo());
+  const [mobileIssues] = useState(() => detectMobileIssues());
 
   useEffect(() => {
+    // Inicializa debugging mobile
+    initMobileDebugging();
+    
+    // Aplica otimizações mobile
+    if (deviceInfo.isMobile || deviceInfo.isTablet) {
+      applyMobileOptimizations();
+      MobileDebugger.log('Otimizações mobile aplicadas');
+    }
+    
+    // Log informações do dispositivo
+    MobileDebugger.log('App inicializado', {
+      deviceInfo,
+      mobileIssues,
+      url: window.location.href
+    });
+    
     const checkApi = async () => {
       setApiStatus('checking');
       setApiMessage('Verificando conexão com o servidor...');
+      
+      MobileDebugger.log('Iniciando verificação de API');
       
       try {
         const status = await getApiStatus();
         setApiStatus(status.status);
         setApiMessage(status.message);
         setConnectionAttempts(0);
+        
+        MobileDebugger.log('Resposta da API recebida', {
+          status: status.status,
+          message: status.message,
+          isMobile: deviceInfo.isMobile
+        });
       } catch (error) {
         setConnectionAttempts(prev => prev + 1);
         setApiStatus('offline');
@@ -39,14 +73,37 @@ function App() {
             : 'Tentando conectar ao servidor...'
         );
         
+        MobileDebugger.log('Erro ao verificar API', { 
+          error: error instanceof Error ? error.message : 'Erro desconhecido',
+          stack: error instanceof Error ? error.stack : undefined,
+          attempts: connectionAttempts
+        });
+        
         // Tentar novamente após um delay se offline
         if (connectionAttempts < 5) {
           setTimeout(checkApi, 5000 + (connectionAttempts * 2000));
         }
       }
     };
+    
     checkApi();
-  }, [connectionAttempts]);
+    
+    // Log específico para dispositivos móveis
+    if (deviceInfo.isMobile || deviceInfo.isTablet) {
+      MobileDebugger.log('Dispositivo móvel detectado', {
+        type: deviceInfo.isMobile ? 'mobile' : 'tablet',
+        browser: deviceInfo.browser,
+        os: deviceInfo.os,
+        screen: `${deviceInfo.screenWidth}x${deviceInfo.screenHeight}`,
+        issues: mobileIssues
+      });
+      
+      // Mostra alerta se há problemas críticos
+      if (mobileIssues.length > 0) {
+        console.warn('Problemas detectados no dispositivo móvel:', mobileIssues);
+      }
+    }
+  }, [connectionAttempts, deviceInfo, mobileIssues]);
 
   const handleAnalyze = async () => {
     if (!file) {
@@ -62,9 +119,25 @@ function App() {
     setLoading(true);
     setError(null);
     
+    MobileDebugger.log('Iniciando análise de arquivo', {
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type,
+      patientData,
+      deviceType: deviceInfo.isMobile ? 'mobile' : deviceInfo.isTablet ? 'tablet' : 'desktop'
+    });
+    
     try {
+      const startTime = Date.now();
       const response = await interpretLab(file, patientData);
+      const analysisTime = Date.now() - startTime;
+      
       setResults(response);
+      
+      MobileDebugger.log('Análise concluída com sucesso', {
+        analysisTime,
+        resultCount: response.lab_findings?.length || 0
+      });
     } catch (err: any) {
       let errorMessage = 'Erro ao analisar o laudo';
       
@@ -75,6 +148,13 @@ function App() {
       }
       
       setError(errorMessage);
+      
+      MobileDebugger.log('Erro durante análise', {
+        error: errorMessage,
+        stack: err.stack,
+        fileName: file.name,
+        fileSize: file.size
+      });
       
       // Se erro de conectividade, verificar status da API novamente
       if (err.message?.includes('conectividade') || err.message?.includes('timeout')) {
