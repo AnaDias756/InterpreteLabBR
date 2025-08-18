@@ -6,7 +6,7 @@ if (!('IntersectionObserver' in window)) {
   // Polyfill simples do IntersectionObserver
   (window as any).IntersectionObserver = class {
     private callback: IntersectionObserverCallback;
-    private elements: Element[] = [];
+    private elements: Set<Element> = new Set();
     public root: Document | Element | null = null;
     public rootMargin: string = '0px';
     public thresholds: ReadonlyArray<number> = [0];
@@ -270,9 +270,9 @@ if (!window.Map) {
     
     constructor(iterable?: Iterable<[any, any]>) {
       if (iterable) {
-        for (const [key, value] of iterable) {
-          this.set(key, value);
-        }
+        Array.from(iterable).forEach((item: [any, any]) => {
+          this.set(item[0], item[1]);
+        });
       }
     }
     
@@ -367,9 +367,9 @@ if (!window.Set) {
     
     constructor(iterable?: Iterable<any>) {
       if (iterable) {
-        for (const value of iterable) {
+        Array.from(iterable).forEach((value: any) => {
           this.add(value);
-        }
+        });
       }
     }
     
@@ -478,7 +478,7 @@ if (!Element.prototype.matches) {
     (Element.prototype as any).oMatchesSelector ||
     (Element.prototype as any).webkitMatchesSelector ||
     function(this: Element, s: string): boolean {
-      const matches = (this.document || this.ownerDocument).querySelectorAll(s);
+      const matches = this.ownerDocument.querySelectorAll(s);
       let i = matches.length;
       while (--i >= 0 && matches.item(i) !== this) {}
       return i > -1;
@@ -528,6 +528,27 @@ if (!String.prototype.endsWith) {
     return this.substring(length - search.length, length) === search;
   };
 }
+
+// Função para verificar suporte a funcionalidades
+export const checkFeatureSupport = (): { [key: string]: boolean } => {
+  return {
+    IntersectionObserver: 'IntersectionObserver' in window,
+    ResizeObserver: 'ResizeObserver' in window,
+    ArrayFrom: !!Array.from,
+    ObjectAssign: !!Object.assign,
+    Promise: !!window.Promise,
+    fetch: !!window.fetch,
+    Map: !!window.Map,
+    Set: !!window.Set,
+    requestAnimationFrame: !!window.requestAnimationFrame,
+    CustomEvent: !!window.CustomEvent,
+    ElementMatches: !!Element.prototype.matches,
+    ElementClosest: !!Element.prototype.closest,
+    StringIncludes: !!String.prototype.includes,
+    StringStartsWith: !!String.prototype.startsWith,
+    StringEndsWith: !!String.prototype.endsWith
+  };
+};
 
 // Função para inicializar todos os polyfills
 export const initPolyfills = (): void => {

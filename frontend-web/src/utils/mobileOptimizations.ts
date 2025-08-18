@@ -1,5 +1,6 @@
 // Otimizações específicas para dispositivos móveis
 
+import React from 'react';
 import { MobileDebugger } from './mobileDetection';
 
 // Debounce function para evitar chamadas excessivas
@@ -326,9 +327,6 @@ export const useMobileOptimizations = () => {
     };
   }, []);
 };
-
-// Exporta React para uso no hook
-import React from 'react';
 
 export default {
   debounce,
