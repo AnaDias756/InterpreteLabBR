@@ -7,10 +7,10 @@ from dotenv import load_dotenv
 # Carrega variáveis de ambiente do arquivo .env
 load_dotenv()
 
-from backend.services.pdf_parser import extract_lab_values
-from backend.services.rule_engine import apply_rules
-from backend.services.specialty_selector import select_specialties
-from backend.services.nlg import build_briefing
+from .services.pdf_parser import extract_lab_values
+from .services.rule_engine import apply_rules
+from .services.specialty_selector import select_specialties
+from .services.nlg import build_briefing
 
 # --- Modelos de Resposta Pydantic ---
 class LabFinding(BaseModel):
