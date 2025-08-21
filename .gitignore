@@ -185,3 +185,5 @@ dist/
 # Local temporary files
 *.tmp
 *.temp
+# Local Netlify folder
+.netlify

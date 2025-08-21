@@ -18,7 +18,7 @@ function App() {
   const [file, setFile] = useState<File | null>(null);
   const [patientData, setPatientData] = useState<PatientData>({
     genero: 'feminino',
-    idade: 30
+    idade: ''
   });
   const [results, setResults] = useState<InterpretationResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -110,6 +110,11 @@ function App() {
       return;
     }
 
+    if (!patientData.idade || patientData.idade === '') {
+      setError('Por favor, informe a idade do paciente');
+      return;
+    }
+
     if (apiStatus === 'offline') {
       setError('Servidor offline. Verifique sua conexão ou aguarde o servidor inicializar.');
       return;
@@ -182,7 +187,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>🧬 Interpretador de Laudos Laboratoriais</h1>
+        <h1>🩸 Interpretador de Laudos de Hemograma</h1>
         <div className={`api-status ${apiStatus}`}>
           {apiStatus === 'checking' && '🔄 Verificando conexão...'}
           {apiStatus === 'online' && '🟢 Servidor Online'}
@@ -204,7 +209,7 @@ function App() {
             
             <button 
               onClick={handleAnalyze} 
-              disabled={!file || loading || apiStatus === 'offline'}
+              disabled={!file || !patientData.idade || patientData.idade === '' || loading || apiStatus === 'offline'}
               className="analyze-button"
             >
               {loading ? '⏳ Processando...' : apiStatus === 'slow' ? '🐌 Analisar (Pode ser lento)' : '🔍 Analisar Laudo'}

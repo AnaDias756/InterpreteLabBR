@@ -13,6 +13,36 @@ except FileNotFoundError:
     df_regras = pd.DataFrame()
 
 
+def normalize_analito_name(analito_name: str) -> str:
+    """
+    Normaliza nomes de analitos para correspondência com guideline_map.csv
+    """
+    analito_lower = analito_name.lower()
+    
+    # Mapeamento de nomes alternativos para nomes padrão
+    mapping = {
+        'plaquetas_alt': 'plaquetas',
+        'plaquetas_alt2': 'plaquetas',
+        'plaquetas_ponto': 'plaquetas',
+        'plaquetas_ponto_alt': 'plaquetas',
+        'plaquetas_formato_exato': 'plaquetas',
+        'hemacias_alt': 'hemacias',
+        'leucocitos_novo': 'leucocitos',
+        'neutrofilos_novo': 'neutrofilos',
+        'eosinofilos_novo': 'eosinofilos',
+        'basofilos_novo': 'basofilos',
+        'linfocitos_novo': 'linfocitos',
+        'monocitos_novo': 'monocitos',
+        'neutrofilos_hemograma': 'neutrofilos',
+        'eosinofilos_hemograma': 'eosinofilos',
+        'basofilos_hemograma': 'basofilos',
+        'linfocitos_hemograma': 'linfocitos',
+        'monocitos_hemograma': 'monocitos',
+        'leucocitos_hemograma': 'leucocitos'
+    }
+    
+    return mapping.get(analito_lower, analito_lower)
+
 def apply_rules(lab_values: List[Dict], genero: str, idade: int) -> List[Dict]:
     """
     O coração do sistema. Compara os valores do exame com as diretrizes
@@ -28,10 +58,13 @@ def apply_rules(lab_values: List[Dict], genero: str, idade: int) -> List[Dict]:
     for valor_exame in lab_values:
         analito_id = valor_exame["analito"]
         valor_paciente = valor_exame["valor"]
+        
+        # Normalizar nome do analito para correspondência
+        analito_normalizado = normalize_analito_name(analito_id)
 
-        # 1. Filtra as regras para o analito, idade e sexo corretos
+        # 1. Filtra as regras para o analito, idade e sexo corretos (comparação case-insensitive)
         regras_aplicaveis = df_regras[
-            (df_regras['analito_id'] == analito_id) &
+            (df_regras['analito_id'].str.lower() == analito_normalizado.lower()) &
             (df_regras['idade_min'] <= idade) &
             (df_regras['idade_max'] >= idade) &
             (df_regras['sexo'].isin([sexo_paciente, 'Todos']))

@@ -16,7 +16,7 @@ export interface InterpretationResponse {
 
 export interface PatientData {
   genero: 'masculino' | 'feminino';
-  idade: number;
+  idade: number | string;
 }
 
 export interface ApiError {

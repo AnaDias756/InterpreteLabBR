@@ -12,7 +12,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ data, onChange }) => {
       <h3>Dados do Paciente</h3>
       
       <div className="form-group">
-        <label htmlFor="genero">Gênero:</label>
+        <label htmlFor="genero">Sexo Biológico:</label>
         <select
           id="genero"
           value={data.genero}
@@ -31,7 +31,8 @@ const PatientForm: React.FC<PatientFormProps> = ({ data, onChange }) => {
           min="0"
           max="150"
           value={data.idade}
-          onChange={(e) => onChange({ ...data, idade: parseInt(e.target.value) || 0 })}
+          placeholder="Digite sua idade"
+          onChange={(e) => onChange({ ...data, idade: e.target.value === '' ? '' : parseInt(e.target.value) || '' })}
         />
         <span className="unit">anos</span>
       </div>

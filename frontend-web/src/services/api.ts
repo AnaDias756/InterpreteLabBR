@@ -96,7 +96,15 @@ export const interpretLab = async (
   const formData = new FormData();
   formData.append('file', file);
   formData.append('genero', patientData.genero);
-  formData.append('idade', patientData.idade.toString());
+  
+  // Converter idade para número, usando 0 como padrão se vazio
+  const idade = typeof patientData.idade === 'string' && patientData.idade === '' 
+    ? 0 
+    : typeof patientData.idade === 'string' 
+    ? parseInt(patientData.idade) || 0
+    : patientData.idade;
+  
+  formData.append('idade', idade.toString());
 
   return retryRequest(async () => {
     const response = await api.post<InterpretationResponse>('/interpret', formData, {

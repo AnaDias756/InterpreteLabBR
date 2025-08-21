@@ -93,6 +93,59 @@ def validate_pdf(pdf_content: Union[str, bytes]) -> tuple[bool, str]:
     except Exception as e:
         return False, f"Erro inesperado na validação: {str(e)}"
 
+def normalize_analito_name(analito: str) -> str:
+    """Normaliza nomes de analitos para deduplicação"""
+    analito_lower = analito.lower()
+    
+    # Mapeamento de nomes alternativos para nomes padrão
+    mapeamento = {
+        'plaquetas_alt': 'plaquetas',
+        'plaquetas_alt2': 'plaquetas',
+        'plaquetas_ponto': 'plaquetas',
+        'plaquetas_ponto_alt': 'plaquetas',
+        'plaquetas_formato_exato': 'plaquetas',
+        'hemacias_alt': 'hemacias',
+        'leucocitos_novo': 'leucocitos',
+        'neutrofilos_novo': 'neutrofilos',
+        'eosinofilos_novo': 'eosinofilos',
+        'basofilos_novo': 'basofilos',
+        'linfocitos_novo': 'linfocitos',
+        'monocitos_novo': 'monocitos',
+        'leucocitos_hemograma': 'leucocitos',
+        'neutrofilos_hemograma': 'neutrofilos',
+        'eosinofilos_hemograma': 'eosinofilos',
+        'basofilos_hemograma': 'basofilos',
+        'linfocitos_hemograma': 'linfocitos',
+        'monocitos_hemograma': 'monocitos'
+    }
+    
+    return mapeamento.get(analito_lower, analito_lower)
+
+def deduplicate_analitos(resultados: List[dict]) -> List[dict]:
+    """Remove analitos duplicados, mantendo apenas um por tipo normalizado"""
+    analitos_unicos = {}
+    
+    for resultado in resultados:
+        analito_original = resultado['analito']
+        analito_normalizado = normalize_analito_name(analito_original)
+        valor = resultado['valor']
+        
+        # Se é o primeiro deste tipo normalizado, adiciona
+        if analito_normalizado not in analitos_unicos:
+            analitos_unicos[analito_normalizado] = {
+                'analito': analito_normalizado,  # Usar nome normalizado
+                'valor': valor
+            }
+        else:
+            # Se já existe, verifica se é o mesmo valor
+            valor_existente = analitos_unicos[analito_normalizado]['valor']
+            if abs(valor - valor_existente) > 0.01:  # Valores diferentes
+                logger.warning(f"⚠️ Valores diferentes para {analito_normalizado}: {valor_existente} vs {valor}")
+                # Manter o primeiro valor encontrado
+            # Se mesmo valor, ignora a duplicata
+    
+    return list(analitos_unicos.values())
+
 def extract_lab_values(pdf_content: Union[str, bytes], patterns_path: str = None) -> List[dict]:
     # Determinar caminho absoluto do arquivo patterns.csv
     if patterns_path is None:
@@ -173,6 +226,7 @@ def extract_lab_values(pdf_content: Union[str, bytes], patterns_path: str = None
     # Aplica os padrões
     resultados = []
     matches_found = 0
+    patterns_not_found = []
     
     for item in patterns:
         try:
@@ -182,22 +236,17 @@ def extract_lab_values(pdf_content: Union[str, bytes], patterns_path: str = None
                 valor_str = match.group(item["grupo"])
                 logger.debug(f"🎯 {item['analito']}: valor bruto '{valor_str}'")
                 
-                # Para série branca (leucócitos, neutrófilos, linfócitos) com valores decimais
-                if "." in valor_str and item["analito"].lower() in ["leucocitos", "neutrófilos", "linfócitos"]:
+                # Processamento inteligente de separadores de milhares vs decimais
+                if "." in valor_str:
                     partes = valor_str.split(".")
-                    if len(partes) == 2 and len(partes[1]) == 3 and int(partes[0]) < 100 and "," not in valor_str:
-                        # Para leucócitos, ponto é separador de milhares, não decimal
-                        valor_str = valor_str.replace(".", "")  # 9.480 → 9480 (valor correto)
+                    if len(partes) == 2 and len(partes[1]) == 3:  # formato X.XXX = separador de milhares
+                        # Para leucócitos, neutrófilos, linfócitos, plaquetas: ponto é separador de milhares
+                        if item["analito"].lower() in ["leucocitos", "leucocitos_novo", "neutrófilos", "linfócitos"] or "plaquetas" in item["analito"].lower():
+                            valor_str = valor_str.replace(".", "")  # 7.010 → 7010, 282.000 → 282000
                 
                 # Para plaquetas, vírgula é sempre separador de milhares
-                if "," in valor_str and item["analito"].lower() == "plaquetas":
-                    valor_str = valor_str.replace(",", "")
-                
-                # Para plaquetas, ponto também pode ser separador de milhares
-                if "." in valor_str and item["analito"].lower() == "plaquetas":
-                    partes = valor_str.split(".")
-                    if len(partes) == 2 and len(partes[1]) == 3:  # formato xxx.xxx
-                        valor_str = valor_str.replace(".", "")  # 256.108 → 256108
+                if "," in valor_str and "plaquetas" in item["analito"].lower():
+                    valor_str = valor_str.replace(",", "")  # 282,000 → 282000
                 
                 # Processamento padrão (agora sem conversão desnecessária)
                 valor_processado = valor_str.replace(",", ".")  # Apenas vírgula → ponto para decimais
@@ -208,23 +257,50 @@ def extract_lab_values(pdf_content: Union[str, bytes], patterns_path: str = None
                         "analito": item["analito"],
                         "valor": valor
                     })
-                    logger.debug(f"✅ {item['analito']}: {valor}")
+                    logger.info(f"✅ Analito encontrado: {item['analito']} = {valor}")
                 except ValueError as e:
                     logger.warning(f"⚠️ Erro ao converter '{valor_processado}' para {item['analito']}: {e}")
                     continue
+            else:
+                # Padrão não encontrou match
+                patterns_not_found.append(item['analito'])
+                logger.debug(f"❌ Padrão não encontrou match para: {item['analito']} - Pattern: {item['pattern'][:100]}...")
         except Exception as e:
             logger.warning(f"⚠️ Erro ao processar padrão para {item['analito']}: {e}")
             continue
     
     logger.info(f"🎯 Encontrados {matches_found} matches, {len(resultados)} valores válidos extraídos")
     
+    # Log dos padrões que não encontraram match
+    if patterns_not_found:
+        logger.warning(f"❌ Padrões sem match ({len(patterns_not_found)}): {', '.join(patterns_not_found)}")
+    
+    # Log detalhado do texto extraído para debug (sempre mostrar quando há padrões não encontrados)
+    if patterns_not_found or len(resultados) == 0:
+        # Mostrar o texto completo para análise
+        logger.info(f"📝 Texto extraído COMPLETO para análise ({len(full_text)} chars):\n{full_text}")
+        logger.info("="*80)
+        
+        # Procurar especificamente por termos da série branca no texto
+        serie_branca_terms = ['basófilo', 'eosinófilo', 'linfócito', 'monócito', 'neutrófilos']
+        found_terms = []
+        for term in serie_branca_terms:
+            if term.lower() in full_text.lower():
+                found_terms.append(term)
+        
+        if found_terms:
+            logger.info(f"🔍 Termos da série branca encontrados no texto: {', '.join(found_terms)}")
+        else:
+            logger.warning("❌ Nenhum termo da série branca encontrado no texto extraído")
+    
     if len(resultados) == 0:
         logger.warning("⚠️ Nenhum valor laboratorial encontrado no PDF")
-        # Log de debug com amostra do texto
-        sample_text = full_text[:500] + "..." if len(full_text) > 500 else full_text
-        logger.debug(f"📝 Amostra do texto extraído: {sample_text}")
     
-    return resultados
+    # Deduplicar analitos com mesmo valor normalizado
+    resultados_deduplificados = deduplicate_analitos(resultados)
+    logger.info(f"🔄 Deduplicação: {len(resultados)} → {len(resultados_deduplificados)} analitos únicos")
+    
+    return resultados_deduplificados
 
 def preprocess_image_for_ocr(img: Image.Image) -> Image.Image:
     """

@@ -622,3 +622,15 @@ select:focus {
     display: none;
   }
 }
+
+/* Ocultar setinhas do input number no Chrome, Safari, Edge */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Ocultar setinhas do input number no Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+}

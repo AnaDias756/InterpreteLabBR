@@ -1,7 +1,7 @@
 analito_id,sexo,idade_min,idade_max,limite_inferior,limite_superior,especialidade
 # SÉRIE VERMELHA (Eritrograma)
 Hemácias,M,18,59,4.4,5.8,"Hematologia,Clínico"
-Hemácias,M,60,120,4.0,5.6,"Hematologia,Clínico"
+Hemácias,M,60,120,4.0,5.6,"Hematologia"
 Hemácias,F,18,59,3.9,5.1,"Hematologia,Clínico"
 Hemácias,F,60,120,3.8,5.1,"Hematologia,Clínico"
 Hemoglobina,M,18,59,13.1,16.9,"Hematologia,Clínico"
