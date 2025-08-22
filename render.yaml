@@ -3,15 +3,28 @@ services:
     name: interpretador-lab-backend
     env: python
     plan: free
-    buildCommand: pip install -r requirements-backend.txt
-    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements-backend.txt
+    startCommand: |
+      uvicorn backend.main:app --host 0.0.0.0 --port $PORT --timeout-keep-alive 300 --timeout-graceful-shutdown 30
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
       - key: PORT
         value: 10000
+      - key: PYTHONPATH
+        value: .
+      - key: UVICORN_WORKERS
+        value: 1
     healthCheckPath: /health
     autoDeploy: true
     branch: main
     rootDir: .
     region: oregon
+    # Configurações para melhorar estabilidade
+    disk:
+      name: interpretador-lab-disk
+      size: 1GB
+    # Configurações de timeout mais generosas
+    maxShutdownDelaySeconds: 30

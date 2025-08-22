@@ -48,6 +48,42 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Evento de startup para verificar dependências
+@app.on_event("startup")
+async def startup_event():
+    """Verificar se todas as dependências estão funcionando na inicialização."""
+    logger.info("🚀 Iniciando API do Interpretador de Laudos...")
+    
+    try:
+        # Testar imports críticos
+        from services.pdf_parser import extract_lab_values
+        from services.rule_engine import apply_rules
+        from services.specialty_selector import select_specialties
+        from services.nlg import build_briefing
+        logger.info("✅ Todos os serviços importados com sucesso")
+        
+        # Verificar arquivos de dados
+        import os
+        data_files = ['data/patterns.csv', 'data/guideline_map.csv']
+        for file_path in data_files:
+            if os.path.exists(file_path):
+                logger.info(f"✅ Arquivo encontrado: {file_path}")
+            else:
+                logger.warning(f"⚠️ Arquivo não encontrado: {file_path}")
+        
+        logger.info("🎉 API inicializada com sucesso!")
+        
+    except Exception as e:
+        logger.error(f"❌ Erro durante inicialização: {e}")
+        logger.error(f"📍 Traceback: {traceback.format_exc()}")
+        # Não falhar a inicialização, apenas logar o erro
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup durante o shutdown."""
+    logger.info("🛑 API sendo finalizada...")
+    logger.info("👋 Shutdown concluído")
+
 # 🆕 Adicionar CORS
 app.add_middleware(
     CORSMiddleware,
@@ -65,7 +101,86 @@ app.add_middleware(
 @app.get("/health")
 async def health_check():
     """Endpoint para verificar se a API está funcionando."""
-    return {"status": "healthy", "message": "API esta funcionando corretamente"}
+    import os
+    import psutil
+    import time
+    
+    try:
+        # Verificar recursos do sistema
+        memory_info = psutil.virtual_memory()
+        disk_info = psutil.disk_usage('/')
+        
+        # Verificar se os serviços críticos estão funcionando
+        test_import = True
+        try:
+            # Como os imports já foram feitos no topo, apenas verificar se estão disponíveis
+            # Não precisamos reimportar, apenas verificar se as funções existem
+            if 'extract_lab_values' in globals() and 'apply_rules' in globals():
+                test_import = True
+            else:
+                test_import = False
+        except Exception:
+            test_import = False
+        
+        health_data = {
+            "status": "healthy",
+            "message": "API esta funcionando corretamente",
+            "timestamp": time.time(),
+            "version": "1.0.0",
+            "system": {
+                "memory_usage_percent": memory_info.percent,
+                "disk_usage_percent": (disk_info.used / disk_info.total) * 100,
+                "python_version": os.environ.get('PYTHON_VERSION', 'unknown'),
+                "port": os.environ.get('PORT', 'unknown')
+            },
+            "services": {
+                "imports_working": test_import,
+                "pdf_processing": test_import
+            }
+        }
+        
+        # Se algum serviço crítico não estiver funcionando, retornar status degraded
+        if not test_import:
+            health_data["status"] = "degraded"
+            health_data["message"] = "Alguns serviços não estão funcionando corretamente"
+        
+        return health_data
+        
+    except Exception as e:
+        logger.error(f"❌ Erro no health check: {e}")
+        return {
+            "status": "unhealthy",
+            "message": f"Erro no health check: {str(e)}",
+            "timestamp": time.time()
+        }
+
+@app.get("/debug")
+async def debug_info():
+    """Endpoint para informações de debug (apenas para desenvolvimento)."""
+    import os
+    import sys
+    
+    try:
+        debug_data = {
+            "python_version": sys.version,
+            "working_directory": os.getcwd(),
+            "environment_variables": {
+                "PYTHON_VERSION": os.environ.get('PYTHON_VERSION'),
+                "PORT": os.environ.get('PORT'),
+                "PYTHONPATH": os.environ.get('PYTHONPATH')
+            },
+            "files_exist": {
+                "data/patterns.csv": os.path.exists('data/patterns.csv'),
+                "data/guideline_map.csv": os.path.exists('data/guideline_map.csv'),
+                "backend/services/pdf_parser.py": os.path.exists('backend/services/pdf_parser.py')
+            },
+            "sys_path": sys.path[:5]  # Primeiros 5 itens do sys.path
+        }
+        
+        return debug_data
+        
+    except Exception as e:
+        return {"error": str(e)}
 
 @app.post("/interpret", response_model=InterpretationResponse)
 async def interpret_results(

@@ -24,3 +24,6 @@ python-dotenv>=1.0.0
 
 # Validação e tipos
 pydantic>=2.0.0
+
+# Monitoramento do sistema
+psutil>=5.9.0
