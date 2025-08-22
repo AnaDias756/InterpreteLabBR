@@ -54,7 +54,8 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",  # React dev server
         "https://interpretlabbr.netlify.app",  # Netlify production
-        "https://*.netlify.app",  # Netlify preview deployments
+        "https://interpretador-lab-backend.onrender.com",  # Backend URL
+        "*",  # Permitir todas as origens temporariamente para debug
     ],
     allow_credentials=True,
     allow_methods=["*"],

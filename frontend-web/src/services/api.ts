@@ -8,6 +8,9 @@ const api = axios.create({
   timeout: 300000, // 5 minutos para aguardar cold start do Render
   headers: {
     'Accept': 'application/json',
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
   },
 });
 

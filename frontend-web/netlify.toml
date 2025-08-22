@@ -9,3 +9,4 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  REACT_APP_API_URL = "https://interpretador-lab-backend.onrender.com"

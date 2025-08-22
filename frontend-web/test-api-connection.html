@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Conexão API</title>
+</head>
+<body>
+    <h1>Teste de Conexão com a API</h1>
+    <button onclick="testConnection()">Testar Conexão</button>
+    <div id="result"></div>
+
+    <script>
+        async function testConnection() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testando conexão...';
+            
+            try {
+                const response = await fetch('https://interpretador-lab-backend.onrender.com/health', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                    },
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = `<p style="color: green;">✅ Conexão bem-sucedida!</p><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                } else {
+                    resultDiv.innerHTML = `<p style="color: red;">❌ Erro HTTP: ${response.status} - ${response.statusText}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color: red;">❌ Erro de conexão: ${error.message}</p>`;
+                console.error('Erro detalhado:', error);
+            }
+        }
+        
+        // Testar automaticamente ao carregar a página
+        window.onload = function() {
+            testConnection();
+        };
+    </script>
+</body>
+</html>
