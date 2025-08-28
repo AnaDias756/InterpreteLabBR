@@ -64,7 +64,7 @@ async def startup_event():
         
         # Verificar arquivos de dados
         import os
-        data_files = ['data/patterns.csv', 'data/guideline_map.csv']
+        data_files = ['../data/patterns.csv', '../data/guideline_map.csv']
         for file_path in data_files:
             if os.path.exists(file_path):
                 logger.info(f"✅ Arquivo encontrado: {file_path}")
@@ -102,14 +102,9 @@ app.add_middleware(
 async def health_check():
     """Endpoint para verificar se a API está funcionando."""
     import os
-    import psutil
     import time
     
     try:
-        # Verificar recursos do sistema
-        memory_info = psutil.virtual_memory()
-        disk_info = psutil.disk_usage('/')
-        
         # Verificar se os serviços críticos estão funcionando
         test_import = True
         try:
@@ -128,8 +123,6 @@ async def health_check():
             "timestamp": time.time(),
             "version": "1.0.0",
             "system": {
-                "memory_usage_percent": memory_info.percent,
-                "disk_usage_percent": (disk_info.used / disk_info.total) * 100,
                 "python_version": os.environ.get('PYTHON_VERSION', 'unknown'),
                 "port": os.environ.get('PORT', 'unknown')
             },
@@ -191,15 +184,26 @@ async def interpret_results(
     """
     Analisa um laudo laboratorial em PDF para interpretar os resultados.
     """
-    # Validações de entrada
+    # Log detalhado dos dados recebidos para debug
+    logger.info(f"🔍 Dados recebidos - Arquivo: {file.filename}, Gênero: {genero}, Idade: {idade}")
+    
+    # Validações de entrada com logging detalhado
     if not file.filename or not file.filename.lower().endswith('.pdf'):
-        raise HTTPException(status_code=400, detail="Formato de arquivo inválido. Por favor, envie um PDF.")
+        logger.error(f"❌ Arquivo inválido: {file.filename}")
+        raise HTTPException(status_code=422, detail="Formato de arquivo inválido. Por favor, envie um PDF.")
     
     if genero.lower() not in ['masculino', 'feminino']:
-        raise HTTPException(status_code=400, detail="Gênero deve ser 'masculino' ou 'feminino'.")
+        logger.error(f"❌ Gênero inválido: {genero}")
+        raise HTTPException(status_code=422, detail="Gênero deve ser 'masculino' ou 'feminino'.")
     
+    # Aceitar idade 0 como válida (quando não informada) ou entre 1 e 150
     if idade < 0 or idade > 150:
-        raise HTTPException(status_code=400, detail="Idade deve estar entre 0 e 150 anos.")
+        logger.error(f"❌ Idade inválida: {idade}")
+        raise HTTPException(status_code=422, detail="Idade deve estar entre 0 e 150 anos.")
+    
+    # Se idade for 0, usar um valor padrão para análise (ex: 30 anos)
+    idade_para_analise = idade if idade > 0 else 30
+    logger.info(f"📊 Usando idade {idade_para_analise} para análise (original: {idade})")
 
     try:
         logger.info(f"📋 Processando arquivo: {file.filename} (tamanho: {file.size} bytes)")
@@ -272,7 +276,7 @@ async def interpret_results(
 
         # 2. Aplicar motor de regras
         try:
-            analyzed_findings = apply_rules(raw_values, genero=genero, idade=idade)
+            analyzed_findings = apply_rules(raw_values, genero=genero, idade=idade_para_analise)
             logger.info(f"⚙️ Regras aplicadas: {len(analyzed_findings)} achados")
         except Exception as e:
             logger.error(f"❌ Erro no motor de regras: {e}")

@@ -7,16 +7,18 @@ interface ResultsDisplayProps {
 }
 
 const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, onReset }) => {
-  const getSeverityColor = (severidade: number) => {
-    if (severidade >= 3) return '#dc3545';
-    if (severidade >= 2) return '#fd7e14';
-    return '#ffc107';
+  const getResultColor = (resultado: string) => {
+    const resultadoLower = resultado.toLowerCase();
+    if (resultadoLower === 'alto') return '#dc3545'; // Vermelho
+    if (resultadoLower === 'baixo') return '#007bff'; // Azul
+    return '#28a745'; // Verde para Normal
   };
 
-  const getSeverityText = (severidade: number) => {
-    if (severidade >= 3) return 'Alta';
-    if (severidade >= 2) return 'Média';
-    return 'Baixa';
+  const getResultText = (resultado: string) => {
+    const resultadoLower = resultado.toLowerCase();
+    if (resultadoLower === 'alto') return 'Alto';
+    if (resultadoLower === 'baixo') return 'Baixo';
+    return 'Normal';
   };
 
   return (
@@ -38,10 +40,10 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, onReset }) => 
                   <div className="finding-header">
                     <h4>{finding.analito}</h4>
                     <span 
-                      className="severity-badge"
-                      style={{ backgroundColor: getSeverityColor(finding.severidade) }}
+                      className="result-badge"
+                      style={{ backgroundColor: getResultColor(finding.resultado) }}
                     >
-                      {getSeverityText(finding.severidade)}
+                      {getResultText(finding.resultado)}
                     </span>
                   </div>
                   
