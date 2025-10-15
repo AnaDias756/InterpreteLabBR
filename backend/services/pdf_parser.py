@@ -3,6 +3,7 @@ import csv
 import io
 import os
 import logging
+import unicodedata
 from PyPDF2 import PdfReader
 from PyPDF2.errors import PdfReadError
 from typing import List, Union
@@ -108,12 +109,22 @@ def normalize_analito_name(analito: str) -> str:
         'leucocitos_novo': 'leucocitos',
         'neutrofilos_novo': 'neutrofilos',
         'eosinofilos_novo': 'eosinofilos',
+        'eosinofilos_formato_exato': 'eosinofilos',
+        'eosinofilos_compacto': 'eosinofilos',
+        'eosinofilos_spaced': 'eosinofilos',
+        'eosinofilos_fragmentado': 'eosinofilos',
+        'eosinofilos_space_tolerant': 'eosinofilos',
+         'eosinofilos_reverse': 'eosinofilos',
+         'eosinofilos_flex': 'eosinofilos',
+         'eosinofilos_percent_only': 'eosinofilos',
+         'eosinofilos_percent_fragmentado': 'eosinofilos',
         'basofilos_novo': 'basofilos',
         'linfocitos_novo': 'linfocitos',
         'monocitos_novo': 'monocitos',
         'leucocitos_hemograma': 'leucocitos',
         'neutrofilos_hemograma': 'neutrofilos',
         'eosinofilos_hemograma': 'eosinofilos',
+        'eosinofilos_hemograma_alt': 'eosinofilos',
         'basofilos_hemograma': 'basofilos',
         'linfocitos_hemograma': 'linfocitos',
         'monocitos_hemograma': 'monocitos'
@@ -204,6 +215,11 @@ def extract_lab_values(pdf_content: Union[str, bytes], patterns_path: str = None
     if len(full_text.strip()) == 0:
         raise Exception("Não foi possível extrair texto do PDF. Possíveis causas: PDF baseado em imagens sem OCR disponível, arquivo corrompido, ou formato não suportado.")
     
+    # Sanitização unicode para normalizar acentos e remover espaços invisíveis
+    full_text = sanitize_unicode_text(full_text)
+    # Normalização de termos fragmentados antes de aplicar regex
+    full_text = normalize_fragmented_terms(full_text)
+
     # Lê os padrões do CSV
     try:
         patterns = []
@@ -237,15 +253,16 @@ def extract_lab_values(pdf_content: Union[str, bytes], patterns_path: str = None
                 logger.debug(f"🎯 {item['analito']}: valor bruto '{valor_str}'")
                 
                 # Processamento inteligente de separadores de milhares vs decimais
+                normalized_name = normalize_analito_name(item["analito"])  # usa mapeamento interno
                 if "." in valor_str:
                     partes = valor_str.split(".")
                     if len(partes) == 2 and len(partes[1]) == 3:  # formato X.XXX = separador de milhares
                         # Para leucócitos, neutrófilos, linfócitos, plaquetas: ponto é separador de milhares
-                        if item["analito"].lower() in ["leucocitos", "leucocitos_novo", "neutrófilos", "linfócitos"] or "plaquetas" in item["analito"].lower():
+                        if normalized_name in ["leucocitos", "neutrofilos", "linfocitos", "plaquetas"]:
                             valor_str = valor_str.replace(".", "")  # 7.010 → 7010, 282.000 → 282000
                 
                 # Para plaquetas, vírgula é sempre separador de milhares
-                if "," in valor_str and "plaquetas" in item["analito"].lower():
+                if "," in valor_str and normalized_name == "plaquetas":
                     valor_str = valor_str.replace(",", "")  # 282,000 → 282000
                 
                 # Processamento padrão (agora sem conversão desnecessária)
@@ -438,6 +455,18 @@ def extract_text_with_medical_ocr(img: Image.Image, page_num: int) -> str:
     
     return best_text
 
+def sanitize_unicode_text(text: str) -> str:
+    """Normaliza acentos (NFKC) e remove caracteres invisíveis/controle que atrapalham regex."""
+    if not text:
+        return text
+    normalized = unicodedata.normalize('NFKC', text)
+    for ch in ("\u200B","\u200C","\u200D","\u2060","\u00A0"):
+        normalized = normalized.replace(ch, " ")
+    import re
+    normalized = re.sub(r"\s{2,}", " ", normalized)
+    return normalized
+
+
 def post_process_medical_text(text: str, doc_type: str) -> str:
     """
     Aplica pós-processamento específico para texto médico
@@ -481,6 +510,43 @@ def post_process_medical_text(text: str, doc_type: str) -> str:
                 processed_text = processed_text.replace(wrong, correct)
     
     return processed_text
+
+# Normalização de termos com espaçamento interno incomum
+def normalize_fragmented_terms(text: str) -> str:
+    """Normaliza termos e tokens numéricos fragmentados (ex.: 'E o s i n ó f i l o s', '5 , 0 %', 'μ L')."""
+    import re
+    processed = text
+    # 1) Termos médicos com letras separadas por espaços
+    label_patterns = [
+        r"(?i)E\s*o\s*s\s*i\s*n\s*[óo]\s*f\s*i\s*l\s*o\s*s",
+        r"(?i)N\s*e\s*u\s*t\s*r\s*[óo]\s*f\s*i\s*l\s*o\s*s",
+        r"(?i)L\s*i\s*n\s*f\s*[óo]\s*c\s*i\s*t\s*o\s*s",
+        r"(?i)M\s*o\s*n\s*[óo]\s*c\s*i\s*t\s*o\s*s",
+        r"(?i)B\s*a\s*s\s*[óo]\s*f\s*i\s*l\s*o\s*s",
+        r"(?i)H\s*e\s*m\s*[áa]\s*c\s*i\s*a\s*s",
+        r"(?i)L\s*e\s*u\s*c\s*[óo]\s*c\s*i\s*t\s*o\s*s",
+        r"(?i)P\s*l\s*a\s*q\s*u\s*e\s*t\s*a\s*s",
+    ]
+    replacements = [
+        "Eosinófilos", "Neutrófilos", "Linfócitos", "Monócitos", "Basófilos",
+        "Hemácias", "Leucócitos", "Plaquetas"
+    ]
+    for pat, rep in zip(label_patterns, replacements):
+        processed = re.sub(pat, rep, processed)
+
+    # 2) Colapsar espaços em números e símbolos (vírgula, ponto, porcento)
+    # Ex.: '5 , 0' -> '5,0', '7 . 010' -> '7.010', '3 5' -> '35'
+    processed = re.sub(r"(\d)\s*,\s*(\d)", r"\1,\2", processed)
+    processed = re.sub(r"(\d)\s*\.\s*(\d{3})", r"\1.\2", processed)
+    processed = re.sub(r"(\d)\s+([\d]{1,3})(?=[^\d])", r"\1\2", processed)
+    processed = re.sub(r"(\d)\s*%", r"\1%", processed)
+
+    # 3) Colapsar espaços em unidades comuns
+    processed = re.sub(r"μ\s*L", "μL", processed)
+    processed = re.sub(r"mm\s*3", "mm3", processed)
+    processed = re.sub(r"/\s*μ\s*L", "/μL", processed)
+
+    return processed
 
 def calculate_medical_text_confidence(text: str, doc_type: str) -> float:
     """

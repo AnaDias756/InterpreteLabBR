@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { InterpretationResponse } from '../types';
 
 interface ResultsDisplayProps {
@@ -20,6 +20,21 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, onReset }) => 
     if (resultadoLower === 'baixo') return 'Baixo';
     return 'Normal';
   };
+
+  // Logs de debug para garantir que Eosinófilos esteja presente
+  useEffect(() => {
+    try {
+      console.log('Resultados completos recebidos:', results);
+      console.log('lab_values_raw:', results?.lab_values_raw);
+      console.table(results?.lab_values_raw || []);
+      const eos = (results?.lab_values_raw || []).find(
+        (v) => v.analito?.toLowerCase().includes('eosinófilos') || v.analito?.toLowerCase().includes('eosinofilos')
+      );
+      console.log('Eosinófilos presente?', !!eos, eos);
+    } catch (e) {
+      console.warn('Falha ao logar resultados', e);
+    }
+  }, [results]);
 
   return (
     <div className="results-container">
@@ -83,6 +98,26 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, onReset }) => 
         <div className="no-findings">
           <h3>✅ Nenhum Achado Anormal</h3>
           <p>Todos os valores analisados estão dentro dos parâmetros normais.</p>
+        </div>
+      )}
+
+      {/* Valores Extraídos - sempre visível se houver */}
+      {results.lab_values_raw && results.lab_values_raw.length > 0 && (
+        <div className="findings-section">
+          <h3>🔍 Valores Extraídos do PDF ({results.lab_values_raw.length})</h3>
+          <div className="findings-grid">
+            {results.lab_values_raw.map((item, index) => (
+              <div key={`${item.analito}-${index}`} className="finding-card">
+                <div className="finding-header">
+                  <h4>{item.analito}</h4>
+                  <span className="severity-badge" style={{ background: '#6c757d' }}>Extraído</span>
+                </div>
+                <div className="finding-details">
+                  <p><strong>Valor:</strong> {item.valor}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

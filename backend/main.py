@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 # Imports relativos para execução como módulo ou absolutos para execução direta
 try:
     from .services.pdf_parser import extract_lab_values
-    from .services.rule_engine import apply_rules
+    from .services.rule_engine import apply_rules, get_display_name
     from .services.specialty_selector import select_specialties
     from .services.nlg import build_briefing
 except ImportError:
@@ -36,10 +36,15 @@ class LabFinding(BaseModel):
     descricao_achado: str
     diretriz: str
 
+class RawLabValue(BaseModel):
+    analito: str
+    valor: float
+
 class InterpretationResponse(BaseModel):
     lab_findings: List[LabFinding]
     recommended_specialties: List[str]
     patient_briefing: str
+    lab_values_raw: List[RawLabValue]
 
 # --- Aplicação FastAPI ---
 app = FastAPI(
@@ -269,9 +274,22 @@ async def interpret_results(
                 )
         
         if not raw_values:
+            logger.warning(
+                "Nenhum valor laboratorial encontrado. Possíveis causas: PDF corrompido/não suportado, texto ilegível, ou ausência de resultados. Sugestões: reenviar PDF válido, verificar qualidade/legibilidade, garantir texto selecionável."
+            )
             raise HTTPException(
                 status_code=422,
-                detail="Nenhum valor laboratorial encontrado no PDF. Verifique se o arquivo contém resultados de exames laboratoriais."
+                detail=(
+                    "Nenhum valor laboratorial foi encontrado no PDF.\n\n"
+                    "Possíveis causas:\n"
+                    "- PDF corrompido ou com formato/layout não suportado;\n"
+                    "- Texto do laudo ilegível, muito distorcido ou apenas imagem;\n"
+                    "- O arquivo não contém resultados de exames laboratoriais.\n\n"
+                    "Como resolver:\n"
+                    "- Tente enviar outro PDF ou exportar novamente o laudo em melhor qualidade;\n"
+                    "- Verifique se o PDF possui texto selecionável (não apenas imagens);\n"
+                    "- Se o problema persistir, verifique se o laudo segue formatos comuns de laboratórios."
+                )
             )
 
         # 2. Aplicar motor de regras
@@ -305,11 +323,18 @@ async def interpret_results(
             # Briefing é opcional, não deve falhar a requisição
             briefing = "Briefing temporariamente indisponível. Os resultados dos exames estão disponíveis acima."
 
+        # Preparar lista de valores brutos com nomes amigáveis
+        raw_display_values = [
+            {"analito": get_display_name(v["analito"]), "valor": v["valor"]}
+            for v in raw_values
+        ]
+
         logger.info("✅ Processamento concluído com sucesso")
         return {
             "lab_findings": analyzed_findings,
             "recommended_specialties": specialties,
-            "patient_briefing": briefing
+            "patient_briefing": briefing,
+            "lab_values_raw": raw_display_values
         }
     
     except HTTPException:

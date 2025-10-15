@@ -3,6 +3,7 @@ import FileUpload from './components/FileUpload';
 import PatientForm from './components/PatientForm';
 import ResultsDisplay from './components/ResultsDisplay';
 import LoadingSpinner from './components/LoadingSpinner';
+import ErrorAlert from './components/ErrorAlert';
 import { interpretLab, getApiStatus } from './services/api';
 import { InterpretationResponse, PatientData } from './types';
 import { 
@@ -13,6 +14,7 @@ import {
 } from './utils/mobileDetection';
 import { applyMobileOptimizations } from './utils/mobileOptimizations';
 import './App.css';
+import References from './components/References';
 
 function App() {
   const [file, setFile] = useState<File | null>(null);
@@ -23,6 +25,7 @@ function App() {
   const [results, setResults] = useState<InterpretationResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
   const [apiStatus, setApiStatus] = useState<'checking' | 'online' | 'offline' | 'slow'>('checking');
   const [apiMessage, setApiMessage] = useState<string>('Verificando conexão...');
   const [connectionAttempts, setConnectionAttempts] = useState(0);
@@ -122,6 +125,7 @@ function App() {
 
     setLoading(true);
     setError(null);
+    setErrorDetail(null);
     
     MobileDebugger.log('Iniciando análise de arquivo', {
       fileName: file.name,
@@ -144,14 +148,19 @@ function App() {
       });
     } catch (err: any) {
       let errorMessage = 'Erro ao analisar o laudo';
-      
-      if (err.message) {
+      let errorDetailMsg: string | null = null;
+
+      if (err.response?.status === 422 && err.response?.data?.detail) {
+        errorDetailMsg = err.response.data.detail;
+        errorMessage = 'Não foi possível interpretar o laudo enviado.';
+      } else if (err.message) {
         errorMessage = err.message;
       } else if (err.response?.data?.detail) {
         errorMessage = err.response.data.detail;
       }
-      
+
       setError(errorMessage);
+      setErrorDetail(errorDetailMsg);
       
       MobileDebugger.log('Erro durante análise', {
         error: errorMessage,
@@ -225,12 +234,29 @@ function App() {
             {error && (
               <div className="error-message">
                 ❌ {error}
+                {errorDetail && (
+                  <ErrorAlert
+                    title="Não foi possível interpretar o laudo"
+                    detail={errorDetail}
+                    causes={[
+                      'PDF corrompido ou com formato/layout não suportado',
+                      'Texto do laudo ilegível, muito distorcido ou apenas imagem',
+                      'O arquivo não contém resultados de exames laboratoriais'
+                    ]}
+                    suggestions={[
+                      'Tente enviar outro PDF ou exportar novamente o laudo em melhor qualidade',
+                      'Verifique se o PDF possui texto selecionável (não apenas imagens)',
+                      'Se o problema persistir, verifique se o laudo segue formatos comuns de laboratórios'
+                    ]}
+                  />
+                )}
               </div>
             )}
           </div>
         ) : (
           <ResultsDisplay results={results} onReset={handleReset} />
         )}
+        <References />
       </main>
     </div>
   );
