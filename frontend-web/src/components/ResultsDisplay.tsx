@@ -36,6 +36,23 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, onReset }) => 
     }
   }, [results]);
 
+  // ==== Achados Normais: calcular valores dentro da faixa de referência ====
+  const normalValues = React.useMemo(() => {
+    const raw = results?.lab_values_raw || [];
+    const abnormalSet = new Set((results?.lab_findings || []).map(f => (f.analito || '').toLowerCase().trim()));
+    return raw.filter(v => !abnormalSet.has((v.analito || '').toLowerCase().trim()));
+  }, [results]);
+
+  // Logs de console para Achados Normais
+  useEffect(() => {
+    try {
+      console.log('Achados Normais calculados:', normalValues.length);
+      console.table(normalValues || []);
+    } catch (e) {
+      console.warn('Falha ao logar achados normais', e);
+    }
+  }, [normalValues]);
+
   return (
     <div className="results-container">
       <div className="results-header">
@@ -101,16 +118,17 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, onReset }) => 
         </div>
       )}
 
-      {/* Valores Extraídos - sempre visível se houver */}
-      {results.lab_values_raw && results.lab_values_raw.length > 0 && (
+
+      {/* Achados Normais - apenas valores dentro da referência, abaixo de Valores Extraídos */}
+      {normalValues && normalValues.length > 0 && (
         <div className="findings-section">
-          <h3>🔍 Valores Extraídos do PDF ({results.lab_values_raw.length})</h3>
+          <h3>✅ Achados Normais ({normalValues.length})</h3>
           <div className="findings-grid">
-            {results.lab_values_raw.map((item, index) => (
-              <div key={`${item.analito}-${index}`} className="finding-card">
+            {normalValues.map((item, index) => (
+              <div key={`${item.analito}-normal-${index}`} className="finding-card">
                 <div className="finding-header">
                   <h4>{item.analito}</h4>
-                  <span className="severity-badge" style={{ background: '#6c757d' }}>Extraído</span>
+                  <span className="result-badge" style={{ backgroundColor: '#28a745' }}>Normal</span>
                 </div>
                 <div className="finding-details">
                   <p><strong>Valor:</strong> {item.valor}</p>
@@ -120,6 +138,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, onReset }) => 
           </div>
         </div>
       )}
+      
     </div>
   );
 };

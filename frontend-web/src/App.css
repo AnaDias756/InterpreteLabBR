@@ -384,7 +384,7 @@ body {
   font-size: 1rem;
 }
 
-.severity-badge {
+.severity-badge, .result-badge {
   padding: 0.25rem 0.5rem;
   border-radius: 12px;
   font-size: 0.75rem;
