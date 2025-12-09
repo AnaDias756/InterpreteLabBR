@@ -213,6 +213,11 @@ function App() {
       <main className="App-main">
         {!results ? (
           <div className="upload-section">
+            <div className="supported-exams-info">
+              <h3>📋 Tipo de Exame Suportado</h3>
+              <p>🩸 O sistema aceita apenas laudos de <strong>Hemograma Completo</strong>.</p>
+            </div>
+              
             <FileUpload file={file} onFileSelect={setFile} />
             <PatientForm data={patientData} onChange={setPatientData} />
             
@@ -239,11 +244,13 @@ function App() {
                     title="Não foi possível interpretar o laudo"
                     detail={errorDetail}
                     causes={[
+                      'O tipo de exame enviado pode não estar entre os suportados atualmente. Apenas são aceitos exames do tipo Hemograma neste sistema.',
                       'PDF corrompido ou com formato/layout não suportado',
                       'Texto do laudo ilegível, muito distorcido ou apenas imagem',
                       'O arquivo não contém resultados de exames laboratoriais'
                     ]}
                     suggestions={[
+                      'Verifique se o laudo é de um dos tipos suportados: Hemograma, Coagulograma ou Bioquímica Básica',
                       'Tente enviar outro PDF ou exportar novamente o laudo em melhor qualidade',
                       'Verifique se o PDF possui texto selecionável (não apenas imagens)',
                       'Se o problema persistir, verifique se o laudo segue formatos comuns de laboratórios'
