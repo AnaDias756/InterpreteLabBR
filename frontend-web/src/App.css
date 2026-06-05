@@ -869,3 +869,79 @@ input[type="number"] {
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   }
 }
+
+/* ===== Comparação de Referências (PNS x Laboratorial) ===== */
+.reference-comparison-section {
+  margin-top: 24px;
+  padding: 18px;
+  background: #fafbfc;
+  border: 1px solid #e1e4e8;
+  border-radius: 12px;
+}
+
+.reference-comparison-section h3 {
+  margin: 0 0 10px 0;
+}
+
+.ref-explain {
+  font-size: 0.9rem;
+  color: #444;
+  line-height: 1.5;
+  margin: 0 0 10px 0;
+}
+
+.ref-divergence-note {
+  font-size: 0.9rem;
+  color: #8a6d00;
+  background: #fff8e1;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: 0 0 12px 0;
+}
+
+.ref-table-wrapper {
+  overflow-x: auto;
+}
+
+.ref-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.ref-table th,
+.ref-table td {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid #eaecef;
+}
+
+.ref-table th {
+  background: #f0f2f5;
+  font-weight: 600;
+  color: #333;
+}
+
+.ref-row-divergent {
+  background: #fff8e1;
+}
+
+.ref-flag {
+  color: #c77700;
+}
+
+.ref-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.ref-footnote {
+  font-size: 0.78rem;
+  color: #777;
+  margin: 12px 0 0 0;
+  line-height: 1.45;
+}

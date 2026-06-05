@@ -8,10 +8,18 @@ try:
     current_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(os.path.dirname(current_dir))
     guideline_path = os.path.join(project_root, "data", "guideline_map.csv")
-    df_regras = pd.read_csv(guideline_path)
+    df_regras = pd.read_csv(guideline_path, comment="#")
 except FileNotFoundError:
     print("AVISO: Arquivo de regras 'guideline_map.csv' não encontrado.")
     df_regras = pd.DataFrame()
+
+# Referência clássica/laboratorial (impressa no laudo do SUS), para comparação
+try:
+    lab_ref_path = os.path.join(project_root, "data", "lab_reference.csv")
+    df_lab_ref = pd.read_csv(lab_ref_path, comment="#")
+except FileNotFoundError:
+    print("AVISO: Arquivo 'lab_reference.csv' não encontrado.")
+    df_lab_ref = pd.DataFrame()
 
 
 def normalize_analito_name(analito_name: str) -> str:
@@ -73,6 +81,81 @@ def get_display_name(analito_id: str) -> str:
         'rdw': 'RDW'
     }
     return display_map.get(base, base.capitalize())
+
+def _normalize_text(s: str) -> str:
+    if not isinstance(s, str):
+        s = str(s)
+    return ''.join(c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn').lower()
+
+
+def _get_interval(df, analito_norm_key: str, sexo_paciente: str, idade: int):
+    """Retorna (limite_inferior, limite_superior) de um analito num DataFrame de referência."""
+    if df.empty:
+        return None
+    aplicaveis = df[
+        (df['analito_id'].apply(_normalize_text) == analito_norm_key)
+        & (df['idade_min'] <= idade)
+        & (df['idade_max'] >= idade)
+        & (df['sexo'].apply(_normalize_text).isin([_normalize_text(sexo_paciente), 'todos']))
+    ]
+    if aplicaveis.empty:
+        return None
+    # Prioriza regra específica do sexo sobre 'Todos'
+    linha = aplicaveis.sort_values(by='sexo', ascending=False).iloc[0]
+    return float(linha['limite_inferior']), float(linha['limite_superior'])
+
+
+def _classificar(valor: float, intervalo) -> str:
+    if intervalo is None:
+        return "sem referência"
+    inf, sup = intervalo
+    if valor < inf:
+        return "baixo"
+    if valor > sup:
+        return "alto"
+    return "normal"
+
+
+def comparar_referencias(lab_values: List[Dict], genero: str, idade: int) -> List[Dict]:
+    """
+    Classifica cada analito segundo a referência da PNS (população brasileira)
+    e a referência clássica/laboratorial, sinalizando divergências.
+    """
+    sexo_map = {'masculino': 'M', 'feminino': 'F'}
+    sexo_paciente = sexo_map.get(genero.lower(), 'Todos')
+
+    comparacoes = []
+    for valor_exame in lab_values:
+        analito_id = valor_exame["analito"]
+        valor = valor_exame["valor"]
+        chave = _normalize_text(normalize_analito_name(analito_id))
+
+        intervalo_pns = _get_interval(df_regras, chave, sexo_paciente, idade)
+        intervalo_lab = _get_interval(df_lab_ref, chave, sexo_paciente, idade)
+
+        classif_pns = _classificar(valor, intervalo_pns)
+        classif_lab = _classificar(valor, intervalo_lab)
+
+        # Ignora analitos sem nenhuma referência
+        if intervalo_pns is None and intervalo_lab is None:
+            continue
+
+        divergente = (
+            intervalo_pns is not None
+            and intervalo_lab is not None
+            and classif_pns != classif_lab
+        )
+
+        comparacoes.append({
+            "analito": get_display_name(analito_id),
+            "valor": valor,
+            "classificacao_pns": classif_pns,
+            "classificacao_lab": classif_lab,
+            "divergente": divergente,
+        })
+
+    return comparacoes
+
 
 def apply_rules(lab_values: List[Dict], genero: str, idade: int) -> List[Dict]:
     """

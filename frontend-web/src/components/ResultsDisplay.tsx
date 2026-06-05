@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { InterpretationResponse } from '../types';
+import ReferenceComparison from './ReferenceComparison';
 
 interface ResultsDisplayProps {
   results: InterpretationResponse;
@@ -184,7 +185,11 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, onReset }) => 
           </div>
         </div>
       )}
-      
+
+      {results.comparacao_referencias && results.comparacao_referencias.length > 0 && (
+        <ReferenceComparison itens={results.comparacao_referencias} />
+      )}
+
     </div>
   );
 };

@@ -16,13 +16,13 @@ logger = logging.getLogger(__name__)
 # Imports relativos para execução como módulo ou absolutos para execução direta
 try:
     from .services.pdf_parser import extract_lab_values
-    from .services.rule_engine import apply_rules, get_display_name
+    from .services.rule_engine import apply_rules, get_display_name, comparar_referencias
     from .services.specialty_selector import select_specialties
     from .services.nlg import build_briefing
 except ImportError:
     # Fallback para execução direta
     from services.pdf_parser import extract_lab_values
-    from services.rule_engine import apply_rules, get_display_name
+    from services.rule_engine import apply_rules, get_display_name, comparar_referencias
     from services.specialty_selector import select_specialties
     from services.nlg import build_briefing
 
@@ -40,11 +40,19 @@ class RawLabValue(BaseModel):
     analito: str
     valor: float
 
+class ReferenceComparison(BaseModel):
+    analito: str
+    valor: float
+    classificacao_pns: str
+    classificacao_lab: str
+    divergente: bool
+
 class InterpretationResponse(BaseModel):
     lab_findings: List[LabFinding]
     recommended_specialties: List[str]
     patient_briefing: str
     lab_values_raw: List[RawLabValue]
+    comparacao_referencias: List[ReferenceComparison] = []
 
 class ManualLabValues(BaseModel):
     """Entrada manual de valores de hemograma (sem PDF).
@@ -366,12 +374,16 @@ async def interpret_results(
             for v in raw_values
         ]
 
+        # Comparação entre referência PNS e laboratorial
+        comparacao = comparar_referencias(raw_values, genero=genero, idade=idade_para_analise)
+
         logger.info("✅ Processamento concluído com sucesso")
         return {
             "lab_findings": analyzed_findings,
             "recommended_specialties": specialties,
             "patient_briefing": briefing,
-            "lab_values_raw": raw_display_values
+            "lab_values_raw": raw_display_values,
+            "comparacao_referencias": comparacao
         }
     
     except HTTPException:
@@ -436,12 +448,16 @@ async def interpret_manual(dados: ManualLabValues):
             for v in raw_values
         ]
 
+        # Comparação entre referência PNS e laboratorial
+        comparacao = comparar_referencias(raw_values, genero=dados.genero, idade=idade_para_analise)
+
         logger.info("✅ Análise manual concluída com sucesso")
         return {
             "lab_findings": analyzed_findings,
             "recommended_specialties": specialties,
             "patient_briefing": briefing,
-            "lab_values_raw": raw_display_values
+            "lab_values_raw": raw_display_values,
+            "comparacao_referencias": comparacao
         }
 
     except HTTPException:

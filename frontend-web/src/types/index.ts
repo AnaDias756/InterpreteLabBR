@@ -13,11 +13,20 @@ export interface RawLabValue {
   valor: number;
 }
 
+export interface ReferenceComparison {
+  analito: string;
+  valor: number;
+  classificacao_pns: string;
+  classificacao_lab: string;
+  divergente: boolean;
+}
+
 export interface InterpretationResponse {
   lab_findings: LabFinding[];
   recommended_specialties: string[];
   patient_briefing: string;
   lab_values_raw: RawLabValue[];
+  comparacao_referencias?: ReferenceComparison[];
 }
 
 export interface PatientData {
