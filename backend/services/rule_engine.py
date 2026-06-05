@@ -41,7 +41,13 @@ def normalize_analito_name(analito_name: str) -> str:
         'basofilos_hemograma': 'basofilos',
         'linfocitos_hemograma': 'linfocitos',
         'monocitos_hemograma': 'monocitos',
-        'leucocitos_hemograma': 'leucocitos'
+        'leucocitos_hemograma': 'leucocitos',
+        'leucocitos_sus': 'leucocitos',
+        'neutrofilos_sus': 'neutrofilos',
+        'eosinofilos_sus': 'eosinofilos',
+        'basofilos_sus': 'basofilos',
+        'linfocitos_sus': 'linfocitos',
+        'monocitos_sus': 'monocitos'
     }
     
     return mapping.get(analito_lower, analito_lower)
