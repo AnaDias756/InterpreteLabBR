@@ -187,3 +187,7 @@ dist/
 *.temp
 # Local Netlify folder
 .netlify
+
+# Laudos reais com dados pessoais (LGPD) — não versionar
+tests/laudos/
+relatorio_extracao.csv

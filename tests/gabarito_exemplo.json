@@ -1,0 +1,18 @@
+{
+  "hemograma_tabela.pdf": {
+    "hemacias": 4.43,
+    "hemoglobina": 14.6,
+    "hematocrito": 42.6,
+    "vcm": 96.2,
+    "hcm": 33.0,
+    "chcm": 34.3,
+    "rdw": 11.8,
+    "leucocitos": 6970,
+    "neutrofilos": 3548,
+    "eosinofilos": 802,
+    "basofilos": 35,
+    "linfocitos": 2216,
+    "monocitos": 369,
+    "plaquetas": 282000
+  }
+}

@@ -1,10 +1,10 @@
 analito,pattern,grupo_decimal
-leucocitos_sus,"(?i)leuc[óo]citos\s+100\s*%\s+([0-9]{3,6})\s*/\s*[μµu]L",1
-neutrofilos_sus,"(?i)neutr[óo]filos\s+[0-9]{1,2}[.,][0-9]\s*%\s+([0-9]{2,6})\s*/\s*[μµu]L",1
-eosinofilos_sus,"(?i)eosin[óo]filos\s+[0-9]{1,2}[.,][0-9]\s*%\s+([0-9]{1,6})\s*/\s*[μµu]L",1
-basofilos_sus,"(?i)bas[óo]filos\s+[0-9]{1,2}[.,][0-9]\s*%\s+([0-9]{1,6})\s*/\s*[μµu]L",1
-linfocitos_sus,"(?i)linf[óo]citos\s+[0-9]{1,2}[.,][0-9]\s*%\s+([0-9]{2,6})\s*/\s*[μµu]L",1
-monocitos_sus,"(?i)mon[óo]citos\s+[0-9]{1,2}[.,][0-9]\s*%\s+([0-9]{1,6})\s*/\s*[μµu]L",1
+leucocitos_sus,"(?i)leuc[óo]citos\s+100\s*%\s+([0-9][0-9.]*)\s*/\s*[μµu]L",1
+neutrofilos_sus,"(?i)neutr[óo]filos\s+[0-9]{1,2}[.,][0-9]\s*%\s+([0-9][0-9.]*)\s*/\s*[μµu]L",1
+eosinofilos_sus,"(?i)eosin[óo]filos\s+[0-9]{1,2}[.,][0-9]\s*%\s+([0-9][0-9.]*)\s*/\s*[μµu]L",1
+basofilos_sus,"(?i)bas[óo]filos\s+[0-9]{1,2}[.,][0-9]\s*%\s+([0-9][0-9.]*)\s*/\s*[μµu]L",1
+linfocitos_sus,"(?i)linf[óo]citos\s+[0-9]{1,2}[.,][0-9]\s*%\s+([0-9][0-9.]*)\s*/\s*[μµu]L",1
+monocitos_sus,"(?i)mon[óo]citos\s+[0-9]{1,2}[.,][0-9]\s*%\s+([0-9][0-9.]*)\s*/\s*[μµu]L",1
 hemacias,"(?i)(?:eritr[óo]citos|hem[áa]cias)\s+([0-9]+[.,][0-9]{2})(?:\s*(?:10\^6\s*/\s*[μµu]L|milh[õo]es/mm3|/[μµu]L))?",1
 hemacias_milhoes,"(?i)hem[áa]cias\s+([0-9]+,[0-9]+)\s+milh[õo]es/mm³",1
 hemacias_alt,"(?i)eritr[óo]citos\s+([0-9]+[.,][0-9]+)\s+milh[õo]es/mm3",1
