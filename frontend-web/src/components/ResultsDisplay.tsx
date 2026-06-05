@@ -6,6 +6,52 @@ interface ResultsDisplayProps {
   onReset: () => void;
 }
 
+// Renderiza markdown simples (negrito **...** e itálico *...*) dentro de uma linha
+const renderInline = (text: string): React.ReactNode[] => {
+  const nodes: React.ReactNode[] = [];
+  const regex = /\*\*([^*]+)\*\*|\*([^*]+)\*/g;
+  let lastIndex = 0;
+  let key = 0;
+  let match: RegExpExecArray | null;
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      nodes.push(text.slice(lastIndex, match.index));
+    }
+    if (match[1] !== undefined) {
+      nodes.push(<strong key={key++}>{match[1]}</strong>);
+    } else {
+      nodes.push(<em key={key++}>{match[2]}</em>);
+    }
+    lastIndex = regex.lastIndex;
+  }
+  if (lastIndex < text.length) {
+    nodes.push(text.slice(lastIndex));
+  }
+  return nodes;
+};
+
+// Converte o briefing (markdown) em parágrafos, preservando quebras de linha
+const BriefingText: React.FC<{ text: string }> = ({ text }) => {
+  const paragrafos = text.split(/\n{2,}/);
+  return (
+    <>
+      {paragrafos.map((paragrafo, i) => {
+        const linhas = paragrafo.split('\n');
+        return (
+          <p key={i} className="briefing-paragraph">
+            {linhas.map((linha, j) => (
+              <React.Fragment key={j}>
+                {renderInline(linha)}
+                {j < linhas.length - 1 && <br />}
+              </React.Fragment>
+            ))}
+          </p>
+        );
+      })}
+    </>
+  );
+};
+
 const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, onReset }) => {
   const getResultColor = (resultado: string) => {
     const resultadoLower = resultado.toLowerCase();
@@ -107,7 +153,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, onReset }) => 
           <div className="briefing-section">
             <h3>📝 Resumo para o Paciente</h3>
             <div className="briefing-content">
-              {results.patient_briefing}
+              <BriefingText text={results.patient_briefing} />
             </div>
           </div>
         </>

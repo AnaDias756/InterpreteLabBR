@@ -476,6 +476,14 @@ body {
   font-size: 0.95rem;
 }
 
+.briefing-paragraph {
+  margin: 0 0 0.75rem 0;
+}
+
+.briefing-paragraph:last-child {
+  margin-bottom: 0;
+}
+
 .no-findings {
   text-align: center;
   color: #666;
