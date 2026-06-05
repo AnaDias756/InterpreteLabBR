@@ -39,3 +39,33 @@ export async function interpretLabManual(
   });
   return response.data;
 }
+
+// Representa um PDF escolhido pelo usuário (via expo-document-picker).
+export interface PickedPdf {
+  uri: string;
+  name: string;
+  mimeType?: string;
+}
+
+export async function interpretLabPdf(
+  patientData: PatientData,
+  pdf: PickedPdf
+): Promise<InterpretationResponse> {
+  const idade = parseInt(patientData.idade, 10) || 0;
+
+  // No React Native, arquivos vão no FormData como { uri, name, type }.
+  const formData = new FormData();
+  formData.append('file', {
+    uri: pdf.uri,
+    name: pdf.name || 'laudo.pdf',
+    type: pdf.mimeType || 'application/pdf',
+  } as any);
+  formData.append('genero', patientData.genero);
+  formData.append('idade', String(idade));
+
+  const response = await api.post<InterpretationResponse>('/interpret', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 300000, // 5 min: upload + extração + OCR podem demorar
+  });
+  return response.data;
+}

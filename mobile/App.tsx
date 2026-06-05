@@ -11,17 +11,21 @@ import {
   Platform,
 } from 'react-native';
 import { PatientData, ManualLabValues, EMPTY_MANUAL_VALUES, InterpretationResponse } from './src/types';
-import { healthCheck, interpretLabManual } from './src/api';
+import { healthCheck, interpretLabManual, interpretLabPdf, PickedPdf } from './src/api';
 import { colors } from './src/theme';
 import PatientForm from './src/components/PatientForm';
 import ManualEntryForm from './src/components/ManualEntryForm';
+import PdfUpload from './src/components/PdfUpload';
 import Results from './src/components/Results';
 
 type ApiStatus = 'checking' | 'online' | 'offline';
+type InputMode = 'manual' | 'pdf';
 
 export default function App() {
+  const [inputMode, setInputMode] = useState<InputMode>('manual');
   const [patientData, setPatientData] = useState<PatientData>({ genero: 'feminino', idade: '' });
   const [manualValues, setManualValues] = useState<ManualLabValues>(EMPTY_MANUAL_VALUES);
+  const [pdf, setPdf] = useState<PickedPdf | null>(null);
   const [results, setResults] = useState<InterpretationResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,18 +47,24 @@ export default function App() {
   const hasManualValues = Object.values(manualValues).some((v) => v !== '');
 
   const handleAnalyze = async () => {
-    if (!hasManualValues) {
+    if (!patientData.idade) {
+      setError('Informe a idade do paciente.');
+      return;
+    }
+    if (inputMode === 'manual' && !hasManualValues) {
       setError('Informe ao menos um valor de exame.');
       return;
     }
-    if (!patientData.idade) {
-      setError('Informe a idade do paciente.');
+    if (inputMode === 'pdf' && !pdf) {
+      setError('Selecione um arquivo PDF.');
       return;
     }
     setLoading(true);
     setError(null);
     try {
-      const resp = await interpretLabManual(patientData, manualValues);
+      const resp = inputMode === 'pdf'
+        ? await interpretLabPdf(patientData, pdf as PickedPdf)
+        : await interpretLabManual(patientData, manualValues);
       setResults(resp);
     } catch (e: any) {
       const detail = e?.response?.data?.detail;
@@ -67,6 +77,7 @@ export default function App() {
   const handleReset = () => {
     setResults(null);
     setManualValues(EMPTY_MANUAL_VALUES);
+    setPdf(null);
     setError(null);
   };
 
@@ -95,14 +106,32 @@ export default function App() {
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {!results ? (
           <>
+            <View style={styles.modeRow}>
+              {(['manual', 'pdf'] as const).map((m) => (
+                <TouchableOpacity
+                  key={m}
+                  style={[styles.modeBtn, inputMode === m && styles.modeBtnActive]}
+                  onPress={() => { setInputMode(m); setError(null); }}
+                >
+                  <Text style={[styles.modeText, inputMode === m && styles.modeTextActive]}>
+                    {m === 'manual' ? '⌨️  Digitar valores' : '📄  Enviar PDF'}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
             <View style={styles.infoBox}>
               <Text style={styles.infoText}>
-                Digite os valores do seu hemograma para uma avaliação baseada na referência
-                da população adulta brasileira (PNS).
+                {inputMode === 'manual'
+                  ? 'Digite os valores do seu hemograma para uma avaliação baseada na referência da população adulta brasileira (PNS).'
+                  : 'Envie o PDF do seu hemograma. O sistema extrai os valores automaticamente e avalia pela referência da população adulta brasileira (PNS).'}
               </Text>
             </View>
 
-            <ManualEntryForm values={manualValues} onChange={setManualValues} />
+            {inputMode === 'manual'
+              ? <ManualEntryForm values={manualValues} onChange={setManualValues} />
+              : <PdfUpload pdf={pdf} onSelect={setPdf} onError={setError} />}
+
             <PatientForm data={patientData} onChange={setPatientData} />
 
             <TouchableOpacity
@@ -147,6 +176,17 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 18, fontWeight: '700', color: colors.text },
   status: { fontSize: 12, marginTop: 4, fontWeight: '600' },
   content: { padding: 16, paddingBottom: 40 },
+  modeRow: {
+    flexDirection: 'row',
+    backgroundColor: '#e6eaf0',
+    borderRadius: 24,
+    padding: 4,
+    marginBottom: 16,
+  },
+  modeBtn: { flex: 1, paddingVertical: 10, borderRadius: 20, alignItems: 'center' },
+  modeBtnActive: { backgroundColor: colors.primary },
+  modeText: { fontSize: 14, fontWeight: '600', color: colors.textMuted },
+  modeTextActive: { color: '#fff' },
   infoBox: {
     backgroundColor: '#eef4ff',
     borderRadius: 10,
