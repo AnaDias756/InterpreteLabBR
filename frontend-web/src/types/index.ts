@@ -25,6 +25,24 @@ export interface PatientData {
   idade: number | string;
 }
 
+// Valores digitados manualmente (strings, pois vêm dos inputs do formulário)
+export type ManualLabValues = {
+  hemacias: string;
+  hemoglobina: string;
+  hematocrito: string;
+  vcm: string;
+  hcm: string;
+  chcm: string;
+  rdw: string;
+  leucocitos: string;
+  neutrofilos: string;
+  eosinofilos: string;
+  basofilos: string;
+  linfocitos: string;
+  monocitos: string;
+  plaquetas: string;
+};
+
 export interface ApiError {
   detail: string;
 }

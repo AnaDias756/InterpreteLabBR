@@ -1,7 +1,7 @@
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware  # 🆕 Adicionar
 from pydantic import BaseModel, Field
-from typing import List
+from typing import List, Optional
 from dotenv import load_dotenv
 import logging
 import traceback
@@ -22,7 +22,7 @@ try:
 except ImportError:
     # Fallback para execução direta
     from services.pdf_parser import extract_lab_values
-    from services.rule_engine import apply_rules
+    from services.rule_engine import apply_rules, get_display_name
     from services.specialty_selector import select_specialties
     from services.nlg import build_briefing
 
@@ -45,6 +45,43 @@ class InterpretationResponse(BaseModel):
     recommended_specialties: List[str]
     patient_briefing: str
     lab_values_raw: List[RawLabValue]
+
+class ManualLabValues(BaseModel):
+    """Entrada manual de valores de hemograma (sem PDF).
+
+    Todos os analitos são opcionais — a análise é feita apenas com os
+    informados. Valores da série branca (leucócitos, neutrófilos, etc.) e
+    plaquetas devem ser em valor ABSOLUTO (/μL), conforme a referência da PNS.
+    """
+    genero: str = Field(..., description="'masculino' ou 'feminino'.")
+    idade: int = Field(..., ge=0, le=150, description="Idade do paciente em anos.")
+    hemacias: Optional[float] = None
+    hemoglobina: Optional[float] = None
+    hematocrito: Optional[float] = None
+    vcm: Optional[float] = None
+    hcm: Optional[float] = None
+    chcm: Optional[float] = None
+    rdw: Optional[float] = None
+    leucocitos: Optional[float] = None
+    neutrofilos: Optional[float] = None
+    eosinofilos: Optional[float] = None
+    basofilos: Optional[float] = None
+    linfocitos: Optional[float] = None
+    monocitos: Optional[float] = None
+    plaquetas: Optional[float] = None
+
+    def to_lab_values(self) -> List[dict]:
+        """Converte os campos preenchidos na lista esperada pelo motor de regras."""
+        analitos = [
+            "hemacias", "hemoglobina", "hematocrito", "vcm", "hcm", "chcm", "rdw",
+            "leucocitos", "neutrofilos", "eosinofilos", "basofilos",
+            "linfocitos", "monocitos", "plaquetas",
+        ]
+        return [
+            {"analito": nome, "valor": float(getattr(self, nome))}
+            for nome in analitos
+            if getattr(self, nome) is not None
+        ]
 
 # --- Aplicação FastAPI ---
 app = FastAPI(
@@ -347,6 +384,74 @@ async def interpret_results(
         raise HTTPException(
             status_code=500, 
             detail="Erro interno do servidor. Nossa equipe foi notificada e está trabalhando na correção."
+        )
+
+@app.post("/interpret-manual", response_model=InterpretationResponse)
+async def interpret_manual(dados: ManualLabValues):
+    """
+    Analisa valores de hemograma informados manualmente (sem PDF).
+
+    Útil para quem não possui o laudo em PDF suportado, melhorando o acesso.
+    Reaproveita o mesmo motor de regras, seleção de especialidades e briefing.
+    """
+    logger.info(f"📝 Entrada manual - Gênero: {dados.genero}, Idade: {dados.idade}")
+
+    # Validações de entrada
+    if dados.genero.lower() not in ['masculino', 'feminino']:
+        raise HTTPException(status_code=422, detail="Gênero deve ser 'masculino' ou 'feminino'.")
+
+    if dados.idade < 0 or dados.idade > 150:
+        raise HTTPException(status_code=422, detail="Idade deve estar entre 0 e 150 anos.")
+
+    raw_values = dados.to_lab_values()
+    if not raw_values:
+        raise HTTPException(
+            status_code=422,
+            detail="Informe ao menos um valor de exame para análise."
+        )
+
+    # Se idade for 0, usar valor padrão para análise (consistente com /interpret)
+    idade_para_analise = dados.idade if dados.idade > 0 else 30
+    logger.info(f"📊 Analisando {len(raw_values)} valor(es) informado(s) manualmente")
+
+    try:
+        # 1. Aplicar motor de regras
+        analyzed_findings = apply_rules(raw_values, genero=dados.genero, idade=idade_para_analise)
+        logger.info(f"⚙️ Regras aplicadas: {len(analyzed_findings)} achados")
+
+        # 2. Selecionar especialidades
+        specialties = select_specialties(analyzed_findings)
+        logger.info(f"👨‍⚕️ Especialidades selecionadas: {len(specialties)}")
+
+        # 3. Construir o briefing
+        try:
+            briefing = build_briefing(analyzed_findings, specialties)
+        except Exception as e:
+            logger.error(f"❌ Erro na geração do briefing: {e}")
+            briefing = "Briefing temporariamente indisponível. Os resultados dos exames estão disponíveis acima."
+
+        # Lista de valores informados com nomes amigáveis
+        raw_display_values = [
+            {"analito": get_display_name(v["analito"]), "valor": v["valor"]}
+            for v in raw_values
+        ]
+
+        logger.info("✅ Análise manual concluída com sucesso")
+        return {
+            "lab_findings": analyzed_findings,
+            "recommended_specialties": specialties,
+            "patient_briefing": briefing,
+            "lab_values_raw": raw_display_values
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Erro inesperado na análise manual: {e}")
+        logger.error(f"📍 Traceback: {traceback.format_exc()}")
+        raise HTTPException(
+            status_code=500,
+            detail="Erro interno do servidor. Tente novamente."
         )
 
 # Executar servidor quando chamado diretamente

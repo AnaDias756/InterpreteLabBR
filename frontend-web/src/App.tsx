@@ -1,23 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import FileUpload from './components/FileUpload';
 import PatientForm from './components/PatientForm';
+import ManualEntryForm from './components/ManualEntryForm';
 import ResultsDisplay from './components/ResultsDisplay';
 import LoadingSpinner from './components/LoadingSpinner';
 import ErrorAlert from './components/ErrorAlert';
-import { interpretLab, getApiStatus } from './services/api';
-import { InterpretationResponse, PatientData } from './types';
-import { 
-  initMobileDebugging, 
-  MobileDebugger, 
-  getDeviceInfo, 
+import { interpretLab, interpretLabManual, getApiStatus } from './services/api';
+import { InterpretationResponse, PatientData, ManualLabValues } from './types';
+import {
+  initMobileDebugging,
+  MobileDebugger,
+  getDeviceInfo,
   detectMobileIssues
 } from './utils/mobileDetection';
 import { applyMobileOptimizations } from './utils/mobileOptimizations';
 import './App.css';
 import References from './components/References';
 
+const EMPTY_MANUAL_VALUES: ManualLabValues = {
+  hemacias: '', hemoglobina: '', hematocrito: '', vcm: '', hcm: '', chcm: '', rdw: '',
+  leucocitos: '', neutrofilos: '', eosinofilos: '', basofilos: '', linfocitos: '',
+  monocitos: '', plaquetas: '',
+};
+
 function App() {
   const [file, setFile] = useState<File | null>(null);
+  const [inputMode, setInputMode] = useState<'pdf' | 'manual'>('pdf');
+  const [manualValues, setManualValues] = useState<ManualLabValues>(EMPTY_MANUAL_VALUES);
   const [patientData, setPatientData] = useState<PatientData>({
     genero: 'feminino',
     idade: ''
@@ -107,9 +116,16 @@ function App() {
     }
   }, [connectionAttempts, deviceInfo, mobileIssues]);
 
+  const hasManualValues = Object.values(manualValues).some((v) => v !== '');
+
   const handleAnalyze = async () => {
-    if (!file) {
+    if (inputMode === 'pdf' && !file) {
       setError('Por favor, selecione um arquivo PDF');
+      return;
+    }
+
+    if (inputMode === 'manual' && !hasManualValues) {
+      setError('Por favor, informe ao menos um valor de exame');
       return;
     }
 
@@ -127,17 +143,20 @@ function App() {
     setError(null);
     setErrorDetail(null);
     
-    MobileDebugger.log('Iniciando análise de arquivo', {
-      fileName: file.name,
-      fileSize: file.size,
-      fileType: file.type,
+    MobileDebugger.log('Iniciando análise', {
+      inputMode,
+      fileName: file?.name,
+      fileSize: file?.size,
+      fileType: file?.type,
       patientData,
       deviceType: deviceInfo.isMobile ? 'mobile' : deviceInfo.isTablet ? 'tablet' : 'desktop'
     });
-    
+
     try {
       const startTime = Date.now();
-      const response = await interpretLab(file, patientData);
+      const response = inputMode === 'manual'
+        ? await interpretLabManual(patientData, manualValues)
+        : await interpretLab(file as File, patientData);
       const analysisTime = Date.now() - startTime;
       
       setResults(response);
@@ -165,8 +184,9 @@ function App() {
       MobileDebugger.log('Erro durante análise', {
         error: errorMessage,
         stack: err.stack,
-        fileName: file.name,
-        fileSize: file.size
+        inputMode,
+        fileName: file?.name,
+        fileSize: file?.size
       });
       
       // Se erro de conectividade, verificar status da API novamente
@@ -190,8 +210,18 @@ function App() {
   const handleReset = () => {
     setResults(null);
     setFile(null);
+    setManualValues(EMPTY_MANUAL_VALUES);
     setError(null);
+    setErrorDetail(null);
   };
+
+  const switchMode = (mode: 'pdf' | 'manual') => {
+    setInputMode(mode);
+    setError(null);
+    setErrorDetail(null);
+  };
+
+  const canAnalyze = inputMode === 'pdf' ? !!file : hasManualValues;
 
   return (
     <div className="App">
@@ -217,13 +247,34 @@ function App() {
               <h3>📋 Tipo de Exame Suportado</h3>
               <p>🩸 O sistema aceita apenas laudos de <strong>Hemograma Completo</strong>.</p>
             </div>
-              
-            <FileUpload file={file} onFileSelect={setFile} />
+
+            <div className="input-mode-toggle">
+              <button
+                type="button"
+                className={`mode-tab ${inputMode === 'pdf' ? 'active' : ''}`}
+                onClick={() => switchMode('pdf')}
+              >
+                📄 Enviar PDF
+              </button>
+              <button
+                type="button"
+                className={`mode-tab ${inputMode === 'manual' ? 'active' : ''}`}
+                onClick={() => switchMode('manual')}
+              >
+                ✍️ Digitar valores
+              </button>
+            </div>
+
+            {inputMode === 'pdf' ? (
+              <FileUpload file={file} onFileSelect={setFile} />
+            ) : (
+              <ManualEntryForm values={manualValues} onChange={setManualValues} />
+            )}
             <PatientForm data={patientData} onChange={setPatientData} />
-            
-            <button 
-              onClick={handleAnalyze} 
-              disabled={!file || !patientData.idade || patientData.idade === '' || loading || apiStatus === 'offline'}
+
+            <button
+              onClick={handleAnalyze}
+              disabled={!canAnalyze || !patientData.idade || patientData.idade === '' || loading || apiStatus === 'offline'}
               className="analyze-button"
             >
               {loading ? '⏳ Processando...' : apiStatus === 'slow' ? '🐌 Analisar (Pode ser lento)' : '🔍 Analisar Laudo'}

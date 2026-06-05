@@ -1,5 +1,5 @@
 import axios, { AxiosError } from 'axios';
-import { InterpretationResponse, PatientData } from '../types';
+import { InterpretationResponse, PatientData, ManualLabValues } from '../types';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
@@ -118,6 +118,40 @@ export const interpretLab = async (
     });
     return response.data;
   }, 3, 3000); // 3 tentativas com delay maior para uploads
+};
+
+export const interpretLabManual = async (
+  patientData: PatientData,
+  manualValues: ManualLabValues
+): Promise<InterpretationResponse> => {
+  const idade = typeof patientData.idade === 'string' && patientData.idade === ''
+    ? 0
+    : typeof patientData.idade === 'string'
+    ? parseInt(patientData.idade) || 0
+    : patientData.idade;
+
+  const payload: Record<string, number | string> = {
+    genero: patientData.genero,
+    idade,
+  };
+
+  // Inclui apenas os campos preenchidos, aceitando vírgula como separador decimal
+  (Object.keys(manualValues) as (keyof ManualLabValues)[]).forEach((key) => {
+    const raw = manualValues[key];
+    if (raw !== '' && raw != null) {
+      const valor = parseFloat(String(raw).replace(',', '.'));
+      if (!Number.isNaN(valor)) {
+        payload[key] = valor;
+      }
+    }
+  });
+
+  return retryRequest(async () => {
+    const response = await api.post<InterpretationResponse>('/interpret-manual', payload, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+    return response.data;
+  }, 3, 2000);
 };
 
 export const healthCheck = async (): Promise<{ status: string; message: string }> => {
