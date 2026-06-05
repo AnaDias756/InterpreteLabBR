@@ -8,7 +8,7 @@
 
 ## Identificação
 
-- **Área/Temas (da lista do curso):** Sistemas de Apoio à Decisão; Aplicativos para plataformas móveis; Processamento e análise de imagens; Inteligência Artificial aplicada à Saúde (camada futura).
+- **Área/Temas (da lista do curso):** Sistemas de Apoio à Decisão; Aplicativos para plataformas móveis; Processamento e análise de imagens; Inclusão Digital; Software Livre e Administração Pública; Inteligência Artificial aplicada à Saúde (camada futura).
 - **Natureza:** Desenvolvimento de ferramenta computacional aplicada + estudo de validação.
 - **Base de continuidade:** Evolução do projeto **InterpreteLabBR** (PWA desenvolvido na graduação) para aplicativo móvel, com adição de um eixo científico de validação.
 
@@ -17,6 +17,8 @@
 ## 1. Contextualização
 
 O hemograma é um dos exames laboratoriais mais solicitados no Brasil, mas sua interpretação por leigos é difícil e os valores de referência frequentemente impressos nos laudos derivam de populações estrangeiras. O projeto **InterpreteLabBR** já implementa um pipeline que extrai valores de laudos em PDF (via parsing de texto e OCR), classifica cada analito como *normal/alto/baixo* segundo faixas de referência e gera um briefing educativo ao paciente, sugerindo especialidades.
+
+O **formato de laudo padrão adotado pelo sistema é o do Sistema Único de Saúde (SUS)**, escolha deliberada para atender prioritariamente a população de menor renda — justamente a que mais depende da rede pública e que possui menor acesso a interpretação especializada. Assim, há uma coerência integral da base pública: tanto os **valores de referência (PNS / Ministério da Saúde)** quanto o **documento de entrada (laudo do SUS)** originam-se do sistema público de saúde brasileiro.
 
 O núcleo científico das classificações é o estudo:
 
@@ -27,16 +29,17 @@ Trata-se, até o momento, do **único estudo que estabeleceu valores de referên
 ## 2. Justificativa
 
 1. **Relevância nacional:** adoção de referência brasileira (PNS) em vez de faixas importadas, aumentando a validade das classificações para a população-alvo.
-2. **Acesso e inclusão:** entrega como aplicativo móvel amplia o alcance a usuários que acessam serviços de saúde majoritariamente pelo celular.
-3. **Lacuna metodológica:** o projeto de graduação entregou a ferramenta, mas **não submeteu o sistema a validação formal**. Este TCC supre essa lacuna com avaliação quantitativa de extração e de classificação, além de avaliação de usabilidade.
-4. **Reaproveitamento responsável:** consolida e valida cientificamente uma base já existente, em vez de partir do zero.
+2. **Equidade em saúde e impacto social:** ao padronizar-se no **laudo do SUS**, o sistema mira a população de menor renda, que mais depende da rede pública e tem menor acesso a interpretação especializada — alinhando o projeto aos princípios de **universalidade e equidade** do SUS.
+3. **Acesso e inclusão digital:** entrega como aplicativo móvel amplia o alcance a usuários que acessam serviços de saúde majoritariamente pelo celular, contribuindo para a inclusão digital de populações vulneráveis.
+4. **Lacuna metodológica:** o projeto de graduação entregou a ferramenta, mas **não submeteu o sistema a validação formal**. Este TCC supre essa lacuna com avaliação quantitativa de extração e de classificação, além de avaliação de usabilidade.
+5. **Reaproveitamento responsável:** consolida e valida cientificamente uma base já existente, em vez de partir do zero.
 
 ## 3. Problema de pesquisa
 
 > Um sistema de apoio à decisão para triagem de hemogramas, fundamentado nos valores de referência da PNS (Rosenfeld et al., 2019) e entregue como aplicativo móvel, é **confiável** quanto à extração automática dos valores e à classificação dos achados, e **usável** do ponto de vista do usuário final?
 
 ### Hipóteses / questões norteadoras
-- **Q1 (extração):** qual a acurácia da extração automática de valores a partir de laudos em diferentes formatos de laboratório?
+- **Q1 (extração):** qual a acurácia da extração automática de valores a partir de laudos no **formato padrão do SUS**?
 - **Q2 (classificação):** a classificação *normal/alto/baixo* do sistema é concordante com a aplicação direta das faixas da PNS, considerando estratos de sexo e idade?
 - **Q3 (usabilidade):** qual o nível de usabilidade percebida do aplicativo móvel por usuários reais?
 
@@ -65,7 +68,7 @@ Pesquisa **aplicada**, de natureza **quantitativa** (frentes A e B) e **quanti-q
 
 ### 6.1 Materiais
 - Base de referência: faixas da PNS (Rosenfeld et al., 2019), já estruturadas em `data/guideline_map.csv`.
-- Conjunto de laudos de teste: laudos reais **anonimizados** (sem dados pessoais — apenas valores) de diferentes laboratórios e/ou variações geradas; meta de **20–30 laudos** de formatos diversos.
+- Conjunto de laudos de teste: laudos reais **anonimizados** (sem dados pessoais — apenas valores) no **formato padrão do SUS** e/ou variações geradas; meta de **20–30 laudos**. A padronização em um único formato (SUS) confere maior controle metodológico à validação da extração.
 - Stack: backend FastAPI existente; app móvel (React Native/Expo); pipeline de OCR (Tesseract/PyMuPDF) existente.
 
 ### 6.2 Frente A — Validação da extração
@@ -100,8 +103,8 @@ Uso de dados **anonimizados** e consentimento informado para a etapa de usabilid
 
 ## 9. Delimitação do escopo
 
-- **Inclui:** hemograma de **adultos** (faixa etária coberta pela PNS); classificação por faixas de referência; app móvel; validação A/B/C.
-- **Não inclui (trabalhos futuros):** população pediátrica; outros exames; diagnóstico (a ferramenta é de **apoio/triagem**, não substitui avaliação médica).
+- **Inclui:** hemograma de **adultos** (faixa etária coberta pela PNS); **laudos no formato padrão do SUS**; classificação por faixas de referência; app móvel; validação A/B/C.
+- **Não inclui (trabalhos futuros):** população pediátrica; laudos de redes privadas com layouts distintos; outros exames; diagnóstico (a ferramenta é de **apoio/triagem**, não substitui avaliação médica).
 
 ## 10. Trabalhos futuros
 
