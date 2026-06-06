@@ -1,236 +1,266 @@
-# 🩺 Interpretador de Laudos Laboratoriais
+# 🩸 InterpreteLabBR — Interpretador de Hemograma
 
-[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://python.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)](https://fastapi.tiangolo.com)
-[![React](https://img.shields.io/badge/React-18+-blue.svg)](https://reactjs.org)
+[![Python](https://img.shields.io/badge/Python-3.11-blue.svg)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)](https://fastapi.tiangolo.com)
+[![React](https://img.shields.io/badge/React-19-blue.svg)](https://reactjs.org)
+[![Expo](https://img.shields.io/badge/Expo-SDK%2054-000020.svg)](https://expo.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5+-blue.svg)](https://typescriptlang.org)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> Sistema inteligente para análise e interpretação automatizada de laudos laboratoriais, fornecendo insights médicos e recomendações de especialidades.
+> Sistema de apoio à decisão para **triagem de hemogramas**, fundamentado nos valores
+> de referência da **população adulta brasileira (PNS)** e voltado ao formato de laudo
+> do **SUS**. Disponível como PWA (web) e aplicativo móvel.
+
+> ⚕️ **Aviso:** ferramenta educativa e de apoio. **Não substitui avaliação médica.**
+> Os resultados não constituem diagnóstico.
+
+## 🔗 Acesso em produção
+
+- **PWA (web):** https://interpretlabbr.netlify.app
+- **API (backend):** https://interpretador-lab-backend.onrender.com
+  ([/health](https://interpretador-lab-backend.onrender.com/health) ·
+  [/docs](https://interpretador-lab-backend.onrender.com/docs))
+
+> ℹ️ O backend roda no plano gratuito do Render e "hiberna" após inatividade —
+> o primeiro acesso pode levar ~50s (cold start) até "acordar".
 
 ## 🎯 Sobre o Projeto
 
-O **Interpretador de Laudos Laboratoriais** é uma aplicação web que utiliza técnicas de OCR, processamento de linguagem natural e regras médicas para analisar resultados de exames laboratoriais em formato PDF. O sistema identifica valores anômalos, classifica a severidade dos achados e sugere especialidades médicas apropriadas.
+O **InterpreteLabBR** extrai os valores de um hemograma (de um PDF ou digitados
+manualmente), classifica cada analito como *normal / alto / baixo* e gera um
+briefing educativo ao paciente, sugerindo especialidades médicas quando pertinente.
 
-### ✨ Funcionalidades Principais
+O diferencial do projeto é a **fundamentação na realidade brasileira**:
 
-- 📄 **Upload e análise de PDFs** de laudos laboratoriais
-- 🔍 **Extração automática de valores** usando OCR e regex
-- 🧠 **Análise inteligente** com regras médicas especializadas
-- ⚠️ **Classificação de severidade** dos achados (1-5)
-- 👨‍⚕️ **Recomendação de especialidades** médicas
-- 📊 **Interface web moderna** e responsiva
-- 🔄 **API RESTful** para integração
+- **Valores de referência da PNS** — as faixas de normalidade derivam do estudo de
+  Rosenfeld et al. (2019), o único que estabeleceu valores de referência de hemograma
+  para adultos brasileiros pelo método paramétrico, com dados da Pesquisa Nacional de
+  Saúde. A maioria das ferramentas usa faixas importadas de populações estrangeiras.
+- **Foco no laudo do SUS** — o formato de entrada padrão é o do Sistema Único de Saúde,
+  escolha deliberada para priorizar a população que mais depende da rede pública e tem
+  menor acesso a interpretação especializada (princípios de universalidade e equidade).
+- **Comparação de referências** — além de classificar pela PNS, o sistema mostra a
+  divergência em relação à referência "clássica/laboratorial" impressa no próprio laudo.
+
+> Este repositório é a base de um **TCC de pós-graduação** que evolui o PWA da graduação
+> para um app móvel e adiciona um eixo de validação (extração, classificação e
+> usabilidade). Veja [`PROPOSTA_TCC.md`](PROPOSTA_TCC.md).
+
+### ✨ Funcionalidades
+
+- 📄 **Análise por PDF** — upload de laudo; extração automática via parsing de texto
+  (e OCR como fallback para imagens)
+- ⌨️ **Entrada manual** — digitação dos valores quando não há PDF
+- 🇧🇷 **Classificação pela PNS** — normal/alto/baixo estratificado por sexo e idade
+- 🔬 **Comparação PNS × referência do laudo** — destaca divergências entre as duas referências
+- ⚠️ **Severidade dos achados** (1–5) e 👨‍⚕️ **recomendação de especialidades**
+- 📝 **Briefing ao paciente** em linguagem acessível
+- 📱 **Multiplataforma** — PWA (React) e app móvel (Expo/React Native)
 
 ## 🏗️ Arquitetura
 
 ```
-┌─────────────────┐    HTTP/JSON    ┌─────────────────┐
-│                 │ ◄──────────────► │                 │
-│  Frontend Web   │                  │  Backend API    │
-│  (React + TS)   │                  │   (FastAPI)     │
-│                 │                  │                 │
-└─────────────────┘                  └─────────────────┘
-                                              │
-                                              ▼
-                                     ┌─────────────────┐
-                                     │   Serviços de   │
-                                     │   Processamento │
-                                     │                 │
-                                     │ • PDF Parser    │
-                                     │ • Rule Engine   │
-                                     │ • NLG System    │
-                                     │ • Specialty AI  │
-                                     └─────────────────┘
+┌──────────────────┐     ┌──────────────────┐
+│   PWA (React)    │     │  App Móvel       │
+│  frontend-web/   │     │  (Expo / RN)     │
+└────────┬─────────┘     └────────┬─────────┘
+         │        HTTP / JSON      │
+         └────────────┬────────────┘
+                      ▼
+            ┌───────────────────┐
+            │   Backend API     │
+            │     (FastAPI)     │
+            └─────────┬─────────┘
+                      ▼
+            ┌───────────────────┐
+            │ Serviços          │
+            │ • pdf_parser      │  extração (texto/OCR + regex)
+            │ • rule_engine     │  regras PNS + comparação de refs
+            │ • specialty_...   │  seleção de especialidades
+            │ • nlg             │  briefing ao paciente
+            └─────────┬─────────┘
+                      ▼
+            ┌───────────────────┐
+            │ data/ (CSV)       │
+            │ • patterns.csv    │  padrões de extração (laudo SUS)
+            │ • lab_reference   │  referência clássica do laudo
+            │ • guideline_map   │  regras/diretrizes por analito
+            └───────────────────┘
 ```
 
 ## 🚀 Tecnologias
 
-### Backend
-- **FastAPI** - Framework web moderno e rápido
-- **Python 3.8+** - Linguagem principal
-- **OCR** - Extração de texto de PDFs
-- **Regex** - Processamento de padrões laboratoriais
-- **Pydantic** - Validação de dados
-
-### Frontend
-- **React 18** - Biblioteca de interface
-- **TypeScript** - Tipagem estática
-- **Axios** - Cliente HTTP
-- **React Dropzone** - Upload de arquivos
-- **CSS3** - Estilização moderna
+| Camada | Stack |
+|---|---|
+| **Backend** | FastAPI · Python 3.11 · Pydantic · pdfplumber/PyMuPDF/PyPDF2 · pytesseract + OpenCV (OCR) · pandas/numpy |
+| **Frontend Web (PWA)** | React 19 · TypeScript · Axios · React Dropzone |
+| **App Móvel** | Expo SDK 54 · React Native 0.81 · expo-document-picker · TypeScript |
 
 ## 📁 Estrutura do Projeto
 
 ```
 InterpreteLabBR/
-├── 📁 backend/                 # API FastAPI
-│   ├── main.py                # Aplicação principal
-│   └── services/              # Serviços de processamento
-│       ├── pdf_parser.py      # Extração de dados do PDF
-│       ├── rule_engine.py     # Motor de regras médicas
-│       ├── specialty_selector.py # Seleção de especialidades
-│       └── nlg.py            # Geração de linguagem natural
-├── 📁 frontend-web/           # Interface React
-│   ├── src/
-│   │   ├── components/        # Componentes React
-│   │   ├── services/         # Serviços de API
-│   │   ├── types/           # Tipos TypeScript
-│   │   └── App.tsx          # Componente principal
-│   └── package.json
-├── 📁 data/                   # Dados de configuração
-│   ├── patterns.csv          # Padrões de extração
-│   └── guideline_map.csv     # Mapeamento de diretrizes
-├── requirements-backend.txt   # Dependências Python
-├── .env.example              # Variáveis de ambiente
-└── README.md                 # Este arquivo
+├── backend/                    # API FastAPI
+│   ├── main.py                 # rotas: /health, /interpret, /interpret-manual, /debug
+│   └── services/
+│       ├── pdf_parser.py       # extração de valores (texto/OCR + regex)
+│       ├── rule_engine.py      # classificação PNS + comparação de referências
+│       ├── specialty_selector.py
+│       └── nlg.py              # geração do briefing ao paciente
+├── frontend-web/               # PWA (React + TypeScript) — deploy na Netlify
+│   └── src/{components,services,types,utils}/
+├── mobile/                     # App móvel (Expo / React Native)
+│   └── src/{components,api.ts,config.ts,types.ts,theme.ts}
+├── data/                       # Bases de configuração
+│   ├── patterns.csv            # padrões de extração (formato do laudo SUS)
+│   ├── lab_reference.csv       # referência "clássica" impressa no laudo
+│   └── guideline_map.csv       # diretrizes/regras por analito
+├── tests/                      # testes do backend
+├── requirements-backend.txt    # dependências Python
+├── render.yaml                 # configuração de deploy (Render)
+├── PROPOSTA_TCC.md             # proposta de TCC (escopo e validação)
+├── RENDER_DEPLOY_GUIDE.md      # guia de deploy do backend
+└── README.md
 ```
 
-## ⚡ Instalação e Execução
+## ⚡ Instalação e Execução (local)
 
 ### Pré-requisitos
-- Python 3.8+
-- Node.js 18+
-- npm ou yarn
+- Python 3.11
+- Node.js 18+ e npm
+- (Opcional) Tesseract OCR — apenas para PDFs que são imagem/escaneados
 
 ### 🔧 Backend (FastAPI)
 
-1. **Clone o repositório**
 ```bash
-git clone https://github.com/seu-usuario/InterpreteLabBR.git
+git clone https://github.com/AnaDias756/InterpreteLabBR.git
 cd InterpreteLabBR
-```
 
-2. **Instale as dependências**
-```bash
 pip install -r requirements-backend.txt
+cp .env.example .env          # ajuste se necessário
+
+# a partir da raiz do projeto:
+uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-3. **Configure as variáveis de ambiente**
-```bash
-cp .env.example .env
-# Edite o arquivo .env conforme necessário
-```
+- API: http://localhost:8000 · Docs: http://localhost:8000/docs
 
-4. **Execute o servidor**
-```bash
-cd backend
-python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
-```
+### 🌐 Frontend Web (PWA)
 
-### 🌐 Frontend (React)
-
-1. **Navegue para o diretório frontend**
 ```bash
 cd frontend-web
-```
-
-2. **Instale as dependências**
-```bash
 npm install
+npm start                      # http://localhost:3000
 ```
 
-3. **Execute o servidor de desenvolvimento**
+> Por padrão a API usada é a de produção (definida em `netlify.toml`). Para apontar
+> ao backend local, crie `frontend-web/.env` com `REACT_APP_API_URL=http://localhost:8000`.
+
+### 📱 App Móvel (Expo)
+
 ```bash
-npm start
+cd mobile
+npm install
+npx expo install expo-document-picker   # garante a versão compatível com o SDK 54
+npx expo start -c                        # abra no Expo Go (Android/iOS)
 ```
 
-### 🎉 Acesso
+> A URL da API fica em `mobile/src/config.ts`. Por padrão aponta para a produção
+> (Render). Para testar contra um backend local, descomente a linha com o IP da sua
+> máquina na rede Wi-Fi (`localhost` não funciona a partir do celular).
 
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:8000
-- **Documentação da API**: http://localhost:8000/docs
-- **Redoc**: http://localhost:8000/redoc
-
-## 📡 API Endpoints
+## 📡 API — Endpoints
 
 ### `GET /health`
-Verifica o status da API
-
-**Resposta:**
+Status da API.
 ```json
 {
   "status": "healthy",
-  "message": "Interpretador de Laudos Laboratoriais está funcionando!"
+  "message": "API esta funcionando corretamente",
+  "version": "1.0.0",
+  "services": { "imports_working": true, "pdf_processing": true }
 }
 ```
 
-### `POST /interpret`
-Analisa um laudo laboratorial
+### `POST /interpret`  (multipart/form-data)
+Analisa um laudo em **PDF**.
 
-**Parâmetros:**
-- `file`: Arquivo PDF do laudo (multipart/form-data)
-- `genero`: Gênero do paciente ("masculino" ou "feminino")
-- `idade`: Idade do paciente (número)
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `file` | arquivo | PDF do hemograma |
+| `genero` | texto | `"masculino"` ou `"feminino"` |
+| `idade` | número | idade em anos |
 
-**Resposta:**
+### `POST /interpret-manual`  (application/json)
+Analisa valores **digitados** (sem PDF). Todos os analitos são opcionais — a análise
+usa apenas os informados. Série branca e plaquetas em valor **absoluto** (/μL).
+
+```json
+{
+  "genero": "feminino",
+  "idade": 35,
+  "hemoglobina": 11.2,
+  "hematocrito": 34.0,
+  "leucocitos": 6500,
+  "plaquetas": 210000
+}
+```
+
+### Resposta (ambas as rotas)
 ```json
 {
   "lab_findings": [
     {
-      "analito": "Hemoglobina",
-      "valor": 10.5,
-      "resultado": "Baixo",
-      "severidade": 3,
-      "especialidade": "Hematologia",
-      "descricao_achado": "Anemia moderada",
-      "diretriz": "Investigar causa da anemia"
+      "analito": "Hemoglobina", "valor": 11.2, "resultado": "Baixo",
+      "severidade": 3, "especialidade": "Hematologia",
+      "descricao_achado": "Anemia", "diretriz": "Investigar causa da anemia"
     }
   ],
   "recommended_specialties": ["Hematologia", "Clínica Médica"],
-  "patient_briefing": "Resumo dos achados para o paciente..."
+  "patient_briefing": "Resumo educativo dos achados...",
+  "lab_values_raw": [{ "analito": "Hemoglobina", "valor": 11.2 }],
+  "comparacao_referencias": [
+    {
+      "analito": "Hemoglobina", "valor": 11.2,
+      "classificacao_pns": "Baixo", "classificacao_lab": "Normal",
+      "divergente": true
+    }
+  ]
 }
 ```
 
-## 🎨 Interface do Usuário
+> Há ainda `GET /debug` com informações técnicas para troubleshooting.
 
-A interface web oferece:
+## ☁️ Deploy
 
-- 📤 **Upload intuitivo** com drag & drop
-- 👤 **Formulário de paciente** (gênero e idade)
-- ⚡ **Status da API** em tempo real
-- 📊 **Visualização de resultados** organizada
-- 📱 **Design responsivo** para mobile
-- 🎯 **Feedback visual** durante o processamento
+| Componente | Plataforma | Branch | Observações |
+|---|---|---|---|
+| Backend | **Render** (Free) | `master` | Auto-Deploy; config em `render.yaml`. Veja [`RENDER_DEPLOY_GUIDE.md`](RENDER_DEPLOY_GUIDE.md) |
+| PWA | **Netlify** | `master` | Build automático; API definida em `frontend-web/netlify.toml` |
+| App móvel | **Expo / EAS Build** | — | `eas build -p android` (ou `--profile preview` para gerar APK de teste) |
 
-## 🧪 Exemplo de Uso
+Um push para `master` dispara o redeploy automático do backend (Render) e do PWA (Netlify).
 
-1. Acesse http://localhost:3000
-2. Faça upload de um PDF de laudo laboratorial
-3. Preencha os dados do paciente (gênero e idade)
-4. Clique em "Analisar Laudo"
-5. Visualize os resultados organizados por:
-   - Achados laboratoriais com severidade
-   - Especialidades recomendadas
-   - Briefing para o paciente
+## 🔬 Fundamentação científica
 
-## 🔬 Processamento de Dados
-
-O sistema processa os laudos através de:
-
-1. **Extração OCR** - Converte PDF em texto
-2. **Regex Patterns** - Identifica valores laboratoriais
-3. **Rule Engine** - Aplica regras médicas especializadas
-4. **Classificação** - Determina severidade (1-5)
-5. **NLG** - Gera descrições em linguagem natural
-6. **Specialty AI** - Recomenda especialidades médicas
+> ROSENFELD, Luiz Gastão et al. **Valores de referência para exames laboratoriais de
+> hemograma da população adulta brasileira: Pesquisa Nacional de Saúde.** Revista
+> Brasileira de Epidemiologia, v. 22, supl. 2, art. e190003, 2019.
+> DOI: [10.1590/1980-549720190003.supl.2](https://doi.org/10.1590/1980-549720190003.supl.2).
 
 ## 🤝 Contribuição
 
 1. Fork o projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
+2. Crie uma branch (`git checkout -b feature/minha-feature`)
+3. Commit (`git commit -m 'feat: minha feature'`)
+4. Push (`git push origin feature/minha-feature`)
 5. Abra um Pull Request
 
 ## 📄 Licença
 
-Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes.
-
-## 👨‍💻 Autor
-
-Desenvolvido com ❤️ para auxiliar pacientes na interpretação de seus laudos laboratoriais.
+Licenciado sob a Licença MIT — veja [LICENSE](LICENSE).
 
 ---
 
-⭐ **Se este projeto foi útil, considere dar uma estrela!**
+Desenvolvido com ❤️ para ajudar pacientes a entender seus hemogramas — com referência
+brasileira (PNS) e foco na população atendida pelo SUS.
