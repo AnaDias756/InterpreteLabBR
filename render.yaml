@@ -19,12 +19,8 @@ services:
         value: 1
     healthCheckPath: /health
     autoDeploy: true
-    branch: main
+    branch: master
     rootDir: .
     region: oregon
-    # Configurações para melhorar estabilidade
-    disk:
-      name: interpretador-lab-disk
-      size: 1GB
     # Configurações de timeout mais generosas
     maxShutdownDelaySeconds: 30
