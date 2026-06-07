@@ -1,115 +1,162 @@
-# Proposta de Trabalho de Conclusão de Curso (Pós-Graduação)
+# PROPOSTA DE TRABALHO DE CONCLUSÃO DE CURSO
 
-> Documento de escopo para alinhamento com o(a) orientador(a). Versão inicial — sujeito a refinamento.
+### Documento de Escopo Temático e Alinhamento de Orientação
 
-## Título provisório
+> Documento de escopo para alinhamento com o(a) orientador(a). Versão preliminar — sujeita a refinamento.
 
-**Aplicativo móvel de apoio à decisão para triagem de hemogramas fundamentado em valores de referência da população adulta brasileira (PNS): validação da extração, da classificação e da usabilidade.**
-
-## Identificação
-
-- **Área/Temas (da lista do curso):** Sistemas de Apoio à Decisão; Aplicativos para plataformas móveis; Processamento e análise de imagens; Inclusão Digital; Software Livre e Administração Pública; Inteligência Artificial aplicada à Saúde (camada futura).
-- **Natureza:** Desenvolvimento de ferramenta computacional aplicada + estudo de validação.
-- **Base de continuidade:** Evolução do projeto **InterpreteLabBR** (PWA desenvolvido na graduação) para aplicativo móvel, com adição de um eixo científico de validação.
+| Campo | Preenchimento |
+|---|---|
+| **Aluno(a)** | _[preencher]_ |
+| **Orientador(a)** | _[preencher]_ |
+| **Curso / Programa** | _[preencher — Pós-Graduação]_ |
+| **Instituição** | _[preencher]_ |
+| **Data** | _[preencher]_ |
 
 ---
 
-## 1. Contextualização
+## 1. Identificação Geral
 
-O hemograma é um dos exames laboratoriais mais solicitados no Brasil, mas sua interpretação por leigos é difícil e os valores de referência frequentemente impressos nos laudos derivam de populações estrangeiras. O projeto **InterpreteLabBR** já implementa um pipeline que extrai valores de laudos em PDF (via parsing de texto e OCR), classifica cada analito como *normal/alto/baixo* segundo faixas de referência e gera um briefing educativo ao paciente, sugerindo especialidades.
+- **Título provisório:** Aplicativo móvel de apoio à decisão para triagem de hemogramas fundamentado em valores de referência da população adulta brasileira (PNS): validação da extração, da classificação e da usabilidade.
+- **Natureza do trabalho:** Desenvolvimento de ferramenta computacional aplicada + estudo de validação.
+- **Áreas/temas correlatos (lista do curso):** Sistemas de Apoio à Decisão; Aplicativos para plataformas móveis; Processamento e análise de imagens; Inteligência Artificial aplicada à Saúde; Inclusão Digital; Software Livre e Administração Pública.
+- **Base de continuidade:** Evolução de um ecossistema de software preexistente (**InterpreteLabBR**) com a introdução de um eixo científico de validação metodológica de triagem.
 
-O **formato de laudo padrão adotado pelo sistema é o do Sistema Único de Saúde (SUS)**, escolha deliberada para atender prioritariamente a população de menor renda — justamente a que mais depende da rede pública e que possui menor acesso a interpretação especializada. Assim, há uma coerência integral da base pública: tanto os **valores de referência (PNS / Ministério da Saúde)** quanto o **documento de entrada (laudo do SUS)** originam-se do sistema público de saúde brasileiro.
+---
 
-O núcleo científico das classificações é o estudo:
+## 2. Introdução e Contextualização
+
+Este projeto de pós-graduação baseia-se na evolução incremental de um artefato computacional concebido originalmente no projeto de conclusão de graduação realizado na Universidade Federal Fluminense (UFF). Naquela etapa, foi desenvolvido um protótipo em formato *Progressive Web App* (PWA) denominado **InterpreteLabBR**. O código-fonte original, que serve de alicerce para a presente arquitetura móvel, encontra-se publicado e acessível no repositório público no GitHub: <https://github.com/AnaDias756/InterpreteLabBR>.
+
+O hemograma consolida-se como um dos exames laboratoriais mais requisitados na rotina diagnóstica no Brasil. Contudo, a interpretação das métricas por usuários leigos apresenta barreiras significativas, frequentemente agravadas pelo fato de os valores de referência impressos nos laudos nacionais derivarem de matrizes populacionais estrangeiras. O projeto InterpreteLabBR mitiga essa lacuna ao implementar um *pipeline* automatizado que extrai os valores analíticos de laudos em formato PDF (utilizando técnicas de *parsing* de texto e reconhecimento óptico de caracteres — OCR), classifica cada analito como *normal*, *alto* ou *baixo* e gera um *briefing* educativo ao paciente, sugerindo especialidades quando pertinente.
+
+Há, no projeto, uma **coerência integral de base pública**: tanto os **valores de referência** (PNS / Ministério da Saúde) quanto o **documento de entrada** (laudo padrão do SUS) originam-se do sistema público de saúde brasileiro.
+
+O grande diferencial científico e o núcleo motor de regras das classificações desta proposta reside no seguinte estudo referencial:
 
 > ROSENFELD, Luiz Gastão et al. **Valores de referência para exames laboratoriais de hemograma da população adulta brasileira: Pesquisa Nacional de Saúde.** Revista Brasileira de Epidemiologia, v. 22, supl. 2, art. e190003, 2019. DOI: 10.1590/1980-549720190003.supl.2.
 
-Trata-se, até o momento, do **único estudo que estabeleceu valores de referência de hemograma para adultos brasileiros pelo método paramétrico, com dados da Pesquisa Nacional de Saúde (PNS)** — o que confere ao sistema uma fundamentação populacional adequada à realidade nacional, diferencial ausente na maioria das ferramentas similares.
+Este consiste no **único estudo que estabeleceu parâmetros hematológicos específicos para adultos brasileiros por meio do método paramétrico**, utilizando dados abrangentes da Pesquisa Nacional de Saúde (PNS), conferindo ao sistema aderência estrita à realidade epidemiológica nacional — diferencial ausente na maioria das ferramentas similares.
 
-## 2. Justificativa
+### 2.1. Objetivos
 
-1. **Relevância nacional:** adoção de referência brasileira (PNS) em vez de faixas importadas, aumentando a validade das classificações para a população-alvo.
-2. **Equidade em saúde e impacto social:** ao padronizar-se no **laudo do SUS**, o sistema mira a população de menor renda, que mais depende da rede pública e tem menor acesso a interpretação especializada — alinhando o projeto aos princípios de **universalidade e equidade** do SUS.
-3. **Acesso e inclusão digital:** entrega como aplicativo móvel amplia o alcance a usuários que acessam serviços de saúde majoritariamente pelo celular, contribuindo para a inclusão digital de populações vulneráveis.
-4. **Lacuna metodológica:** o projeto de graduação entregou a ferramenta, mas **não submeteu o sistema a validação formal**. Este TCC supre essa lacuna com avaliação quantitativa de extração e de classificação, além de avaliação de usabilidade.
-5. **Reaproveitamento responsável:** consolida e valida cientificamente uma base já existente, em vez de partir do zero.
+**Objetivo geral:** Evoluir a solução InterpreteLabBR para um aplicativo móvel de apoio à decisão na triagem de hemogramas, fundamentado nos valores de referência da PNS, e validar rigorosamente seu desempenho de extração de dados, acurácia de classificação e usabilidade percebida.
 
-## 3. Problema de pesquisa
+**Objetivos específicos:**
+
+1. Consolidar e parametrizar a base de regras de classificação com base nos dados de Rosenfeld et al. (2019), considerando a estratificação por sexo e faixas etárias.
+2. Desenvolver e portar a interface do sistema para aplicação móvel utilizando o *framework* React Native (Expo), consumindo a API existente em FastAPI.
+3. **Frente A (validação da extração):** mensurar a precisão e o *recall* da extração automatizada de analitos a partir de uma base de laudos reais anonimizados estruturados sob o padrão de leiaute do Sistema Único de Saúde (SUS).
+4. **Frente B (validação da classificação):** avaliar estatisticamente o índice de concordância entre os resultados gerados pelo sistema e a aplicação manual das tabelas da PNS, com foco em casos de borda.
+5. **Frente C (avaliação de usabilidade):** aplicar a escala psicométrica padronizada SUS (*System Usability Scale*) com usuários finais para determinar a usabilidade percebida e a eficácia na conclusão de tarefas.
+
+### 2.2. Justificativa
+
+A relevância deste trabalho repousa em dois pilares centrais — a **precisão populacional** e a **inclusão em saúde pública** — desdobrados nos pontos a seguir:
+
+1. **Relevância nacional / precisão populacional:** a adoção das faixas de referência da PNS (Rosenfeld et al., 2019), em detrimento de tabelas estrangeiras importadas, eleva de forma expressiva a validade clínica da triagem para o cidadão brasileiro.
+2. **Equidade em saúde e impacto social:** ao restringir o *pipeline* de extração e a validação do aplicativo ao ecossistema de laudos da rede pública (padrão SUS), o projeto atende diretamente à parcela da população que mais depende da rede pública e que possui menor acesso a interpretação especializada — alinhando-se aos princípios de **universalidade e equidade** do SUS.
+3. **Acesso e inclusão digital:** a entrega como aplicativo móvel amplia o alcance a usuários que acessam serviços de saúde majoritariamente pelo celular, contribuindo para a inclusão digital e para o letramento em saúde de populações vulneráveis.
+4. **Lacuna metodológica:** o projeto de graduação entregou a ferramenta, mas **não a submeteu a validação formal**. Este TCC supre essa lacuna com avaliação quantitativa de extração e de classificação, além de avaliação de usabilidade.
+5. **Reaproveitamento responsável:** consolida e valida cientificamente uma base já existente, em vez de partir do zero, transformando conhecimento técnico em um ativo compreensível ao paciente.
+
+### 2.3. Escopo e Delimitação
+
+**Inclusões:**
+- Hemogramas de indivíduos **adultos** (faixa etária coberta pelo recorte da PNS);
+- Classificação automatizada por faixas de referência parametrizadas;
+- Entrega via **aplicativo móvel** (híbrido — React Native/Expo), além do PWA já existente;
+- Validação em **tripla frente (A, B e C)**, aplicada restritamente a documentos emitidos no padrão SUS.
+
+**Exclusões (delimitação / trabalhos futuros):**
+- População **pediátrica**;
+- Análise de **outros exames** laboratoriais fora do hemograma;
+- Emissão de **diagnósticos clínicos** — a ferramenta atua estritamente como **triagem informativa**, não substituindo o parecer médico;
+- Laudos da **rede privada** com leiautes proprietários divergentes do padrão SUS.
+
+---
+
+## 3. Problema de Pesquisa
 
 > Um sistema de apoio à decisão para triagem de hemogramas, fundamentado nos valores de referência da PNS (Rosenfeld et al., 2019) e entregue como aplicativo móvel, é **confiável** quanto à extração automática dos valores e à classificação dos achados, e **usável** do ponto de vista do usuário final?
 
-### Hipóteses / questões norteadoras
-- **Q1 (extração):** qual a acurácia da extração automática de valores a partir de laudos no **formato padrão do SUS**?
+**Questões norteadoras:**
+
+- **Q1 (extração):** qual a acurácia da extração automática de valores analíticos a partir de laudos estruturados sob o padrão de formatação e leiaute do SUS?
 - **Q2 (classificação):** a classificação *normal/alto/baixo* do sistema é concordante com a aplicação direta das faixas da PNS, considerando estratos de sexo e idade?
 - **Q3 (usabilidade):** qual o nível de usabilidade percebida do aplicativo móvel por usuários reais?
 
-## 4. Objetivos
+---
 
-### Objetivo geral
-Evoluir o InterpreteLabBR para um aplicativo móvel de apoio à decisão na triagem de hemogramas, fundamentado nos valores de referência da população adulta brasileira (PNS), e **validar** seu desempenho de extração, de classificação e de usabilidade.
+## 4. Fundamentação Teórica (eixos)
 
-### Objetivos específicos
-1. Consolidar a base de regras de classificação a partir dos valores de referência de Rosenfeld et al. (2019), documentando estratificação por sexo e faixa etária.
-2. Desenvolver/portar a interface para aplicativo móvel (ex.: React Native/Expo), consumindo a API existente (FastAPI).
-3. **Frente A — Validação da extração:** medir precisão e recall da extração automática de analitos em um conjunto de laudos de formatos variados.
-4. **Frente B — Validação da classificação:** avaliar a concordância entre a saída do sistema e a aplicação manual das faixas da PNS, incluindo casos de borda.
-5. **Frente C — Avaliação de usabilidade:** aplicar instrumento padronizado (ex.: SUS — System Usability Scale) com usuários, mensurando usabilidade percebida e taxa de conclusão de tarefas.
+A revisão de literatura será organizada nos seguintes eixos:
 
-## 5. Fundamentação teórica (eixos)
+1. **Hemograma e valores de referência populacionais:** interpretação dos analitos da série vermelha, série branca e plaquetas; o estudo da PNS (Rosenfeld et al., 2019) e o **método paramétrico** de estabelecimento de intervalos de referência; a importância da estratificação por sexo e idade.
+2. **Sistemas de Apoio à Decisão Clínica (CDSS):** conceitos, taxonomias, benefícios e limites; o papel de ferramentas de triagem informativa e a fronteira ética com o diagnóstico.
+3. **Extração de informação de documentos:** *parsing* de PDF, OCR (Tesseract) e pré-processamento de imagem; métricas de avaliação de extração (precisão, *recall*, F1).
+4. **Desenvolvimento mobile e avaliação de usabilidade:** arquitetura híbrida (React Native/Expo) consumindo API REST; Engenharia de Software aplicada à saúde; avaliação de usabilidade pela *System Usability Scale* (SUS) e métricas de Interação Humano-Computador (IHC).
+5. **Letramento e inclusão digital em saúde:** equidade, universalidade e o papel das tecnologias móveis no acesso à informação em saúde para populações vulneráveis.
 
-- Hemograma e valores de referência populacionais; o estudo PNS (Rosenfeld et al., 2019) e o método paramétrico.
-- Sistemas de Apoio à Decisão Clínica (CDSS): conceitos, benefícios e limites.
-- Extração de informação de documentos: parsing de PDF, OCR (Tesseract) e pré-processamento de imagem.
-- Desenvolvimento mobile e avaliação de usabilidade (SUS; métricas de IHC).
+---
 
-## 6. Metodologia
+## 5. Metodologia Proposta
 
-Pesquisa **aplicada**, de natureza **quantitativa** (frentes A e B) e **quanti-qualitativa** (frente C), com desenvolvimento de artefato (método de pesquisa: *Design Science Research*, opcional como enquadramento).
+Pesquisa **aplicada**, de natureza **quantitativa** (frentes A e B) e **quanti-qualitativa** (frente C), fundamentada na abordagem metodológica da **Design Science Research (DSR)** para o desenvolvimento e a avaliação do artefato.
 
-### 6.1 Materiais
-- Base de referência: faixas da PNS (Rosenfeld et al., 2019), já estruturadas em `data/guideline_map.csv`.
-- Conjunto de laudos de teste: laudos reais **anonimizados** (sem dados pessoais — apenas valores) no **formato padrão do SUS** e/ou variações geradas; meta de **20–30 laudos**. A padronização em um único formato (SUS) confere maior controle metodológico à validação da extração.
-- Stack: backend FastAPI existente; app móvel (React Native/Expo); pipeline de OCR (Tesseract/PyMuPDF) existente.
+### 5.1. Materiais e Ferramentas
 
-### 6.2 Frente A — Validação da extração
-Para cada laudo, comparar os valores extraídos automaticamente com um **gabarito conferido manualmente**. Métricas por analito e agregadas: **precisão, recall, F1** de extração; taxa de erro por formato de laudo. Análise de falhas (analitos mais problemáticos, impacto do OCR).
+- **Base de regras:** faixas da PNS (Rosenfeld et al., 2019) pré-estruturadas em formato tabular (já materializadas nos arquivos de configuração do projeto, `data/`).
+- **Massa de testes:** **20 a 30 laudos reais anonimizados** (contendo apenas valores laboratoriais, com omissão de dados pessoais), coletados de emissões do ecossistema público de saúde (SUS). A padronização em um único leiaute (SUS) confere maior controle metodológico à validação da extração.
+- **Stack tecnológica:** *backend* em Python (FastAPI); aplicativo móvel em React Native com Expo; *pipeline* de processamento e OCR baseado em bibliotecas abertas (ex.: Tesseract, PyMuPDF/pdfplumber).
 
-### 6.3 Frente B — Validação da classificação
-Aplicar as faixas da PNS manualmente a um conjunto de valores (reais e sintéticos de borda) e comparar com a classificação do sistema. Métrica de **concordância** (ex.: % de acerto e/ou kappa), com atenção a estratos sexo × idade e a valores próximos aos limites.
+### 5.2. Protocolo das Frentes de Validação
 
-### 6.4 Frente C — Avaliação de usabilidade
-Teste de usabilidade com usuários (amostra por conveniência), execução de tarefas típicas (enviar laudo, interpretar resultado), aplicação do **SUS** e coleta de feedback qualitativo. Reportar escore SUS médio e principais achados.
+**Frente A — Extração.** Os valores extraídos pelo algoritmo automatizado serão confrontados com um **gabarito elaborado manualmente** por inspeção visual. Serão calculadas as métricas de **Precisão, Recall e F1-Score**, por analito e agregadas, mapeando potenciais fragilidades induzidas por ruídos de impressão comuns nos laudos do SUS e pelo OCR.
 
-### 6.5 Aspectos éticos
-Uso de dados **anonimizados** e consentimento informado para a etapa de usabilidade, em conformidade com a LGPD. Avaliar necessidade de submissão a Comitê de Ética conforme orientação do(a) orientador(a).
+**Frente B — Classificação.** Aplicação das regras epidemiológicas da PNS de forma **manual** sobre a base de analitos extraídos (incluindo **dados sintéticos** para simulação de casos de borda). O índice de **concordância** do motor de regras será medido estatisticamente (ex.: percentual de concordância e/ou coeficiente *kappa* de Cohen), com atenção especial aos estratos sexo × idade e aos valores próximos aos limites.
 
-## 7. Resultados esperados
+**Frente C — Usabilidade.** Teste de usabilidade direcionado a uma **amostra por conveniência** de usuários finais. Os participantes executarão tarefas de rotina no aplicativo (submissão de laudo e leitura do *briefing* interpretativo) e responderão ao questionário psicométrico padronizado **System Usability Scale (SUS)** para aferição do escore global de satisfação, complementado por coleta de *feedback* qualitativo. Serão reportados o escore SUS médio (escala 0–100) e os principais achados qualitativos.
 
-- Aplicativo móvel funcional, fundamentado na referência brasileira (PNS).
-- Relatório quantitativo de **acurácia de extração** e de **concordância de classificação**.
-- **Escore de usabilidade (SUS)** e recomendações de melhoria.
-- Identificação de limitações e direções para trabalhos futuros.
+### 5.3. Aspectos Éticos
 
-## 8. Cronograma (sugestão — ajustar à duração do curso)
+Garantia de **total anonimização** de dados de terceiros, em estrita conformidade com a **Lei Geral de Proteção de Dados (LGPD)**, e obtenção de **consentimento informado** dos participantes da etapa de usabilidade. A necessidade de submissão do teste de usabilidade à **Plataforma Brasil / Comitê de Ética em Pesquisa (CEP)** será avaliada conjuntamente com o(a) professor(a) orientador(a).
+
+---
+
+## 6. Resultados Esperados
+
+- **Aplicativo móvel funcional**, fundamentado na referência brasileira (PNS), em continuidade ao PWA existente.
+- **Relatório quantitativo** de acurácia de extração (Precisão/Recall/F1) e de concordância de classificação (kappa / % de acerto).
+- **Escore de usabilidade (SUS)** com usuários reais e recomendações de melhoria de interface e experiência.
+- **Identificação de limitações** do sistema e definição de direções para trabalhos futuros.
+
+---
+
+## 7. Cronograma (sugestão — ajustar à duração do curso)
 
 | Etapa | Atividades | Período |
 |---|---|---|
-| 1 | Revisão bibliográfica; consolidação da fundamentação (PNS, CDSS, OCR, SUS) | Meses 1–2 |
-| 2 | Coleta/anonimização de laudos; definição de gabaritos | Meses 2–3 |
-| 3 | Port para app móvel; ajustes na API | Meses 3–4 |
-| 4 | Frente A (extração) e Frente B (classificação) | Meses 4–5 |
-| 5 | Frente C (usabilidade) | Mês 5 |
-| 6 | Análise de resultados; escrita; revisão final | Meses 6–7 |
+| 1 | Revisão bibliográfica; consolidação da fundamentação teórica (PNS, CDSS, OCR, usabilidade) | Meses 1–2 |
+| 2 | Coleta e anonimização de laudos; elaboração dos gabaritos de extração | Meses 2–3 |
+| 3 | Port/evolução para o aplicativo móvel; ajustes na API | Meses 3–4 |
+| 4 | Execução da Frente A (extração) e da Frente B (classificação) | Meses 4–5 |
+| 5 | Execução da Frente C (usabilidade) | Mês 5 |
+| 6 | Análise dos resultados; redação; revisão final e entrega | Meses 6–7 |
 
-## 9. Delimitação do escopo
+---
 
-- **Inclui:** hemograma de **adultos** (faixa etária coberta pela PNS); **laudos no formato padrão do SUS**; classificação por faixas de referência; app móvel; validação A/B/C.
-- **Não inclui (trabalhos futuros):** população pediátrica; laudos de redes privadas com layouts distintos; outros exames; diagnóstico (a ferramenta é de **apoio/triagem**, não substitui avaliação médica).
+## 8. Trabalhos Futuros
 
-## 10. Trabalhos futuros
+Com a disponibilidade de uma **base rotulada de hemogramas reais**, propõe-se uma camada de **aprendizado de máquina** para (i) reconhecimento de padrões multi-analito (ex.: classificação de tipos de anemia) e (ii) maior robustez a extrações incompletas ou ruidosas do OCR, sempre tendo os valores de referência da PNS como **padrão-ouro de rotulagem** — evoluindo o sistema de uma arquitetura **baseada em regras** para uma abordagem **híbrida (regras + ML)**. Outras direções incluem a extensão a leiautes da rede privada e à população pediátrica.
 
-Com a disponibilidade de uma **base rotulada de hemogramas reais**, propõe-se uma camada de **aprendizado de máquina** para (i) reconhecimento de padrões multi-analito (ex.: tipos de anemia) e (ii) robustez a extrações incompletas/ruidosas do OCR, sempre tendo os valores de referência da PNS como padrão-ouro de rotulagem — evoluindo o sistema de baseado em regras para **híbrido (regras + ML)**.
+---
 
-## Referências
+## 9. Referências
 
-ROSENFELD, Luiz Gastão et al. Valores de referência para exames laboratoriais de hemograma da população adulta brasileira: Pesquisa Nacional de Saúde. **Revista Brasileira de Epidemiologia**, v. 22, supl. 2, art. e190003, 2019. DOI: https://doi.org/10.1590/1980-549720190003.supl.2.
+BROOKE, John. SUS: a 'quick and dirty' usability scale. In: JORDAN, P. W. et al. (Eds.). **Usability Evaluation in Industry**. London: Taylor & Francis, 1996. p. 189–194.
+
+HEVNER, Alan R.; MARCH, Salvatore T.; PARK, Jinsoo; RAM, Sudha. Design science in information systems research. **MIS Quarterly**, v. 28, n. 1, p. 75–105, 2004.
+
+ROSENFELD, Luiz Gastão et al. Valores de referência para exames laboratoriais de hemograma da população adulta brasileira: Pesquisa Nacional de Saúde. **Revista Brasileira de Epidemiologia**, v. 22, supl. 2, art. e190003, 2019. DOI: <https://doi.org/10.1590/1980-549720190003.supl.2>.
+
+> _Referências preliminares — a serem ampliadas e ajustadas ao estilo exigido (ABNT/instituição) em conjunto com o(a) orientador(a), incluindo fontes dos eixos de CDSS, OCR e LGPD._
