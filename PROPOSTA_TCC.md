@@ -99,17 +99,45 @@ A revisão de literatura será organizada nos seguintes eixos:
 
 ---
 
-## 5. Metodologia Proposta
+## 5. Arquitetura e Componentes do Artefato
+
+Esta seção detalha os componentes centrais do InterpreteLabBR que sustentam suas funções de apoio à decisão, em complemento à descrição metodológica da validação (Seção 6).
+
+### 5.1. Base de conhecimento e modelos de dados
+
+A base de conhecimento do sistema é composta por dois arquivos no formato CSV. O primeiro, `patterns.csv`, atua como um **dicionário de extração**: mapeia cada analito do hemograma (ex.: *hemoglobina*, *leucócitos*) a uma expressão regular (*regex*) específica, permitindo localizar e extrair os valores numéricos do leiaute do laudo do SUS em formato PDF. O segundo, `guideline_map.csv`, constitui o **núcleo do motor de regras**: funciona como uma tabela de decisão que implementa os valores de referência de Rosenfeld et al. (2019), definindo, para cada analito, as faixas de normalidade (limites inferior e superior) condicionadas ao sexo e à idade, além de vincular a(s) especialidade(s) médica(s) recomendada(s) em caso de alteração.
+
+Para garantir a integridade e a padronização da comunicação entre *backend* e *frontend*, o sistema utiliza modelos de dados definidos com a biblioteca **Pydantic**. A classe `LabFinding` modela um "achado" individual, encapsulando o nome do analito, o valor extraído, a classificação do resultado (*Normal/Alto/Baixo*), a severidade e a especialidade associada. A classe `InterpretationResponse` representa a estrutura completa da resposta da API, agregando a lista de `LabFinding`, a lista consolidada de especialidades recomendadas e o texto explicativo destinado ao paciente.
+
+### 5.2. Mecanismo de recomendação de especialidades
+
+A recomendação de especialidades é obtida por um algoritmo de **votação ponderada por severidade**. Cada achado anormal "vota" nas especialidades a ele vinculadas no `guideline_map.csv`, somando sua severidade ao placar de cada especialidade; ao final, o sistema ordena as especialidades por placar e retorna as três mais pontuadas (com placar positivo).
+
+Cabe registrar, em nome da transparência metodológica, que **na implementação atual a severidade de cada achado é fixada em valor unitário** (simplificação assumida), de modo que o ranqueamento opera, na prática, por **frequência de indicação** — prioriza-se a especialidade apontada pelo maior número de analitos alterados. A ponderação efetiva por magnitude do desvio (ex.: distância relativa ao limite de referência) constitui refinamento previsto (Seção 9). Ressalta-se, ainda, que o vínculo *analito → especialidade* é uma **associação clínica heurística parametrizada no projeto** — distinta dos valores de referência, estes derivados da PNS — cuja fundamentação será consolidada com base em literatura clínica e na orientação especializada `[confirmar fonte do mapeamento]`. Em coerência com o caráter descritivo adotado, a validação formal desta recomendação não integra as frentes A–C, sendo tratada como limitação e direção futura.
+
+### 5.3. Geração do briefing ao paciente (NLG)
+
+O texto explicativo entregue ao paciente é produzido por uma camada de **geração de linguagem natural (NLG)** organizada em uma **cascata com degradação graciosa**:
+
+1. **Base curada:** o sistema mantém um repositório interno de explicações educativas, em linguagem acessível, para cada analito, redigidas e revisadas no âmbito do projeto;
+2. **Composição do *prompt*:** os achados, as especialidades sugeridas e as explicações curadas são integrados em um *prompt* estruturado;
+3. **Geração:** o *prompt* é submetido, prioritariamente, a um **modelo generativo (Google Gemini)** — empregado de forma **opcional**, condicionada à disponibilidade de credencial de API; havendo indisponibilidade, o sistema recorre, sucessivamente, a um modelo local (Ollama) e, por fim, a um **texto-modelo determinístico**, que assegura resposta segura mesmo sem qualquer LLM.
+
+Esse arranjo evidencia uma decisão de projeto relevante para o domínio de saúde: **a lógica clinicamente sensível (classificação pela PNS e recomendação de especialidades) é integralmente determinística e baseada em regras**, ao passo que o modelo generativo atua exclusivamente na **camada de comunicação** (clareza, acolhimento e didatismo do texto), sem interferir na classificação. Como ressalvas a explicitar: (i) saídas de LLM são **não determinísticas** e sujeitas a imprecisões, mitigadas pelo *prompt* ancorado em conteúdo curado, pelo *fallback* determinístico e pelo aviso de que a ferramenta não substitui avaliação médica; e (ii) o uso do Gemini implica **transferência de dados a serviço de terceiros** (Google), aspecto a ser tratado sob a LGPD e refletido na política de privacidade do aplicativo. `[confirmar se a credencial Gemini está ativa em produção]`
+
+---
+
+## 6. Metodologia Proposta
 
 Pesquisa **aplicada**, de natureza **quantitativa** (frentes A e B) e **quanti-qualitativa** (frente C), fundamentada na abordagem metodológica da **Design Science Research (DSR)** para o desenvolvimento e a avaliação do artefato.
 
-### 5.1. Materiais e Ferramentas
+### 6.1. Materiais e Ferramentas
 
 - **Base de regras:** faixas da PNS (Rosenfeld et al., 2019) pré-estruturadas em formato tabular (já materializadas nos arquivos de configuração do projeto, `data/`).
 - **Massa de testes:** **20 a 30 laudos reais anonimizados** (contendo apenas valores laboratoriais, com omissão de dados pessoais), coletados de emissões do ecossistema público de saúde (SUS). A padronização em um único leiaute (SUS) confere maior controle metodológico à validação da extração.
-- **Stack tecnológica:** *backend* em Python (FastAPI); aplicativo móvel em React Native com Expo; *pipeline* de processamento e OCR baseado em bibliotecas abertas (ex.: Tesseract, PyMuPDF/pdfplumber).
+- **Stack tecnológica:** *backend* em Python (FastAPI); aplicativo móvel em React Native com Expo; *pipeline* de processamento e OCR baseado em bibliotecas abertas (ex.: Tesseract, PyMuPDF/pdfplumber); geração de linguagem natural por modelo generativo (Google Gemini), de uso opcional, com *fallbacks* local (Ollama) e determinístico.
 
-### 5.2. Protocolo das Frentes de Validação
+### 6.2. Protocolo das Frentes de Validação
 
 **Frente A — Extração.** Os valores extraídos pelo algoritmo automatizado serão confrontados com um **gabarito elaborado manualmente** por inspeção visual. Serão calculadas as métricas de **Precisão, Recall e F1-Score**, por analito e agregadas, mapeando potenciais fragilidades induzidas por ruídos de impressão comuns nos laudos do SUS e pelo OCR.
 
@@ -117,13 +145,15 @@ Pesquisa **aplicada**, de natureza **quantitativa** (frentes A e B) e **quanti-q
 
 **Frente C — Usabilidade.** Teste de usabilidade direcionado a uma **amostra por conveniência** de usuários finais. Os participantes executarão tarefas de rotina no aplicativo (submissão de laudo e leitura do *briefing* interpretativo) e responderão ao questionário psicométrico padronizado **System Usability Scale (SUS)** para aferição do escore global de satisfação, complementado por coleta de *feedback* qualitativo. Serão reportados o escore SUS médio (escala 0–100) e os principais achados qualitativos.
 
-### 5.3. Aspectos Éticos
+### 6.3. Aspectos Éticos
 
 Garantia de **total anonimização** de dados de terceiros, em estrita conformidade com a **Lei Geral de Proteção de Dados (LGPD)**, e obtenção de **consentimento informado** dos participantes da etapa de usabilidade. A necessidade de submissão do teste de usabilidade à **Plataforma Brasil / Comitê de Ética em Pesquisa (CEP)** será avaliada conjuntamente com o(a) professor(a) orientador(a).
 
+Atenção adicional recai sobre o componente de NLG (Seção 5.3): quando o modelo generativo (Gemini) está ativo, há **transferência de dados a serviço de terceiros**, o que demanda base legal, minimização de dados e transparência (política de privacidade) sob a LGPD; o *fallback* determinístico permite, quando requerido, operar **sem qualquer envio externo**.
+
 ---
 
-## 6. Resultados Esperados
+## 7. Resultados Esperados
 
 - **Aplicativo móvel funcional**, fundamentado na referência brasileira (PNS), em continuidade ao PWA existente.
 - **Relatório quantitativo** de acurácia de extração (Precisão/Recall/F1) e de concordância de classificação (kappa / % de acerto).
@@ -132,7 +162,7 @@ Garantia de **total anonimização** de dados de terceiros, em estrita conformid
 
 ---
 
-## 7. Cronograma (sugestão — ajustar à duração do curso)
+## 8. Cronograma (sugestão — ajustar à duração do curso)
 
 | Etapa | Atividades | Período |
 |---|---|---|
@@ -145,13 +175,13 @@ Garantia de **total anonimização** de dados de terceiros, em estrita conformid
 
 ---
 
-## 8. Trabalhos Futuros
+## 9. Trabalhos Futuros
 
-Com a disponibilidade de uma **base rotulada de hemogramas reais**, propõe-se uma camada de **aprendizado de máquina** para (i) reconhecimento de padrões multi-analito (ex.: classificação de tipos de anemia) e (ii) maior robustez a extrações incompletas ou ruidosas do OCR, sempre tendo os valores de referência da PNS como **padrão-ouro de rotulagem** — evoluindo o sistema de uma arquitetura **baseada em regras** para uma abordagem **híbrida (regras + ML)**. Outras direções incluem a extensão a leiautes da rede privada e à população pediátrica.
+Com a disponibilidade de uma **base rotulada de hemogramas reais**, propõe-se uma camada de **aprendizado de máquina** para (i) reconhecimento de padrões multi-analito (ex.: classificação de tipos de anemia) e (ii) maior robustez a extrações incompletas ou ruidosas do OCR, sempre tendo os valores de referência da PNS como **padrão-ouro de rotulagem** — evoluindo o sistema de uma arquitetura **baseada em regras** para uma abordagem **híbrida (regras + ML)**. Prevê-se, ademais, (iii) a **ponderação efetiva da severidade** dos achados (hoje simplificada) na recomendação de especialidades e (iv) a **avaliação sistemática da qualidade e segurança** dos textos gerados pelo LLM (precisão factual, ausência de alucinações e adequação da linguagem). Outras direções incluem a extensão a leiautes da rede privada e à população pediátrica.
 
 ---
 
-## 9. Referências
+## 10. Referências
 
 BROOKE, John. SUS: a 'quick and dirty' usability scale. In: JORDAN, P. W. et al. (Eds.). **Usability Evaluation in Industry**. London: Taylor & Francis, 1996. p. 189–194.
 
