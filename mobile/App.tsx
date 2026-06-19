@@ -22,7 +22,7 @@ type ApiStatus = 'checking' | 'online' | 'offline';
 type InputMode = 'manual' | 'pdf';
 
 export default function App() {
-  const [inputMode, setInputMode] = useState<InputMode>('manual');
+  const [inputMode, setInputMode] = useState<InputMode>('pdf');
   const [patientData, setPatientData] = useState<PatientData>({ genero: 'feminino', idade: '' });
   const [manualValues, setManualValues] = useState<ManualLabValues>(EMPTY_MANUAL_VALUES);
   const [pdf, setPdf] = useState<PickedPdf | null>(null);
@@ -107,7 +107,7 @@ export default function App() {
         {!results ? (
           <>
             <View style={styles.modeRow}>
-              {(['manual', 'pdf'] as const).map((m) => (
+              {(['pdf', 'manual'] as const).map((m) => (
                 <TouchableOpacity
                   key={m}
                   style={[styles.modeBtn, inputMode === m && styles.modeBtnActive]}
