@@ -1,0 +1,478 @@
+\documentclass[12pt]{article}
+
+\usepackage{sbc-template}
+\usepackage[brazil]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{hyperref}
+
+\sloppy
+
+\title{Migração de um Sistema de Apoio à Decisão em Saúde do\\
+Paradigma PWA para Aplicativo Móvel: Uma Análise de\\
+Engenharia de Software}
+
+\author{Ana Carolina Dias Faria\inst{1}, Diogo S. Martins\inst{1}}
+
+\address{Centro de Matemática, Computação e Cognição\\
+  Universidade Federal do ABC (UFABC) -- Santo André -- SP -- Brasil
+  \email{ana.faria@aluno.ufabc.edu.br, diogo.martins@ufabc.edu.br}
+}
+
+\begin{document}
+
+\maketitle
+
+%-----------------------------------------------------------------------
+\begin{abstract}
+This paper investigates the architectural paradigm shift in digital health
+by analyzing the migration of a Clinical Decision Support System (CDSS)
+from a Progressive Web App (PWA) to a dedicated mobile platform.
+Built on an API-first approach using FastAPI, the system performs text
+parsing and OCR on blood test reports to provide patient-centered
+explanations. While PWAs offer immediate access, web-view-based
+frameworks impose significant CPU and energy overhead during basic
+interactions. This case study evaluates the migration to React Native,
+characterizing software engineering benefits such as perceived
+performance, architectural reuse, and usability heuristics.
+\end{abstract}
+
+\begin{resumo}
+Este artigo investiga a mudança de paradigma arquitetural em saúde
+digital por meio da análise da migração de um Sistema de Apoio à
+Decisão Clínica (SADC) de uma aplicação web progressiva (PWA) para
+uma plataforma móvel dedicada. Estruturado em uma abordagem API-first
+com FastAPI, o sistema realiza \textit{parsing} de texto e OCR em laudos
+de hemogramas para fornecer \textit{briefings} educativos aos pacientes.
+Embora PWAs ofereçam acesso imediato, \textit{frameworks} baseados em
+\textit{web views} impõem \textit{overhead} severo de CPU e energia em
+interações básicas. Este estudo de caso avalia a migração para React
+Native, caracterizando empiricamente os benefícios de engenharia de
+software em termos de desempenho percebido, reuso arquitetural e
+heurísticas de usabilidade.
+\end{resumo}
+
+%-----------------------------------------------------------------------
+\section{Introdução}
+
+O hemograma é um dos exames laboratoriais mais requisitados no Brasil,
+mas sua interpretação por usuários comuns é difícil, sendo agravada pelo
+fato de os valores de referência impressos nos laudos derivarem, em geral,
+de populações estrangeiras \cite{rosenfeld2019}. O projeto-base deste
+trabalho, denominado InterpreteLabBR, foi concebido originalmente na
+graduação como uma Progressive Web App (PWA). O sistema atua na extração
+de valores de hemogramas no padrão do SUS por meio de \textit{parsing} de
+texto e reconhecimento óptico de caracteres (OCR), classificando cada
+analito segundo as faixas estabelecidas pela Pesquisa Nacional de Saúde
+\cite{rosenfeld2019} e gerando um \textit{briefing} educativo ao paciente.
+
+Embora as PWAs ofereçam a vantagem de um acesso imediato, a literatura
+aponta limitações críticas de desempenho frente a soluções móveis
+dedicadas. \cite{oliveira2023} demonstram que \textit{frameworks} baseados
+em \textit{web views} impõem um \textit{overhead} severo de CPU e energia
+em interações básicas, como a rolagem de tela, chegando a demandar até 8
+vezes mais energia do que soluções estruturadas sobre componentes nativos.
+Diante desse cenário, a motivação desta pesquisa é investigar e
+documentar, sob a ótica da Engenharia de Software, os impactos técnicos e
+operacionais de migrar esse artefato de um PWA encapsulado para uma
+arquitetura móvel dedicada \cite{oliveira2023}.
+
+A relevância social e científica desta transição reflete-se diretamente
+nos seus potenciais beneficiários. Por um lado, os pacientes usuários do
+SUS ganham uma interface mais responsiva e um canal de distribuição mais
+inclusivo por meio de um aplicativo instalável, alinhando-se ao eixo de
+cidadania e inclusão apontado pelo Brazilian Digital Health Index (BDHI)
+\cite{cruz2022}. Por outro lado, a comunidade de Engenharia de Software
+aplicada à saúde beneficia-se com um estudo de caso empírico e rico em
+métricas computacionais, detalhando os benefícios, os custos e os desafios
+práticos de migrar um sistema de informação em saúde entre diferentes
+paradigmas de distribuição \cite{oliveira2023}.
+
+A partir desse contexto, estabelece-se o problema de pesquisa deste
+trabalho, que busca compreender quais são, e como podem ser medidos de
+forma reprodutível, os benefícios de Engenharia de Software especificamente
+em termos de desempenho percebido, reuso arquitetural e usabilidade
+decorrentes da migração de um sistema de apoio à decisão clínica do
+paradigma PWA para um aplicativo móvel dedicado, garantindo a preservação
+da integridade funcional do sistema \cite{rampinelli2026}.
+
+Ao analisar como esse problema é tratado atualmente na literatura,
+identificam-se frentes de soluções existentes que evidenciam a necessidade
+deste estudo. As ferramentas comerciais de leitura de exames operam
+majoritariamente em nuvem, dependem de parâmetros populacionais
+estrangeiros e desconsideram tanto o leiaute de impressão do SUS quanto a
+referência epidemiológica nacional. Similarmente, os leitores de OCR
+comerciais genéricos limitam-se a extrair o texto bruto do documento, sem
+realizar qualquer tipo de interpretação clínica ou contextualização para o
+entendimento do paciente leigo. Por fim, o próprio protótipo inicial do
+InterpreteLabBR em PWA, embora funcional, carece de uma validação formal e
+sofre com as restrições de encapsulamento e de acesso a \textit{hardware}
+impostas pelos navegadores \cite{cardieri2018}. As soluções comerciais
+vigentes funcionam, em geral, como ``caixas-pretas'' inadequadas à
+realidade técnica do sistema público de saúde. Portanto, persiste na
+literatura uma lacuna de estudos de caso reais que quantifiquem e mapeiem
+de forma clara os efeitos práticos de uma migração de paradigma arquitetural
+sobre sistemas de informação em saúde, lacuna esta que este trabalho se
+propõe a preencher \cite{rampinelli2026}.
+
+%-----------------------------------------------------------------------
+\section{Revisão de Literatura}
+
+\subsection{Sistemas de Apoio à Decisão Clínica na Saúde Digital Brasileira}
+
+Os Sistemas de Apoio à Decisão Clínica (\textit{Clinical Decision Support
+Systems} — CDSS) são ferramentas computacionais projetadas para auxiliar
+profissionais de saúde e pacientes no processo de tomada de decisão,
+fornecendo informações baseadas em evidências em contextos clínicos
+específicos. De acordo com a literatura, essas ferramentas integram dados
+do paciente com bases de conhecimento estruturadas para gerar
+recomendações, alertas ou interpretações que auxiliam na triagem e no
+diagnóstico \cite{bauermann2024}.
+
+No contexto brasileiro, a saúde digital tem sido avaliada por iniciativas
+como o Brazilian Digital Health Index (BDHI), instrumento desenvolvido para
+mensurar o nível de maturidade da saúde digital no país. \cite{cruz2022}
+demonstram que o Brasil apresenta avanços significativos em alguns eixos,
+como conectividade e infraestrutura, mas ainda enfrenta lacunas expressivas
+no eixo de cidadania e inclusão, que abrange o acesso da população a
+ferramentas digitais de saúde. Esse diagnóstico evidencia a necessidade de
+soluções que priorizem a acessibilidade e a inclusão digital como critério
+de projeto, e não apenas como efeito secundário.
+
+No campo dos CDSS aplicados à saúde pública brasileira, destaca-se o
+trabalho de \cite{bauermann2024}, que desenvolveram um sistema de apoio à
+decisão clínica voltado a cuidadores de pacientes pediátricos hemofílicos.
+Esse trabalho exemplifica como sistemas computacionais podem ser projetados
+para mediar o conhecimento clínico especializado e o leigo, reduzindo
+barreiras de interpretação para familiares e cuidadores sem formação na
+área da saúde, em uma proposta análoga à do InterpreteLabBR, que busca
+traduzir resultados laboratoriais de hemogramas para o paciente comum do
+SUS. A relevância de soluções móveis nesse contexto é reforçada por
+\cite{torrente2024}, que analisam a relação entre tecnologia e atendimento
+pré-hospitalar móvel, evidenciando que a adoção de aplicativos instaláveis
+no contexto de saúde pública contribui para a agilidade e a qualidade do
+atendimento. A disponibilização de sistemas de saúde em plataformas móveis
+instaláveis configura, portanto, não apenas uma decisão técnica, mas uma
+estratégia de alcance e equidade no acesso à informação clínica.
+
+\subsection{Hemograma e Valores de Referência Populacionais Brasileiros}
+
+O hemograma é um dos exames laboratoriais mais solicitados na rotina
+clínica do Sistema Único de Saúde (SUS), permitindo a avaliação de
+componentes do sangue como eritrócitos, leucócitos e plaquetas. Apesar
+de sua ampla utilização, a interpretação dos resultados por pacientes
+leigos é frequentemente dificultada pela ausência de contextualização
+adequada nos laudos e, sobretudo, pelo fato de que os valores de referência
+impressos na maioria dos laudos brasileiros derivam de estudos populacionais
+estrangeiros, que não refletem as especificidades demográficas, nutricionais
+e epidemiológicas da população brasileira.
+
+Essa lacuna foi endereçada de forma expressiva pela Pesquisa Nacional de
+Saúde (PNS), cujos resultados para exames laboratoriais de hemograma foram
+publicados por \cite{rosenfeld2019}. O estudo, de abrangência nacional,
+estabeleceu valores de referência para a população adulta brasileira
+estratificados por sexo e faixa etária, constituindo o primeiro
+levantamento paramétrico de grande escala conduzido com amostra
+representativa do Brasil. A adoção desses parâmetros como base
+classificatória confere ao InterpreteLabBR validade epidemiológica superior
+às ferramentas que utilizam tabelas de referência importadas, tornando-o
+mais adequado à realidade do sistema público de saúde nacional. A
+importância de se utilizar valores de referência populacionalmente ajustados
+reside no fato de que a classificação equivocada de um analito como anormal,
+ou, inversamente, a não detecção de um valor limítrofe, pode gerar ansiedade
+desnecessária no paciente ou, em casos mais graves, retardar a busca por
+atendimento médico. A fundamentação do sistema na PNS representa, portanto,
+um diferencial de segurança e de relevância clínica para a população usuária
+do SUS, público-alvo primário do projeto.
+
+\subsection{\textit{Progressive Web Apps}: Características e Limitações}
+
+As \textit{Progressive Web Apps} (PWAs) constituem uma abordagem de
+desenvolvimento de software que busca combinar as vantagens das aplicações
+web — acessibilidade via navegador, sem necessidade de instalação — com
+características típicas de aplicativos nativos, como comportamento
+responsivo, suporte a notificações e capacidade de funcionamento
+\textit{offline} por meio de \textit{Service Workers}.
+
+No contexto do InterpreteLabBR, a escolha inicial pela arquitetura PWA
+justificou-se pela praticidade de distribuição e pela dispensa de contas em
+plataformas comerciais. No entanto, essa abordagem impõe restrições
+estruturais que limitam o desempenho e a experiência do usuário. As PWAs
+executam sobre o motor de renderização do navegador (\textit{web view}), o
+que introduz uma camada de abstração entre o código da aplicação e os
+componentes nativos do sistema operacional. Essa camada adicional implica
+\textit{overhead} de processamento, especialmente em operações que
+demandam alta responsividade de interface, como rolagem de listas extensas,
+animações ou interações rápidas com o teclado. Adicionalmente, PWAs
+enfrentam limitações de integração com recursos de \textit{hardware} do
+dispositivo de forma mais restrita do que aplicativos nativos, por estarem
+sujeitas às permissões e às políticas de segurança impostas pelo navegador.
+No contexto do InterpreteLabBR, onde o carregamento de documentos PDF via
+seletor de arquivos nativo é uma operação central, essas restrições
+impactam diretamente a experiência do usuário e motivam a evolução para uma
+arquitetura móvel dedicada.
+
+\subsection{\textit{Frameworks} de Desenvolvimento Móvel e \textit{Overhead} de Recursos}
+
+O desenvolvimento de aplicativos móveis pode ser realizado por meio de três
+abordagens principais: (i) desenvolvimento nativo, em que a aplicação é
+escrita nas linguagens oficiais da plataforma, com acesso irrestrito às
+APIs do sistema operacional; (ii) desenvolvimento híbrido baseado em
+\textit{web view}, em que o código web é encapsulado em um contêiner nativo
+e renderizado por um motor de navegador embutido; e (iii) \textit{frameworks}
+de renderização nativa, como o React Native, que traduzem componentes
+escritos em JavaScript/TypeScript em componentes nativos da plataforma, sem
+o uso de \textit{web views}.
+
+A distinção entre essas abordagens tem implicações diretas no desempenho e
+no consumo de recursos do dispositivo. \cite{oliveira2023} conduziram um
+estudo empírico sobre o \textit{overhead} de recursos em
+\textit{frameworks} de desenvolvimento móvel, comparando soluções baseadas
+em \textit{web views} com aquelas baseadas em componentes nativos. Os
+resultados demonstram que \textit{frameworks} baseados em \textit{web views}
+podem demandar até 8 vezes mais energia do que soluções estruturadas sobre
+componentes nativos em interações básicas, como a rolagem de listas. Esse
+\textit{overhead} impacta diretamente a experiência do usuário em
+dispositivos com recursos limitados de bateria e processamento, cenário
+comum entre usuários do SUS, que frequentemente utilizam aparelhos Android
+de entrada. O React Native, \textit{framework} adotado no InterpreteLabBR
+para a camada móvel, posiciona-se como uma solução intermediária que combina
+a produtividade do desenvolvimento em JavaScript/TypeScript com a eficiência
+de renderização de componentes nativos. Ao contrário de soluções que
+encapsulam \textit{web views}, o React Native mapeia os componentes
+declarativos da aplicação diretamente para os componentes visuais do sistema
+operacional, favorecendo uma execução mais fluida e um menor consumo de
+recursos. O Expo fornece uma camada de abstração que simplifica o processo
+de \textit{build} e distribuição, incluindo a geração de APKs por meio do
+serviço EAS Build sem a necessidade de ambiente nativo configurado
+localmente.
+
+\subsection{Arquitetura \textit{API-first} e Reuso Arquitetural em Migrações de Software}
+
+A arquitetura \textit{API-first} é uma abordagem de \textit{design} de
+software na qual a interface de programação de aplicações (API) é concebida
+e documentada antes da implementação dos clientes que a consomem. Nesse
+modelo, toda a lógica de negócio e processamento de dados é centralizada no
+servidor (\textit{backend}), exposta por meio de \textit{endpoints} REST ou
+GraphQL, e consumida por diferentes clientes de forma independente. Essa
+separação de responsabilidades constitui um princípio fundamental de
+Engenharia de Software, alinhado ao conceito de baixo acoplamento e alta
+coesão.
+
+No contexto de migrações de sistema, a arquitetura \textit{API-first}
+apresenta vantagem expressiva: ao concentrar a lógica clínica no
+\textit{backend}, ela permite que a substituição ou a evolução da camada de
+apresentação — de uma PWA para um aplicativo móvel — ocorra sem que o
+núcleo funcional do sistema precise ser reescrito. No caso do
+InterpreteLabBR, todo o processamento crítico, incluindo a extração de
+valores via OCR e a classificação dos analitos segundo as faixas da PNS,
+reside no \textit{backend} implementado em FastAPI (Python), exposto como
+serviço REST. Isso permite que tanto o cliente web (PWA) quanto o cliente
+móvel (React Native) consumam os mesmos \textit{endpoints}, garantindo
+consistência nos resultados e eliminando a necessidade de duplicação de
+lógica clínica. Esse padrão arquitetural é também relevante do ponto de
+vista da manutenibilidade e da evolução do sistema. \cite{rampinelli2026}
+propõem um \textit{framework} de avaliação de sistemas de informação sob a
+perspectiva do usuário, destacando que sistemas bem estruturados
+arquiteturalmente tendem a apresentar maior facilidade de adaptação a novos
+contextos de uso e plataformas. A documentação e a caracterização formal do
+reuso arquitetural constituem, portanto, uma contribuição relevante deste
+trabalho para a literatura de Engenharia de Software aplicada à saúde.
+
+\subsection{Reconhecimento Óptico de Caracteres em Documentos de Saúde}
+
+O Reconhecimento Óptico de Caracteres (\textit{Optical Character Recognition}
+— OCR) é uma tecnologia que converte imagens de texto em texto digital
+estruturado, possibilitando o processamento computacional de documentos
+digitalizados ou gerados por impressão. No contexto de sistemas de saúde,
+o OCR viabiliza a extração automatizada de dados a partir de laudos,
+prescrições e prontuários, reduzindo a necessidade de entrada manual de
+informações e ampliando a escalabilidade de soluções de triagem e análise
+clínica.
+
+A qualidade da extração por OCR em documentos de saúde está sujeita a
+desafios específicos, incluindo variações no \textit{layout} de impressão,
+presença de ruídos gráficos, diferenças tipográficas entre unidades de saúde
+e inconsistências na qualidade de digitalização. \cite{most2025} abordam
+abordagens baseadas em visão computacional para recuperação robusta de
+documentos, evidenciando que estratégias que combinam OCR com técnicas de
+pré-processamento de imagem tendem a apresentar maior resiliência a variações
+de qualidade. No contexto do InterpreteLabBR, o leiaute padronizado do laudo
+do SUS representa tanto uma vantagem — ao permitir o desenvolvimento de
+heurísticas de \textit{parsing} específicas para esse formato — quanto um
+desafio, dado que pequenas variações entre laboratórios da rede pública podem
+introduzir erros de extração.
+
+\cite{bhaskaran2025} investigaram a aplicação de OCR para avaliação
+automatizada de transcrições acadêmicas, demonstrando que a combinação de
+técnicas de extração com estratégias de validação pós-OCR aumenta
+significativamente a precisão dos dados estruturados obtidos. Essa abordagem
+é análoga à adotada no InterpreteLabBR, que combina \textit{parsing} de texto
+com OCR como estratégia de \textit{fallback}, e aplica regras de validação
+para verificar se os valores extraídos estão dentro de faixas plausíveis
+antes de submetê-los ao motor de classificação. A questão do
+pós-processamento de texto extraído por OCR em língua portuguesa é
+endereçada por \cite{osorio2025}, que propõem recursos específicos para
+otimização de texto em português após extração por OCR. Essa contribuição é
+particularmente relevante para o contexto do InterpreteLabBR, cujos laudos
+são emitidos em português e podem conter termos técnicos da nomenclatura
+hematológica que ferramentas genéricas de OCR tendem a interpretar de forma
+equivocada.
+
+\subsection{Avaliação de Usabilidade por Inspeção Heurística}
+
+A usabilidade é um atributo de qualidade de software que mede a facilidade
+com que usuários conseguem aprender e utilizar uma interface para alcançar
+seus objetivos, bem como o grau de satisfação proporcionado durante o uso.
+No contexto de sistemas de saúde voltados ao paciente leigo, a usabilidade
+assume dimensão crítica: interfaces confusas ou que exigem conhecimento
+técnico prévio podem resultar em interpretações equivocadas dos dados
+clínicos, comprometendo o propósito informativo do sistema.
+
+Entre os métodos de avaliação de usabilidade, a Avaliação Heurística,
+proposta por Jakob Nielsen, é amplamente utilizada na prática de Engenharia
+de Software por sua eficiência e pelo baixo custo de aplicação. O método
+consiste na inspeção sistemática da interface por especialistas em
+usabilidade ou interação humano-computador (IHC), que avaliam a adequação
+da interface a um conjunto de princípios estabelecidos — as heurísticas de
+Nielsen — registrando e classificando os problemas encontrados segundo uma
+escala de severidade de 0 a 4 \cite{cardieri2018}. A ausência de usuários
+reais no processo de avaliação, substituídos por especialistas que atuam
+como juízes inspetores, é uma característica que distingue a avaliação
+heurística dos testes de usabilidade com usuários, dispensando aprovação de
+comitê de ética e viabilizando a execução dentro de prazos acadêmicos mais
+curtos \cite{cardieri2018}.
+
+\cite{cardieri2018} realizaram um estudo comparativo da experiência do
+usuário em aplicações \textit{web} móveis, nativas e PWAs, sob as
+perspectivas de usuários reais e especialistas em IHC. Os resultados
+evidenciam diferenças perceptíveis de qualidade de interação entre os
+paradigmas, com aplicações nativas e PWAs bem implementadas tendendo a
+superar aplicações \textit{web} móveis em critérios como responsividade,
+fluidez e consistência de navegação. Esse achado fundamenta a hipótese
+central deste trabalho, de que a migração do InterpreteLabBR para um
+aplicativo móvel resultará em ganhos mensuráveis de usabilidade,
+verificáveis pela inspeção heurística comparativa. \cite{rampinelli2026}
+propõem um \textit{framework} de avaliação de sistemas de informação sob a
+perspectiva do usuário, reforçando a necessidade de metodologias estruturadas
+para a avaliação da qualidade percebida em sistemas de saúde digital.
+\cite{vaz2026} desenvolveu e avaliou a usabilidade do APScreening, um
+aplicativo móvel de apoio à decisão clínica para rastreamentos na Atenção
+Primária à Saúde no contexto do SUS, obtendo pontuação SUS de 91,25 ---
+classificada como excelente ---, evidenciando que CDSSs móveis voltados ao
+ecossistema de saúde pública brasileiro podem atingir alta aceitabilidade em
+condições reais de uso.
+
+\subsection{\textit{Design Science Research} como Abordagem Metodológica}
+
+A \textit{Design Science Research} (DSR) é uma abordagem metodológica
+originada na área de Sistemas de Informação, utilizada para orientar a
+concepção, o desenvolvimento e a avaliação de artefatos que resolvem
+problemas práticos identificados. Diferentemente das metodologias de
+pesquisa baseadas em observação de fenômenos existentes, a DSR parte da
+construção de um artefato — seja um sistema, um modelo, um método ou um
+constructo — e avalia sua efetividade no contexto do problema que motivou
+sua criação.
+
+A DSR é especialmente adequada a trabalhos de pós-graduação em Tecnologia e
+Sistemas de Informação que envolvem o desenvolvimento de soluções
+computacionais, pois confere rigor científico ao processo de construção e
+validação do artefato, exigindo que o problema seja claramente identificado,
+que a solução seja fundamentada na literatura e que sua avaliação seja
+conduzida de forma sistemática e reprodutível. No caso do InterpreteLabBR,
+o artefato é o aplicativo móvel resultante da migração do PWA original, e
+sua avaliação ocorre nas três frentes metodológicas previstas: desempenho
+comparativo (Frente A), caracterização da engenharia da migração (Frente B)
+e inspeção de usabilidade (Frente C).
+
+%-----------------------------------------------------------------------
+\section{Trabalhos Relacionados}
+
+A presente seção situa o InterpreteLabBR em relação a trabalhos recentes
+que investigam desempenho, migração e desafios de desenvolvimento em
+\textit{frameworks} de aplicativos móveis \textit{cross-platform},
+identificando as contribuições específicas que o diferenciam da literatura
+existente.
+
+\cite{sokolov2025} conduziu um estudo experimental quantitativo comparando
+o consumo de memória e a eficiência de tempo de execução entre uma aplicação
+React Native e seu equivalente nativo em Kotlin, utilizando criptografia e
+decriptografia AES como carga computacional de referência e o Android Debug
+Bridge (ADB) como instrumento de coleta de métricas. Os resultados
+demonstraram que a implementação nativa superou o React Native em eficiência
+de CPU e crescimento de memória ao longo do tempo, embora em determinados
+cenários de decriptografia o React Native tenha apresentado desempenho
+superior. O trabalho contribui com evidências empíricas sobre o
+\textit{overhead} de execução do React Native em tarefas computacionalmente
+intensivas, mas restringe-se a um \textit{benchmark} sintético — criptografia
+de arquivos — sem qualquer vínculo com aplicações de domínio específico ou
+com o processo de migração de sistemas existentes. O InterpreteLabBR
+complementa essa perspectiva ao avaliar o \textit{overhead} de desempenho
+em um cenário real de uso, com operações predominantemente
+\textit{I/O-bound} e \textit{rede-bound} (submissão de PDF e retorno de
+JSON da API), sobre dispositivos Android de entrada representativos do
+perfil de usuários do SUS.
+
+\cite{zhou2024} realizou um estudo qualitativo com 20 desenvolvedores
+experientes em React Native e Flutter, por meio de entrevistas
+semiestruturadas, para mapear os desafios e soluções em projetos de
+desenvolvimento \textit{cross-platform}. Entre os desafios mais recorrentes
+identificados, destacam-se a otimização de desempenho de renderização, a
+consistência da interface entre plataformas, a integração com módulos
+nativos e a curva de aprendizado associada às atualizações frequentes dos
+\textit{frameworks}. O trabalho oferece uma perspectiva valiosa sobre a
+experiência do desenvolvedor (DX), mas opera exclusivamente no plano
+qualitativo e não documenta o processo de migração de um sistema
+preexistente de um paradigma para outro. O InterpreteLabBR avança nessa
+direção ao registrar empiricamente o processo de migração de um PWA em
+produção para React Native, quantificando o reuso de componentes,
+identificando os padrões de portabilidade adotados e caracterizando o
+esforço de adaptação por categoria de artefato, informação ausente na
+literatura revisada por Zhou.
+
+\cite{karin2025} conduziu uma revisão sistemática da literatura sobre o
+impacto de \textit{frameworks cross-platform} no desempenho de aplicações
+móveis, sintetizando evidências que posicionam soluções baseadas em
+\textit{WebView} — incluindo PWAs — como as de maior \textit{overhead}
+dentre as abordagens analisadas, com médias de 30 a 60 quadros por segundo
+e consumo muito elevado de CPU, enquanto o React Native se mostrou mais
+eficiente para aplicações orientadas a dados. A revisão conclui que, para
+80\% das aplicações de negócio com perfil CRUD, a diferença de desempenho
+entre paradigmas é imperceptível ao usuário final. Embora o trabalho
+consolide evidências comparativas relevantes, trata-se de uma síntese da
+literatura existente, sem coleta primária de dados e sem estudo de caso
+aplicado a um sistema real. O InterpreteLabBR posiciona-se como um estudo
+de caso primário que instancia, em um sistema de saúde pública real,
+exatamente a transição de paradigma identificada por Karin como
+teoricamente vantajosa — de PWA para React Native —, verificando
+empiricamente se os ganhos de desempenho previstos pela literatura se
+manifestam no contexto específico de laudos hematológicos no SUS.
+
+Em síntese, os três trabalhos relacionados abordam, de formas
+complementares, questões de desempenho e experiência de desenvolvimento em
+\textit{frameworks cross-platform} \cite{sokolov2025,zhou2024,karin2025},
+mas nenhum deles trata simultaneamente de: (i) um sistema real de apoio à
+decisão clínica como objeto de avaliação; (ii) o processo de migração de
+um PWA em produção para React Native como fenômeno de pesquisa; e (iii) a
+avaliação tripartite que integra desempenho técnico, caracterização da
+engenharia de migração e inspeção de usabilidade. A originalidade do
+InterpreteLabBR reside precisamente nessa intersecção, ao conduzir um
+estudo de caso empírico e reprodutível em um sistema de saúde pública
+nacional, utilizando ferramentas gratuitas e metodologia verificável, que
+possa servir de referência para migrações similares no contexto da saúde
+digital brasileira.
+
+%-----------------------------------------------------------------------
+% Seções futuras (a preencher):
+% \section{Arquitetura do Sistema e Processo de Migração}
+% \section{Metodologia de Avaliação}
+% \section{Resultados}
+% \section{Conclusão}
+
+%-----------------------------------------------------------------------
+\bibliographystyle{sbc}
+\bibliography{referencias}
+
+\end{document}
