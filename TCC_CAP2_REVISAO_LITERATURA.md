@@ -86,7 +86,21 @@ A DSR é especialmente adequada a trabalhos de pós-graduação em Tecnologia e 
 
 ---
 
-## 2.9 Síntese e Posicionamento do Trabalho
+## 2.9 Trabalhos Relacionados
+
+A presente seção situa o InterpreteLabBR em relação a trabalhos recentes que investigam desempenho, migração e desafios de desenvolvimento em frameworks de aplicativos móveis cross-platform, identificando as contribuições específicas que o diferenciam da literatura existente.
+
+Sokolov (2025) conduziu um estudo experimental quantitativo comparando o consumo de memória e a eficiência de tempo de execução entre uma aplicação React Native e seu equivalente nativo em Kotlin, utilizando criptografia e decriptografia AES como carga computacional de referência e o Android Debug Bridge (ADB) como instrumento de coleta de métricas. Os resultados demonstraram que a implementação nativa superou o React Native em eficiência de CPU e crescimento de memória ao longo do tempo, embora em determinados cenários de decriptografia o React Native tenha apresentado desempenho superior. O trabalho contribui com evidências empíricas sobre o overhead de execução do React Native em tarefas computacionalmente intensivas, mas restringe-se a um benchmark sintético — criptografia de arquivos — sem qualquer vínculo com aplicações de domínio específico ou com o processo de migração de sistemas existentes. O InterpreteLabBR complementa essa perspectiva ao avaliar o overhead de desempenho em um cenário real de uso, com operações predominantemente I/O-bound e rede-bound (submissão de PDF e retorno de JSON da API), sobre dispositivos Android de entrada representativos do perfil de usuários do SUS.
+
+Zhou (2024) realizou um estudo qualitativo com 20 desenvolvedores experientes em React Native e Flutter, por meio de entrevistas semiestruturadas, para mapear os desafios e soluções em projetos de desenvolvimento cross-platform. Entre os desafios mais recorrentes identificados, destacam-se a otimização de desempenho de renderização, a consistência da interface entre plataformas, a integração com módulos nativos e a curva de aprendizado associada às atualizações frequentes dos frameworks. O trabalho oferece uma perspectiva valiosa sobre a experiência do desenvolvedor (DX), mas opera exclusivamente no plano qualitativo e não documenta o processo de migração de um sistema preexistente de um paradigma para outro. O InterpreteLabBR avança nessa direção ao registrar empiricamente o processo de migração de um PWA em produção para React Native, quantificando o reuso de componentes, identificando os padrões de portabilidade adotados e caracterizando o esforço de adaptação por categoria de artefato — informação ausente na literatura revisada por Zhou.
+
+Karin (2025) conduziu uma revisão sistemática da literatura sobre o impacto de frameworks cross-platform no desempenho de aplicações móveis, sintetizando evidências que posicionam soluções baseadas em WebView — incluindo PWAs — como as de maior overhead dentre as abordagens analisadas, com médias de 30 a 60 quadros por segundo e consumo muito elevado de CPU, enquanto o React Native se mostrou mais eficiente para aplicações orientadas a dados, com 45 a 60 quadros por segundo. A revisão conclui que, para 80% das aplicações de negócio com perfil CRUD, a diferença de desempenho entre paradigmas é imperceptível ao usuário final. Embora o trabalho consolide evidências comparativas relevantes, trata-se de uma síntese da literatura existente, sem coleta primária de dados e sem estudo de caso aplicado a um sistema real. O InterpreteLabBR posiciona-se como um estudo de caso primário que instancia, em um sistema de saúde pública real, exatamente a transição de paradigma identificada por Karin como teoricamente vantajosa — de PWA para React Native —, verificando empiricamente se os ganhos de desempenho previstos pela literatura se manifestam no contexto específico de laudos hematológicos no SUS.
+
+Em síntese, os três trabalhos relacionados abordam, de formas complementares, questões de desempenho e experiência de desenvolvimento em frameworks cross-platform, mas nenhum deles trata simultaneamente de: (i) um sistema real de apoio à decisão clínica como objeto de avaliação; (ii) o processo de migração de um PWA em produção para React Native como fenômeno de pesquisa; (iii) a avaliação tripartite que integra desempenho técnico, caracterização da engenharia de migração e inspeção de usabilidade. A originalidade do InterpreteLabBR reside precisamente nessa intersecção, ao conduzir um estudo de caso empírico e reprodutível em um sistema de saúde pública nacional, utilizando ferramentas gratuitas e metodologia verificável, que possa servir de referência para migrações similares no contexto da saúde digital brasileira.
+
+---
+
+## 2.10 Síntese e Posicionamento do Trabalho
 
 A revisão da literatura apresentada neste capítulo evidencia a confluência de múltiplos campos do conhecimento que fundamentam o InterpreteLabBR: a saúde digital brasileira e seus desafios de inclusão (CRUZ et al., 2022), a epidemiologia hematológica nacional e a necessidade de parâmetros populacionais próprios (ROSENFELD et al., 2019), a Engenharia de Software de sistemas móveis e os *trade-offs* entre paradigmas de distribuição (OLIVEIRA et al., 2023; CARDIERI; ZAINA, 2018), as técnicas de extração automatizada de documentos em saúde (MOST et al., 2025; BHASKARAN; PARDOS, 2025; OSÓRIO; CARDOSO, 2025) e os métodos de avaliação de qualidade de sistemas de informação em saúde (RAMPINELLI et al., 2026; TORKAMAAN et al., 2026).
 
@@ -114,6 +128,12 @@ RAMPINELLI, Vanessa P. C. et al. An evaluation framework for information systems
 
 ROSENFELD, Luiz Gastão et al. Valores de referência para exames laboratoriais de hemograma da população adulta brasileira: Pesquisa Nacional de Saúde. **Revista Brasileira de Epidemiologia**, v. 22, supl. 2, art. e190003, 2019.
 
+KARIN, Juliana. The Impact of Cross-Platform Frameworks on Mobile Web Application Performance: A Systematic Review. **International Journal of Research and Applied Technology**, v. 5, n. 2, p. 407-411, 2025.
+
+SOKOLOV, Roman. **Comparing Memory Usage and Runtime Efficiency of Cross-Platform vs. Native Mobile Apps**. 2025. Trabalho de Conclusão de Curso (Graduação em Desenvolvimento de Software e Empreendedorismo) — Estonian University of Applied Sciences, Tallinn, 2025.
+
 TORKAMAAN, Helma et al. HealthIUI: Workshop on Intelligent and Interactive Health User Interfaces. In: INTERNATIONAL CONFERENCE ON INTELLIGENT USER INTERFACES COMPANION (IUI Companion '26), 31., 2026, Paphos. **Companion Proceedings...** New York: ACM, 2026. p. 248-252.
 
 TORRENTE, Gisele et al. Atendimento pré-hospitalar móvel e tecnologia: um estudo de validação. **Journal of Health Informatics**, v. 16, Número Especial SBIS, p. 1-14, 2024.
+
+ZHOU, Changkong. **Challenges and Solutions in Cross-Platform Mobile Development: A Qualitative Study of Flutter and React Native**. 2024. Dissertação (Mestrado em Computer, Communication and Information Sciences) — Aalto University, Otaniemi, 2024.
