@@ -305,14 +305,20 @@ heurísticas de \textit{parsing} específicas para esse formato — quanto um
 desafio, dado que pequenas variações entre laboratórios da rede pública podem
 introduzir erros de extração.
 
-\cite{bhaskaran2025} investigaram a aplicação de OCR para avaliação
-automatizada de transcrições acadêmicas, demonstrando que a combinação de
-técnicas de extração com estratégias de validação pós-OCR aumenta
-significativamente a precisão dos dados estruturados obtidos. Essa abordagem
-é análoga à adotada no InterpreteLabBR, que combina \textit{parsing} de texto
-com OCR como estratégia de \textit{fallback}, e aplica regras de validação
-para verificar se os valores extraídos estão dentro de faixas plausíveis
-antes de submetê-los ao motor de classificação. A questão do
+\cite{lima2024} comparou modelos de OCR de código aberto --- Tesseract e
+EasyOCR --- com a API Google Cloud Vision para extração de informações em
+prescrições médicas, avaliando precisão, velocidade e robustez em diferentes
+cenários de caligrafia e condições de digitalização. Os resultados
+demonstraram que modelos de OCR tradicionais apresentam vantagens em
+velocidade e precisão para textos impressos, enquanto modelos especializados
+em reconhecimento de texto manuscrito superam as demais opções em caligrafias
+variadas \cite{lima2024}. Esse achado é diretamente relevante para o
+InterpreteLabBR, que adota o Tesseract como estratégia de \textit{fallback}
+na extração de laudos hematológicos do SUS: laudos gerados por sistemas
+informatizados são processados com maior confiabilidade pelos mesmos modelos
+de OCR open-source avaliados por Lima, enquanto documentos digitalizados por
+câmera ou scanner de baixa qualidade exigem estratégias adicionais de
+pré-processamento de imagem. A questão do
 pós-processamento de texto extraído por OCR em língua portuguesa é
 endereçada por \cite{osorio2025}, que propõem recursos específicos para
 otimização de texto em português após extração por OCR. Essa contribuição é
