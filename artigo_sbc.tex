@@ -471,8 +471,132 @@ possa servir de referência para migrações similares no contexto da saúde
 digital brasileira.
 
 %-----------------------------------------------------------------------
+%-----------------------------------------------------------------------
+\section{Arquitetura do Sistema e Processo de Migração}
+
+O InterpreteLabBR é estruturado em três camadas distintas: o
+\textit{backend} clínico, o cliente web progressivo (PWA) e o cliente
+móvel nativo. Toda a lógica clínica sensível — extração de valores por
+OCR, classificação segundo as faixas da PNS e geração de texto educativo
+— reside exclusivamente no \textit{backend}, implementado em Python com
+o \textit{framework} FastAPI e exposto como serviço REST. Essa separação
+de responsabilidades constitui o fator determinante para a estratégia de
+migração adotada: ao concentrar o núcleo funcional no servidor, a transição
+de paradigma de distribuição restringe-se à reescrita da camada de
+apresentação, sem qualquer alteração na lógica clínica subjacente. Ambos
+os clientes — o PWA original e o aplicativo móvel — consomem os mesmos
+\textit{endpoints}, garantindo consistência dos resultados e eliminando a
+necessidade de duplicação de lógica clínica entre plataformas.
+
+\subsection{Backend: Componente Compartilhado entre PWA e Aplicativo Móvel}
+
+O \textit{backend} disponibiliza quatro \textit{endpoints} REST. O
+\textit{endpoint} GET /health realiza a verificação de disponibilidade do
+serviço; o GET /debug fornece informações de diagnóstico do ambiente de
+execução. O \textit{endpoint} central POST /interpret recebe o laudo
+hematológico em formato PDF via \textit{multipart/form-data}, acompanhado
+do sexo e da idade do paciente, e retorna a interpretação clínica completa.
+O \textit{endpoint} POST /interpret-manual aceita os valores laboratoriais
+digitados manualmente em formato JSON e retorna a mesma estrutura de
+resposta, viabilizando o uso do sistema sem necessidade de \textit{upload}
+de documento.
+
+A lógica de processamento é distribuída entre quatro serviços internos.
+O serviço de extração (pdf\_parser.py) processa o documento PDF
+utilizando a biblioteca PyPDF2 para leitura de texto selecionável; quando
+o texto não é diretamente extraível — situação comum em laudos
+digitalizados por câmera ou \textit{scanner} de baixa qualidade
+\cite{lima2024} —, aciona o Tesseract OCR e o PyMuPDF como estratégia
+de \textit{fallback}. O motor de regras (rule\_engine.py) carrega o
+arquivo guideline\_map.csv em memória na inicialização do servidor e
+aplica as faixas de referência da PNS, estratificadas por sexo e faixa
+etária \cite{rosenfeld2019}, para classificar cada analito como normal,
+alto ou baixo. O serviço de geração de linguagem natural (nlg.py) produz
+o \textit{briefing} educativo ao paciente, priorizando chamadas à API do
+Google Gemini e recorrendo a um dicionário de explicações determinístico
+como \textit{fallback} local em caso de indisponibilidade do serviço —
+arquitetura tolerante a falhas que preserva a funcionalidade essencial do
+sistema mesmo sem conexão ao modelo generativo. Por fim, o seletor de
+especialidades (specialty\_selector.py) pondera os achados alterados
+segundo sua severidade e retorna as três especialidades médicas mais
+relevantes para o perfil clínico identificado.
+
+\subsection{Migração da Camada de Apresentação: do PWA ao Aplicativo Móvel}
+
+O cliente web foi desenvolvido com React 19 e TypeScript, sendo composto
+por nove componentes organizados em torno de um orquestrador central
+(App.tsx). O componente FileUpload implementa a seleção de PDF via
+\textit{drag-and-drop} utilizando a biblioteca react-dropzone, que opera
+sobre APIs de arrastar-e-soltar do navegador. O PatientForm coleta o sexo
+e a idade do paciente; o ManualEntryForm permite a digitação manual dos
+14 analitos do hemograma. Os resultados são apresentados pelo
+ResultsDisplay com sinalização semafórica de legibilidade clínica,
+acompanhados pelo ReferenceComparison, que exibe a tabela comparativa
+entre os valores do paciente e as faixas de referência da PNS. A
+comunicação com a API é centralizada no módulo services/api.ts, que
+configura o cliente Axios com \textit{timeout} de 300 segundos e lógica
+de \textit{retry} com \textit{backoff} exponencial de até cinco tentativas.
+A presença de utilitários adicionais — detecção de dispositivo móvel,
+otimizações CSS programáticas e \textit{polyfills} de compatibilidade
+\textit{cross-browser} — evidencia o esforço adicional necessário para
+adaptar uma aplicação web ao contexto móvel sem abandonar o paradigma
+de \textit{web view}, esforço que a migração para React Native torna
+desnecessário \cite{cardieri2018}.
+
+O cliente móvel foi desenvolvido com React Native 0.81.5 e Expo 54,
+mantendo TypeScript como linguagem. A interface é composta por seis
+componentes. O PdfUpload implementa a seleção de PDF por meio do
+expo-document-picker, que aciona o seletor nativo de arquivos do sistema
+operacional Android, conferindo ao usuário a experiência padrão do
+dispositivo. O PatientForm e o ManualEntryForm mantêm os mesmos campos
+e a mesma lógica de validação da versão web, reimplementados com
+primitivos nativos do React Native (TextInput, Picker). O componente
+Results exibe os resultados com sinalização semafórica em uma ScrollView
+nativa; o ReferenceComparisonTable apresenta a comparação com as faixas
+da PNS em \textit{layout} de View e Text nativos. Os três utilitários
+exclusivos de navegador presentes no PWA foram eliminados por não se
+aplicarem ao ambiente React Native, e o sistema de estilos CSS foi
+integralmente substituído por um objeto TypeScript de tema centralizado
+(src/theme.ts).
+
+\subsection{Mapa de Migração e Inventário de Reuso}
+
+A migração da camada de apresentação seguiu quatro padrões distintos.
+O padrão de \textit{reescrita} aplicou-se ao componente de seleção de
+arquivo: o FileUpload, baseado em react-dropzone e nas APIs de
+\textit{drag-and-drop} do navegador, foi reescrito como PdfUpload,
+integrando o expo-document-picker e o seletor nativo do Android. O padrão
+de \textit{portabilidade estrutural} aplicou-se aos quatro componentes de
+formulário e resultado, que foram portados mantendo integralmente a lógica
+de negócio, com substituição dos elementos HTML pelos primitivos nativos
+do React Native. O padrão de \textit{eliminação por equivalência nativa}
+aplicou-se ao LoadingSpinner — substituído pelo ActivityIndicator nativo
+— e ao ErrorAlert, incorporado diretamente ao App.tsx. O padrão de
+\textit{não portabilidade} aplicou-se ao componente References, cuja seção
+de referências bibliográficas não foi incluída na versão inicial do
+aplicativo móvel.
+
+A adoção da arquitetura \textit{API-first} viabilizou um nível expressivo
+de reuso entre as duas plataformas \cite{rampinelli2026}. O
+\textit{backend} permaneceu 100\% inalterado: todos os quatro serviços
+Python, os três arquivos de dados e os quatro \textit{endpoints} REST foram
+integralmente reaproveitados sem qualquer modificação de código. As
+interfaces TypeScript que definem o contrato de comunicação
+(InterpretationResponse, PatientData e ManualLabValues) foram portadas
+sem alterações. Na camada de apresentação, quatro dos nove componentes
+foram portados com adaptação estrutural; um foi reescrito; dois foram
+eliminados por disponibilidade de equivalentes nativos; e um não foi
+portado na versão inicial. Do ponto de vista de capacidades nativas, a
+migração resultou em ganhos relevantes para a experiência do usuário: o
+aplicativo passa a ser instalável como APK com ícone nativo na tela
+inicial do dispositivo; a seleção de arquivos ocorre por meio do seletor
+nativo do sistema operacional; os componentes visuais são renderizados
+diretamente pelo motor gráfico do sistema operacional, sem a intermediação
+do motor de renderização do navegador; e a barra de status do dispositivo
+passa a ser controlada programaticamente via expo-status-bar, com suporte
+a dispositivos com \textit{notch} via SafeAreaView.
+
 % Seções futuras (a preencher):
-% \section{Arquitetura do Sistema e Processo de Migração}
 % \section{Metodologia de Avaliação}
 % \section{Resultados}
 % \section{Conclusão}
