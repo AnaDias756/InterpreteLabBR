@@ -230,12 +230,52 @@ def fig_frente_c():
     _salvar(fig, "fig_frente_c_sus.png")
 
 
+# --------------------------------------------------------------------------- #
+def fig_inspecao_heuristica():
+    """Problemas por heurística, PWA × Móvel (Frente C — inspeção heurística)."""
+    caminho = os.path.join(SAIDAS, "inspecao_resumo.json")
+    if not os.path.exists(caminho):
+        print("  [pulado] Inspeção heurística: inspecao_resumo.json ausente.")
+        return
+    with open(caminho, encoding="utf-8") as f:
+        resumo = json.load(f)
+    heurs = [f"H{i}" for i in range(1, 11)]
+    pwa = [resumo["por_heuristica"]["PWA"].get(h, 0) for h in heurs]
+    mob = [resumo["por_heuristica"]["Móvel"].get(h, 0) for h in heurs]
+
+    fig, ax = plt.subplots(figsize=(8.0, 4.8))
+    _grade(ax, "y")
+    x = range(len(heurs))
+    larg = 0.38
+    ax.bar([i - larg / 2 for i in x], pwa, larg, color=AZUL, zorder=3, label="PWA")
+    ax.bar([i + larg / 2 for i in x], mob, larg, color=LARANJA, zorder=3, label="Móvel")
+    for i, v in zip(x, pwa):
+        if v:
+            ax.text(i - larg / 2, v + 0.1, str(v), ha="center", va="bottom", fontsize=7.5, color=CINZA)
+    for i, v in zip(x, mob):
+        if v:
+            ax.text(i + larg / 2, v + 0.1, str(v), ha="center", va="bottom", fontsize=7.5, color=CINZA)
+    ax.set_xticks(list(x)); ax.set_xticklabels(heurs)
+    ax.set_ylabel("Problemas registrados")
+    ax.set_xlabel("Heurística de Nielsen")
+    ax.legend(frameon=False, loc="upper right")
+    pc = resumo["por_cliente"]
+    ax.set_title("Frente C — Problemas por heurística (PWA × Móvel)", fontweight="bold", loc="left")
+    fig.text(0.01, -0.04,
+             f"PWA: {pc['PWA']['problemas']} problemas (sev. média {pc['PWA']['severidade_media']}) · "
+             f"Móvel: {pc['Móvel']['problemas']} (sev. média {pc['Móvel']['severidade_media']}). "
+             f"ILUSTRATIVO/SINTÉTICO — substituir pelos dados reais.",
+             fontsize=7.5, color=LARANJA, fontweight="bold")
+    _salvar(fig, "fig_frente_c_inspecao_heuristica.png")
+
+
 def main():
     print("Gerando figuras em docs/figuras/ ...")
     fig_frente_a()
     fig_frente_b_matriz()
     fig_pns_vs_lab()
     fig_frente_c()
+    fig_inspecao_heuristica()
     print("Concluído.")
 
 

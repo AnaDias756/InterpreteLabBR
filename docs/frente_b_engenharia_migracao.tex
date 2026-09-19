@@ -1,0 +1,178 @@
+% =====================================================================
+% Frente B — Engenharia da Migração (Resultados)
+% ---------------------------------------------------------------------
+% Seção pronta para ser inserida no TCC (Overleaf). Insira com
+%   \input{frente_b_engenharia_migracao}
+% ou copie o conteúdo abaixo. Usa apenas pacotes já carregados no
+% preâmbulo do documento principal (tabularx, array, float).
+% As chaves de citação usadas (oliveira2023, rampinelli2026, peffers2007,
+% hevner2004) já existem na bibliografia do trabalho.
+% =====================================================================
+
+\section{Resultados da Frente B: Engenharia da Migração}
+\label{sec:frente_b}
+
+Esta seção apresenta os resultados da Frente B, cujo objetivo é caracterizar,
+sob a ótica da Engenharia de Software, o \emph{reuso arquitetural} viabilizado
+pela estratégia \emph{API-first} na migração do InterpreteLabBR do paradigma PWA
+para o aplicativo móvel dedicado. A caracterização foi obtida por
+\textbf{análise documental comparativa} das duas bases de código do cliente
+(a PWA, em React/TypeScript, e o aplicativo móvel, em React Native/Expo) e do
+serviço compartilhado (\emph{backend} FastAPI), classificando-se cada artefato
+segundo os três padrões de portabilidade definidos na metodologia
+(Seção~4.3): \textbf{(i)} reescrita completa; \textbf{(ii)}
+portabilidade estrutural com adaptação de elementos visuais; e \textbf{(iii)}
+substituição por componente nativo equivalente. Todas as métricas de linhas de
+código (LOC) reportadas foram extraídas diretamente do repositório do projeto.
+
+\subsection{Definição operacional de reuso}
+
+Adota-se, nesta análise, a seguinte definição operacional. Considera-se
+\emph{reuso integral} o artefato incorporado ao cliente móvel \textbf{sem
+qualquer alteração} de código (caso do \emph{backend} e da base de
+conhecimento, consumidos por rede). Considera-se \emph{reuso estrutural}
+(padrão~ii) o artefato cuja \textbf{lógica e estrutura} são preservadas, com
+adaptação restrita à camada de apresentação ou de transporte (por exemplo, a
+substituição de elementos HTML por primitivas nativas). Considera-se
+\emph{substituição nativa} (padrão~iii) o artefato descartado em favor de um
+componente equivalente da plataforma. A taxa de reuso é reportada por camada
+arquitetural, evitando um índice global único que obscureceria a natureza
+distinta de cada camada.
+
+\subsection{Reuso do núcleo funcional via arquitetura API-first}
+
+O resultado central da Frente B é a confirmação empírica de que a arquitetura
+\emph{API-first} permitiu \textbf{reuso integral (100\%) de toda a lógica
+clinicamente sensível}. O \emph{backend} FastAPI --- que concentra a extração
+por OCR/\emph{parsing}, o motor de classificação segundo as faixas da PNS, a
+seleção de especialidades e a geração do \emph{briefing} --- foi reaproveitado
+\textbf{sem uma única linha reescrita}, sendo consumido pelo novo cliente por
+meio dos mesmos três \emph{endpoints} REST (Tabela~\ref{tab:endpoints}). Do
+mesmo modo, a base de conhecimento (\texttt{data/*.csv}) permaneceu inalterada.
+Em números, \textbf{1.654 linhas de Python} e \textbf{145 linhas de regras em
+CSV} foram preservadas na íntegra, o que representa a materialização do
+princípio de baixo acoplamento entre lógica de negócio e camada de apresentação
+apontado como vantagem-chave de migrações estruturadas \cite{rampinelli2026}.
+
+\begin{table}[H]
+\centering
+\caption{\emph{Endpoints} REST reaproveitados sem alteração pelos dois clientes.}
+\label{tab:endpoints}
+\footnotesize
+\begin{tabular}{|l|l|p{6.2cm}|}
+\hline
+\textbf{Endpoint} & \textbf{Método} & \textbf{Função (reusada por PWA e Mobile)} \\ \hline
+\texttt{/health} & GET & Verificação de disponibilidade do serviço \\ \hline
+\texttt{/interpret} & POST & Interpretação a partir de laudo em PDF (multipart) \\ \hline
+\texttt{/interpret-manual} & POST & Interpretação a partir de valores digitados (JSON) \\ \hline
+\end{tabular}
+\end{table}
+
+\subsection{Mapa de migração dos componentes do cliente}
+
+A Tabela~\ref{tab:mapa_migracao} apresenta o mapa de migração completo, artefato
+a artefato, com a respectiva classificação de portabilidade. Observa-se que a
+maioria dos componentes de interface enquadrou-se no padrão~(ii): a estrutura
+declarativa e a lógica de estado foram preservadas, adaptando-se apenas as
+primitivas visuais (de elementos HTML \texttt{<div>}/\texttt{<input>} para
+\texttt{<View>}/\texttt{<TextInput>}/\texttt{StyleSheet} do React Native). Os
+casos de padrão~(iii) concentraram-se em pontos de contato com o \emph{hardware}
+e com o ambiente de execução: o seletor de arquivos (de \texttt{react-dropzone}
+para \texttt{expo-document-picker}), o indicador de carregamento (para o
+\texttt{ActivityIndicator} nativo) e o \emph{bootstrap} da aplicação (de
+\texttt{ReactDOM} para o \texttt{registerRootComponent} do Expo).
+
+\begin{table}[H]
+\centering
+\caption{Mapa de migração PWA $\rightarrow$ Mobile por artefato (LOC = linhas de código).}
+\label{tab:mapa_migracao}
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{|p{4.3cm}|p{4.0cm}|c|p{3.0cm}|}
+\hline
+\textbf{Artefato na PWA (LOC)} & \textbf{Contraparte no Mobile} & \textbf{LOC} & \textbf{Padrão} \\ \hline
+\emph{Backend} FastAPI + serviços (1.654) & idêntico (via REST) & 1.654 & Reuso integral \\ \hline
+Base de conhecimento \texttt{data/*.csv} (145) & idêntica (via REST) & 145 & Reuso integral \\ \hline
+\texttt{types/index.ts} (56) & \texttt{types.ts} (58) & 58 & (ii) Estrutural (contrato) \\ \hline
+\texttt{services/api.ts} (213) & \texttt{api.ts} (71) & 71 & (ii) Estrutural c/ adaptação de transporte \\ \hline
+\texttt{App.tsx} (323) & \texttt{App.tsx} (209) & 209 & (ii) Estrutural (orquestração/estado) \\ \hline
+\texttt{PatientForm.tsx} (42) & \texttt{PatientForm.tsx} & --- & (ii) Estrutural \\ \hline
+\texttt{ManualEntryForm.tsx} (90) & \texttt{ManualEntryForm.tsx} & --- & (ii) Estrutural \\ \hline
+\texttt{ResultsDisplay.tsx} (196) & \texttt{Results.tsx} & --- & (ii) Estrutural \\ \hline
+\texttt{ReferenceComparison.tsx} (82) & \texttt{ReferenceComparisonTable.tsx} & --- & (ii) Estrutural \\ \hline
+\texttt{FileUpload.tsx} (56, \emph{react-dropzone}) & \texttt{PdfUpload.tsx} (\emph{expo-document-picker}) & --- & (iii) Substituição nativa \\ \hline
+\texttt{LoadingSpinner.tsx} (79) & \texttt{ActivityIndicator} (nativo) & --- & (iii) Substituição nativa \\ \hline
+\texttt{ErrorAlert.tsx} (37); \texttt{References.tsx} (16) & absorvidos em \texttt{App.tsx} & --- & (iii) Absorvido \\ \hline
+\texttt{index.tsx} (66, \emph{ReactDOM}) & \texttt{index.ts} (8, Expo) & 8 & (iii) \emph{Bootstrap} de plataforma \\ \hline
+\texttt{utils/} (1.239: \emph{polyfills}, \emph{mobileDetection}, \emph{mobileOptimizations}) & --- (não portados) & 0 & Eliminados (contorno de \emph{webview}) \\ \hline
+--- & \texttt{theme.ts} (34); \texttt{config.ts} (13) & 47 & Novos (específicos do mobile) \\ \hline
+\end{tabular}
+\end{table}
+
+\subsection{Taxa de reuso por camada}
+
+A Tabela~\ref{tab:taxa_reuso} sintetiza a taxa de reuso por camada
+arquitetural. O reuso é total no núcleo funcional e no contrato de dados, e
+localiza-se a reescrita estritamente na camada de apresentação --- resultado
+coerente com a hipótese de que a arquitetura \emph{API-first} confina o esforço
+de migração à interface, preservando o ativo de maior valor e risco (a lógica
+clínica).
+
+\begin{table}[H]
+\centering
+\caption{Taxa de reuso por camada na migração PWA $\rightarrow$ Mobile.}
+\label{tab:taxa_reuso}
+\footnotesize
+\begin{tabular}{|p{4.6cm}|c|p{5.2cm}|}
+\hline
+\textbf{Camada} & \textbf{Reuso} & \textbf{Observação} \\ \hline
+Lógica de negócio (\emph{backend} + regras) & 100\% & 1.654 LOC Python + 145 CSV, sem alteração \\ \hline
+Contrato de dados (interfaces TS) & $\approx$100\% & 5 interfaces de domínio migradas verbatim \\ \hline
+Serviços de comunicação (rede) & 3/3 operações & Semântica preservada; transporte adaptado (File $\rightarrow$ FormData nativo) \\ \hline
+Apresentação (componentes de UI) & Reescrita estrutural & Padrão (ii): estrutura/estado preservados, primitivas nativas \\ \hline
+Utilitários de contorno de \emph{webview} & 0\% (eliminados) & 1.239 LOC descartadas \\ \hline
+\end{tabular}
+\end{table}
+
+\subsection{Eliminação do código de contorno de \emph{webview}}
+
+Um achado quantitativo de particular relevância para a justificativa da migração
+diz respeito ao \textbf{código de contorno} presente na PWA. A versão web
+mantinha três módulos utilitários --- \texttt{polyfills.ts} (603 LOC),
+\texttt{mobileOptimizations.ts} (338 LOC) e \texttt{mobileDetection.ts} (298
+LOC) --- que existiam \textbf{exclusivamente} para mitigar limitações de
+execução do paradigma \emph{webview} em navegadores móveis (detecção de
+dispositivo, ajustes de desempenho de rolagem e compatibilização de APIs). Esses
+módulos somam \textbf{1.239 linhas, equivalentes a 49\% de todo o código do
+cliente web} (2.525 LOC). Na arquitetura de renderização nativa do React Native,
+tais contornos tornaram-se \textbf{desnecessários e foram integralmente
+eliminados}, uma vez que o \emph{framework} mapeia os componentes diretamente
+para as primitivas do sistema operacional, sem a camada intermediária de
+\emph{webview}. Esse resultado é a contraparte, no plano da engenharia de código,
+do \emph{overhead} de recursos que a literatura atribui às soluções baseadas em
+\emph{webview} \cite{oliveira2023}: além do custo de execução, o paradigma PWA
+impunha um \textbf{custo de manutenção} correspondente a quase metade da base de
+código do cliente, ora suprimido.
+
+\subsection{Síntese da Frente B}
+
+Os resultados da Frente B evidenciam que a migração, sustentada pela arquitetura
+\emph{API-first}, foi caracterizada por: (a) \textbf{reuso integral (100\%) da
+lógica clínica} e da base de conhecimento, sem reescrita; (b) \textbf{reuso
+estrutural do contrato de dados} e da orquestração de estado do cliente; (c)
+\textbf{reescrita confinada à camada de apresentação}, majoritariamente sob o
+padrão de portabilidade estrutural (ii), com substituições nativas (iii)
+restritas aos pontos de integração com \emph{hardware} e ambiente; e (d)
+\textbf{eliminação de 1.239 linhas de código de contorno de \emph{webview}}.
+Confirma-se, assim, a hipótese de que a separação de responsabilidades
+\emph{API-first} minimiza o custo e o risco de migrações de paradigma em
+sistemas de informação em saúde, ao preservar o núcleo funcional e localizar o
+esforço de reengenharia na interface \cite{rampinelli2026, oliveira2023}.
+
+% ---------------------------------------------------------------------
+% Nota metodológica (opcional; remover se redundante com o Cap. de Metodologia):
+% A classificação de portabilidade foi obtida por análise comparativa estática
+% das duas bases de código no estado final do repositório, e não por registro
+% em tempo real (diário de bordo). Trata-se, portanto, de uma reconstrução
+% documental do mapa de migração, adequada ao caráter retrospectivo da Frente B.
+% ---------------------------------------------------------------------

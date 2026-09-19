@@ -197,6 +197,11 @@ relatorio_extracao.csv
 # (respostas_sus_exemplo.csv) PODEM ser versionados.
 tests/respostas_sus.csv
 
+# Registros reais da inspeção heurística (Frente C — enquadramento do Overleaf).
+# O modelo (inspecao_heuristica_modelo.csv) e o exemplo sintético
+# (inspecao_heuristica_exemplo.csv) PODEM ser versionados.
+tests/inspecao_heuristica.csv
+
 # Saídas intermediárias das validações (derivadas; regeneráveis).
 # As figuras do capítulo (docs/figuras/) SÃO versionadas de propósito.
 tests/saidas/

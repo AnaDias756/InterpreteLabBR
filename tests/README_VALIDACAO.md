@@ -51,6 +51,28 @@ regenerável) e as figuras para `docs/figuras/` (versionadas).
 > `respostas_sus_exemplo.csv` contém dados **fictícios** apenas para demonstrar
 > a apuração — não são respostas de usuários reais.
 
+## ⚠️ Dois enquadramentos de "Frentes" no projeto
+
+Atenção: existem **duas definições diferentes** das Frentes A/B/C, conforme o
+documento de referência. Não confundir:
+
+| | PROPOSTA_TCC.md (este diretório) | TCC no Overleaf (Análise de Engenharia) |
+|---|---|---|
+| **A** | Extração (P/R/F1) | Desempenho PWA × Mobile (ADB) |
+| **B** | Classificação vs PNS (kappa) | **Engenharia da migração (reuso)** |
+| **C** | Usabilidade por **SUS** | Usabilidade por **inspeção heurística** |
+
+Os artefatos deste diretório (`validacao_*`, `pontuacao_sus.py`) e o
+`../RESULTADOS.md` seguem o enquadramento do **PROPOSTA_TCC.md**.
+
+Os artefatos do enquadramento do **Overleaf** estão em `../docs/`:
+- `../docs/frente_b_engenharia_migracao.tex` — seção da Frente B (reuso) pronta
+  para o TCC, com o mapa de migração real extraído do repositório.
+- `../docs/protocolo_frente_c_inspecao_heuristica.md` — protocolo de coleta da
+  inspeção heurística (5 especialistas, heurísticas de Nielsen, severidade 0–4).
+- `consolidar_inspecao.py` + `inspecao_heuristica_modelo.csv` — consolidação dos
+  formulários e métricas comparativas PWA × Móvel (figura em `../docs/figuras/`).
+
 ## O que é real agora × o que depende de coleta
 
 - **Real e determinístico:** Frente B (motor × PNS) e comparação PNS ×
