@@ -1,48 +1,59 @@
-# Validação da Extração (Frente A do TCC)
+# Validação e Resultados (Etapa 4 do TCC)
 
-Este diretório contém o instrumento de avaliação da **acurácia da extração**
-automática de valores de hemograma a partir de laudos em PDF.
+Este diretório reúne os instrumentos de validação das três frentes do TCC e a
+tubulação que gera as tabelas, estatísticas e figuras do capítulo de Resultados
+(`../RESULTADOS.md`).
 
-## Como executar
+## Visão geral da tubulação
+
+| Frente | Script | Natureza dos dados | Saída |
+|---|---|---|---|
+| **A — Extração** | `validacao_extracao.py` | laudos reais (pendente) / exemplo sintético | acurácia, precisão, recall, F1 |
+| **B — Classificação** | `validacao_classificacao.py` | sintético (casos de borda) | concordância %, kappa, matriz de confusão |
+| **PNS × estrangeira** | `comparacao_referencias.py` | analítico (tabelas) | discordância por analito, kappa |
+| **C — Usabilidade** | `pontuacao_sus.py` | respostas reais (pendente) / exemplo sintético | escore SUS, DP, classificação |
+| **Figuras** | `gerar_graficos.py` | lê `saidas/` | PNG em `../docs/figuras/` |
+| **Orquestrador** | `gerar_resultados.py` | — | roda tudo de ponta a ponta |
+
+## Como rodar tudo
 
 ```bash
-# Roda sobre o exemplo sintético (sem dados pessoais)
-python tests/validacao_extracao.py
+pip install pandas numpy matplotlib pdfplumber PyMuPDF PyPDF2 reportlab
 
-# Roda sobre seus próprios laudos (anonimizados), salvando um relatório CSV
-python tests/validacao_extracao.py \
-    --gabarito tests/meu_gabarito.json \
-    --laudos tests/laudos \
-    --relatorio relatorio_extracao.csv
+# Demonstração completa (A e C sobre exemplos sintéticos; B e PNS×Lab reais)
+python tests/gerar_resultados.py
+
+# Com dados reais, quando disponíveis:
+python tests/gerar_resultados.py \
+    --laudos tests/laudos --gabarito tests/meu_gabarito.json \
+    --respostas-sus tests/respostas_sus.csv
 ```
 
-## Como adicionar seus laudos do SUS
+As saídas intermediárias vão para `tests/saidas/` (ignorado pelo Git; é
+regenerável) e as figuras para `docs/figuras/` (versionadas).
+
+## Frente A — inserir laudos reais (LGPD)
 
 1. Coloque os PDFs **anonimizados** (sem nome, CPF, Cód.SUS, endereço, nome da
-   mãe) na pasta `tests/laudos/` — essa pasta é **ignorada pelo Git** por
-   privacidade (LGPD).
-2. Crie um gabarito JSON conferido manualmente, no formato:
+   mãe) em `tests/laudos/` — pasta **ignorada pelo Git**.
+2. Crie um gabarito JSON conferido manualmente (veja `gabarito_exemplo.json`),
+   mapeando cada arquivo aos valores verdadeiros dos analitos.
+3. Rode com `--laudos tests/laudos --gabarito tests/meu_gabarito.json`.
 
-```json
-{
-  "laudo01.pdf": {
-    "hemacias": 4.69, "hemoglobina": 14.6, "hematocrito": 42.9,
-    "vcm": 91.5, "hcm": 31.1, "chcm": 34.0, "rdw": 11.8,
-    "leucocitos": 3100, "neutrofilos": 1073, "eosinofilos": 22,
-    "basofilos": 6, "linfocitos": 1798, "monocitos": 202,
-    "plaquetas": 116000
-  }
-}
-```
+## Frente C — coletar respostas SUS (LGPD)
 
-3. Rode o harness apontando para a pasta e o gabarito.
+1. Aplique o questionário SUS (10 itens, escala 1–5) aos participantes.
+2. Preencha `tests/respostas_sus.csv` a partir do modelo
+   `respostas_sus_modelo.csv` (use identificadores anonimizados: P01, P02, …).
+   Esse arquivo de respostas reais é **ignorado pelo Git**.
+3. Rode com `--respostas-sus tests/respostas_sus.csv`.
 
-## O que o harness mede
+> `respostas_sus_exemplo.csv` contém dados **fictícios** apenas para demonstrar
+> a apuração — não são respostas de usuários reais.
 
-- **Acurácia de extração** (corretos / esperados), por laudo e agregada.
-- **Precisão, Recall e F1** (tratando a extração correta como verdadeiro positivo).
-- **Ausentes** (analito não extraído), **Incorretos** (valor errado) e
-  **Falsos positivos** (extraído sem constar no gabarito).
-- **Desempenho por analito**, para identificar os mais problemáticos.
+## O que é real agora × o que depende de coleta
 
-Esses números alimentam diretamente o capítulo de Resultados do TCC.
+- **Real e determinístico:** Frente B (motor × PNS) e comparação PNS ×
+  referência estrangeira — não dependem de dados coletados.
+- **Pendente de coleta empírica:** Frente A (laudos reais) e Frente C (usuários).
+  Os instrumentos já estão prontos e validados sobre exemplos sintéticos.

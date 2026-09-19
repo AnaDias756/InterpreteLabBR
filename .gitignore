@@ -191,3 +191,12 @@ dist/
 # Laudos reais com dados pessoais (LGPD) — não versionar
 tests/laudos/
 relatorio_extracao.csv
+
+# Respostas reais dos participantes da Frente C (LGPD) — não versionar.
+# O modelo (respostas_sus_modelo.csv) e o exemplo sintético
+# (respostas_sus_exemplo.csv) PODEM ser versionados.
+tests/respostas_sus.csv
+
+# Saídas intermediárias das validações (derivadas; regeneráveis).
+# As figuras do capítulo (docs/figuras/) SÃO versionadas de propósito.
+tests/saidas/
