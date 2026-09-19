@@ -202,6 +202,11 @@ tests/respostas_sus.csv
 # (inspecao_heuristica_exemplo.csv) PODEM ser versionados.
 tests/inspecao_heuristica.csv
 
+# Medições reais de desempenho ADB (Frente A — enquadramento do Overleaf).
+# O modelo (desempenho_modelo.csv) e o exemplo sintético
+# (desempenho_exemplo.csv) PODEM ser versionados.
+tests/desempenho.csv
+
 # Saídas intermediárias das validações (derivadas; regeneráveis).
 # As figuras do capítulo (docs/figuras/) SÃO versionadas de propósito.
 tests/saidas/

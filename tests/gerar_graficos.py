@@ -269,6 +269,65 @@ def fig_inspecao_heuristica():
     _salvar(fig, "fig_frente_c_inspecao_heuristica.png")
 
 
+import math  # noqa: E402
+
+
+def fig_desempenho_adb():
+    """Desempenho PWA × Móvel por métrica (Frente A — ADB), em pequenos múltiplos."""
+    caminho = os.path.join(SAIDAS, "desempenho_resumo.json")
+    if not os.path.exists(caminho):
+        print("  [pulado] Frente A (ADB): desempenho_resumo.json ausente.")
+        return
+    with open(caminho, encoding="utf-8") as f:
+        resumo = json.load(f)
+    metricas = resumo.get("metricas", {})
+    if not metricas:
+        print("  [pulado] Frente A (ADB): sem métricas no resumo.")
+        return
+
+    nomes_m = list(metricas.keys())
+    ncols = 2
+    nrows = math.ceil(len(nomes_m) / ncols)
+    fig, axes = plt.subplots(nrows, ncols, figsize=(9.0, 2.6 * nrows))
+    axes = axes.flatten() if hasattr(axes, "flatten") else [axes]
+
+    for k, metrica in enumerate(nomes_m):
+        ax = axes[k]
+        meta = metricas[metrica]
+        tarefas = sorted(meta["por_tarefa"].keys())
+        pwa = [meta["por_tarefa"][t]["PWA"].get("media") or 0 for t in tarefas]
+        mov = [meta["por_tarefa"][t]["Móvel"].get("media") or 0 for t in tarefas]
+        pwa_e = [meta["por_tarefa"][t]["PWA"].get("dp") or 0 for t in tarefas]
+        mov_e = [meta["por_tarefa"][t]["Móvel"].get("dp") or 0 for t in tarefas]
+        x = range(len(tarefas))
+        larg = 0.38
+        ax.bar([i - larg / 2 for i in x], pwa, larg, yerr=pwa_e, capsize=3,
+               color=AZUL, zorder=3, label="PWA", error_kw={"elinewidth": 1, "ecolor": CINZA})
+        ax.bar([i + larg / 2 for i in x], mov, larg, yerr=mov_e, capsize=3,
+               color=LARANJA, zorder=3, label="Móvel", error_kw={"elinewidth": 1, "ecolor": CINZA})
+        _grade(ax, "y")
+        ax.set_xticks(list(x)); ax.set_xticklabels(tarefas, fontsize=8)
+        seta = "↓ menor melhor" if meta["direcao"] == "menor_melhor" else "↑ maior melhor"
+        ax.set_title(f"{meta['rotulo']} ({meta['unidade']}) · {seta}",
+                     fontsize=9.5, fontweight="bold", loc="left")
+        if k == 0:
+            ax.legend(frameon=False, fontsize=8, loc="upper right")
+
+    for j in range(len(nomes_m), len(axes)):
+        axes[j].set_visible(False)
+
+    fig.suptitle("Frente A — Desempenho PWA × Móvel por tarefa (ADB)",
+                 fontweight="bold", x=0.01, ha="left", fontsize=12)
+    nota = "Barras: média; hastes: desvio-padrão (10 repetições)."
+    if resumo.get("natureza") == "sintético":
+        nota += "  ILUSTRATIVO/SINTÉTICO — substituir pelas medições reais."
+    fig.text(0.01, -0.01, nota, fontsize=8,
+             color=LARANJA if resumo.get("natureza") == "sintético" else CINZA,
+             fontweight="bold" if resumo.get("natureza") == "sintético" else "normal")
+    fig.tight_layout(rect=[0, 0.02, 1, 0.96])
+    _salvar(fig, "fig_frente_a_desempenho_adb.png")
+
+
 def main():
     print("Gerando figuras em docs/figuras/ ...")
     fig_frente_a()
@@ -276,6 +335,7 @@ def main():
     fig_pns_vs_lab()
     fig_frente_c()
     fig_inspecao_heuristica()
+    fig_desempenho_adb()
     print("Concluído.")
 
 

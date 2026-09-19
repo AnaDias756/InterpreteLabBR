@@ -66,12 +66,20 @@ Os artefatos deste diretório (`validacao_*`, `pontuacao_sus.py`) e o
 `../RESULTADOS.md` seguem o enquadramento do **PROPOSTA_TCC.md**.
 
 Os artefatos do enquadramento do **Overleaf** estão em `../docs/`:
-- `../docs/frente_b_engenharia_migracao.tex` — seção da Frente B (reuso) pronta
-  para o TCC, com o mapa de migração real extraído do repositório.
-- `../docs/protocolo_frente_c_inspecao_heuristica.md` — protocolo de coleta da
-  inspeção heurística (5 especialistas, heurísticas de Nielsen, severidade 0–4).
-- `consolidar_inspecao.py` + `inspecao_heuristica_modelo.csv` — consolidação dos
+- **Frente A (desempenho ADB):**
+  `../docs/protocolo_frente_a_desempenho_adb.md` (protocolo), `coletar_desempenho.sh`
+  (coleta via ADB), `analisar_desempenho.py` (estatística) + `desempenho_modelo.csv`.
+  Figura comparativa PWA × Móvel por métrica em `../docs/figuras/`.
+- **Frente B (engenharia da migração):**
+  `../docs/frente_b_engenharia_migracao.tex` — seção pronta para o TCC, com o
+  mapa de migração real extraído do repositório.
+- **Frente C (inspeção heurística):**
+  `../docs/protocolo_frente_c_inspecao_heuristica.md` (protocolo de coleta),
+  `consolidar_inspecao.py` + `inspecao_heuristica_modelo.csv` — consolidação dos
   formulários e métricas comparativas PWA × Móvel (figura em `../docs/figuras/`).
+
+> O capítulo antigo (enquadramento do PROPOSTA) foi arquivado em
+> `../docs/arquivo/RESULTADOS_proposta_antiga.md`.
 
 ## O que é real agora × o que depende de coleta
 

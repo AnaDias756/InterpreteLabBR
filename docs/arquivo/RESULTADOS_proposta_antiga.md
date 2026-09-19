@@ -1,4 +1,19 @@
-# 4. Resultados Obtidos
+> ⚠️ **DOCUMENTO ARQUIVADO / OBSOLETO.** Este capítulo foi redigido para o
+> enquadramento do `PROPOSTA_TCC.md` (Frentes A = extração, B = classificação/kappa,
+> C = usabilidade por SUS), que **não corresponde** ao TCC atual no Overleaf
+> ("Migração PWA → Mobile: Análise de Engenharia de Software"), cujas Frentes são
+> A = desempenho (ADB), B = engenharia da migração, C = inspeção heurística.
+> Mantido apenas como referência histórica. Os artefatos válidos para o TCC atual
+> estão em `docs/frente_b_engenharia_migracao.tex`,
+> `docs/protocolo_frente_c_inspecao_heuristica.md` e
+> `docs/protocolo_frente_a_desempenho_adb.md`.
+>
+> As frentes de extração/classificação aqui descritas continuam sendo validações
+> úteis do artefato, mas fora do escopo das Frentes A/B/C do Overleaf.
+
+---
+
+# 4. Resultados Obtidos (versão da proposta antiga — arquivado)
 
 > **Documento de trabalho — Etapa 4 (Capítulo dos Resultados).** Este capítulo
 > relata os resultados da aplicação da metodologia descrita na proposta
