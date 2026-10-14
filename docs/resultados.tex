@@ -1,0 +1,262 @@
+% =====================================================================
+% Capítulo de Resultados — Etapa 4 (integrado, Frentes A/B/C do Overleaf)
+% ---------------------------------------------------------------------
+% COMO USAR NO OVERLEAF:
+%   1. Faça upload deste arquivo e das figuras (pasta figuras/) no projeto.
+%   2. No preâmbulo, garanta: \usepackage{graphicx} e \usepackage{float}
+%      (já presentes no seu documento) e, se as figuras ficarem em subpasta:
+%         \graphicspath{{figuras/}}
+%   3. Antes de \bibliographystyle, insira:  \input{resultados}
+%
+% Este arquivo SUBSTITUI o antigo frente_b_engenharia_migracao.tex: a Frente B
+% já está incluída aqui como subseção (5.3), com as mesmas tabelas reais.
+% Chaves de citação usadas já existem no seu .bib: oliveira2023, rampinelli2026,
+% nielsen1994, cardieri2018.
+% =====================================================================
+
+\section{Resultados Obtidos}
+\label{sec:resultados}
+
+Este capítulo apresenta os resultados da avaliação tripartite do artefato. Por
+transparência metodológica, distinguem-se dois tipos de resultado: os
+\textbf{já apurados} --- a Frente~B (engenharia da migração), derivada da análise
+direta do código-fonte e, portanto, determinística e reprodutível --- e os
+\textbf{pendentes de coleta empírica} --- a Frente~A (desempenho), que depende dos
+ensaios com ADB em dispositivo físico, e a Frente~C (usabilidade), que depende das
+inspeções dos especialistas. Para as frentes pendentes, apresentam-se o
+instrumento de medição já construído, tabelas preparadas para os dados e uma
+demonstração do método com dados sintéticos, explicitamente rotulados como
+ilustrativos.
+
+\subsection{O produto: aplicativo móvel}
+\label{sub:produto}
+
+O primeiro resultado é o próprio artefato: o cliente móvel em React Native/Expo,
+que consome a mesma API FastAPI do PWA e preserva as funcionalidades da versão
+web (entrada manual de valores, envio de laudo em PDF, verificação de
+disponibilidade do servidor, exibição de resultados/\emph{briefing} e tabela de
+comparação de referências). A caracterização técnica dessa migração constitui a
+Frente~B (Seção~\ref{sub:frenteB}).
+
+\subsection{Frente A --- Desempenho comparativo (ADB)}
+\label{sub:frenteA}
+
+A Frente~A compara PWA e cliente móvel sobre as mesmas tarefas (T1 inicialização;
+T2 submissão de PDF; T3 rolagem; T4 renderização de tabelas), no mesmo
+dispositivo Android, com dez execuções por tarefa e cliente, alternadas para
+diluir efeitos térmicos e de processos concorrentes. As métricas --- tempo de
+resposta, uso de CPU, memória (RAM), taxa de quadros (FPS) e energia estimada ---
+são coletadas via Android Debug Bridge (ADB) e \texttt{dumpsys}, conforme o
+protocolo de Oliveira et al. (2023) \cite{oliveira2023}.
+
+Os ensaios em dispositivo físico ainda não foram executados; a
+Tabela~\ref{tab:desempenho} está preparada para receber os valores
+(média~$\pm$~desvio-padrão).
+
+\begin{table}[H]
+\centering
+\caption{Desempenho PWA $\times$ Móvel (a preencher).}
+\label{tab:desempenho}
+\footnotesize
+\begin{tabular}{|p{6.2cm}|c|c|c|}
+\hline
+\textbf{Métrica (direção)} & \textbf{PWA} & \textbf{Móvel} & \textbf{$\Delta$} \\ \hline
+Tempo de inicialização --- T1 (ms, $\downarrow$) & --- & --- & \\ \hline
+Tempo de submissão de PDF --- T2 (ms, $\downarrow$) & --- & --- & \\ \hline
+CPU em rolagem --- T3 (\%, $\downarrow$) & --- & --- & \\ \hline
+Memória --- T2 (MB, $\downarrow$) & --- & --- & \\ \hline
+FPS em rolagem --- T3 (fps, $\uparrow$) & --- & --- & \\ \hline
+Energia estimada --- T3 (mAh, $\downarrow$) & --- & --- & \\ \hline
+\end{tabular}
+\end{table}
+
+A Figura~\ref{fig:desempenho} ilustra o formato da apuração sobre um conjunto
+\textbf{fictício} de medições (um painel por métrica; barras = média, hastes =
+desvio-padrão). \emph{Os valores são ilustrativos e não constituem resultados do
+estudo}: a hipótese de ganho de desempenho do cliente nativo sobre o PWA baseado
+em \emph{webview} só será confirmada ou refutada com as medições reais.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{fig_frente_a_desempenho_adb.png}
+\caption{Demonstração do método da Frente~A (dados sintéticos, a substituir pelas medições reais).}
+\label{fig:desempenho}
+\end{figure}
+
+\subsection{Frente B --- Engenharia da migração}
+\label{sub:frenteB}
+
+A Frente~B caracteriza, por \textbf{análise documental comparativa} das duas bases
+de código do cliente (PWA em React/TypeScript e aplicativo em React Native/Expo) e
+do serviço compartilhado (\emph{backend} FastAPI), o reuso arquitetural viabilizado
+pela estratégia \emph{API-first}. Cada artefato preexistente foi classificado
+segundo três padrões de portabilidade: \textbf{(i)}~reescrita completa;
+\textbf{(ii)}~portabilidade estrutural com adaptação de elementos visuais; e
+\textbf{(iii)}~substituição por componente nativo equivalente. As métricas de
+linhas de código (LOC) foram extraídas diretamente do repositório.
+
+\subsubsection{Reuso do núcleo funcional via API-first}
+
+O resultado central é o \textbf{reuso integral (100\%) de toda a lógica
+clinicamente sensível}. O \emph{backend} FastAPI --- extração por OCR/\emph{parsing},
+classificação pelas faixas da PNS, seleção de especialidades e geração do
+\emph{briefing} --- foi reaproveitado \textbf{sem uma única linha reescrita}, sendo
+consumido pelo novo cliente pelos mesmos três \emph{endpoints} REST
+(Tabela~\ref{tab:endpoints}). A base de conhecimento (\texttt{data/*.csv}) também
+permaneceu inalterada. Em números, \textbf{1.654 linhas de Python} e \textbf{145
+linhas de regras em CSV} foram preservadas na íntegra \cite{rampinelli2026}.
+
+\begin{table}[H]
+\centering
+\caption{\emph{Endpoints} REST reaproveitados sem alteração pelos dois clientes.}
+\label{tab:endpoints}
+\footnotesize
+\begin{tabular}{|l|l|p{6.2cm}|}
+\hline
+\textbf{Endpoint} & \textbf{Método} & \textbf{Função (reusada por PWA e Mobile)} \\ \hline
+\texttt{/health} & GET & Verificação de disponibilidade do serviço \\ \hline
+\texttt{/interpret} & POST & Interpretação a partir de laudo em PDF (multipart) \\ \hline
+\texttt{/interpret-manual} & POST & Interpretação a partir de valores digitados (JSON) \\ \hline
+\end{tabular}
+\end{table}
+
+\subsubsection{Mapa de migração dos componentes}
+
+A Tabela~\ref{tab:mapa_migracao} apresenta o mapa de migração, artefato a
+artefato. A maioria dos componentes de interface enquadrou-se no padrão~(ii):
+estrutura declarativa e lógica de estado preservadas, com adaptação apenas das
+primitivas visuais (de \texttt{<div>}/\texttt{<input>} para
+\texttt{<View>}/\texttt{<TextInput>}/\texttt{StyleSheet}). As substituições
+nativas (iii) concentraram-se nos pontos de contato com \emph{hardware} e ambiente.
+
+\begin{table}[H]
+\centering
+\caption{Mapa de migração PWA $\rightarrow$ Mobile por artefato (LOC = linhas de código).}
+\label{tab:mapa_migracao}
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{|p{4.3cm}|p{4.0cm}|c|p{3.0cm}|}
+\hline
+\textbf{Artefato na PWA (LOC)} & \textbf{Contraparte no Mobile} & \textbf{LOC} & \textbf{Padrão} \\ \hline
+\emph{Backend} FastAPI + serviços (1.654) & idêntico (via REST) & 1.654 & Reuso integral \\ \hline
+Base de conhecimento \texttt{data/*.csv} (145) & idêntica (via REST) & 145 & Reuso integral \\ \hline
+\texttt{types/index.ts} (56) & \texttt{types.ts} (58) & 58 & (ii) Estrutural (contrato) \\ \hline
+\texttt{services/api.ts} (213) & \texttt{api.ts} (71) & 71 & (ii) Estrutural c/ adaptação de transporte \\ \hline
+\texttt{App.tsx} (323) & \texttt{App.tsx} (209) & 209 & (ii) Estrutural (orquestração/estado) \\ \hline
+\texttt{ManualEntryForm.tsx} (90) & \texttt{ManualEntryForm.tsx} & --- & (ii) Estrutural \\ \hline
+\texttt{ResultsDisplay.tsx} (196) & \texttt{Results.tsx} & --- & (ii) Estrutural \\ \hline
+\texttt{ReferenceComparison.tsx} (82) & \texttt{ReferenceComparisonTable.tsx} & --- & (ii) Estrutural \\ \hline
+\texttt{FileUpload.tsx} (56, \emph{react-dropzone}) & \texttt{PdfUpload.tsx} (\emph{expo-document-picker}) & --- & (iii) Substituição nativa \\ \hline
+\texttt{LoadingSpinner.tsx} (79) & \texttt{ActivityIndicator} (nativo) & --- & (iii) Substituição nativa \\ \hline
+\texttt{index.tsx} (66, \emph{ReactDOM}) & \texttt{index.ts} (8, Expo) & 8 & (iii) \emph{Bootstrap} de plataforma \\ \hline
+\texttt{utils/} (1.239: contorno de \emph{webview}) & --- (não portados) & 0 & Eliminados \\ \hline
+\end{tabular}
+\end{table}
+
+\subsubsection{Taxa de reuso e eliminação de código de contorno}
+
+A Tabela~\ref{tab:taxa_reuso} sintetiza a taxa de reuso por camada. Destaca-se um
+achado quantitativo relevante: a PWA mantinha três módulos utilitários
+(\texttt{polyfills.ts}, \texttt{mobileOptimizations.ts} e
+\texttt{mobileDetection.ts}), somando \textbf{1.239 linhas --- 49\% de todo o
+código do cliente web (2.525 LOC)} ---, que existiam exclusivamente para mitigar
+limitações do paradigma \emph{webview} em navegadores móveis. Na renderização
+nativa do React Native, esses contornos tornaram-se desnecessários e foram
+\textbf{integralmente eliminados}. Esse resultado é o correlato, no plano do
+código, do \emph{overhead} de recursos que a literatura atribui às soluções
+baseadas em \emph{webview} \cite{oliveira2023}.
+
+\begin{table}[H]
+\centering
+\caption{Taxa de reuso por camada na migração PWA $\rightarrow$ Mobile.}
+\label{tab:taxa_reuso}
+\footnotesize
+\begin{tabular}{|p{4.6cm}|c|p{5.2cm}|}
+\hline
+\textbf{Camada} & \textbf{Reuso} & \textbf{Observação} \\ \hline
+Lógica de negócio (\emph{backend} + regras) & 100\% & 1.654 LOC Python + 145 CSV, sem alteração \\ \hline
+Contrato de dados (interfaces TS) & $\approx$100\% & 5 interfaces de domínio migradas verbatim \\ \hline
+Serviços de comunicação (rede) & 3/3 operações & Semântica preservada; transporte adaptado \\ \hline
+Apresentação (componentes de UI) & Reescrita estrutural & Padrão (ii): estrutura/estado preservados \\ \hline
+Utilitários de contorno de \emph{webview} & 0\% (eliminados) & 1.239 LOC descartadas \\ \hline
+\end{tabular}
+\end{table}
+
+Confirma-se, assim, a hipótese de reuso: a separação de responsabilidades
+\emph{API-first} preservou o núcleo funcional (ativo de maior valor e risco) e
+localizou o esforço de reengenharia na camada de apresentação
+\cite{rampinelli2026, oliveira2023}.
+
+\subsection{Frente C --- Usabilidade (inspeção heurística)}
+\label{sub:frenteC}
+
+A Frente~C avalia a usabilidade por inspeção heurística \cite{nielsen1994,
+cardieri2018}: cinco especialistas em IHC inspecionam, de forma independente, os
+dois clientes sobre os mesmos cenários, registrando violações às dez heurísticas
+e classificando cada problema em uma escala de severidade de 0 a 4. As inspeções
+ainda não foram realizadas; a Tabela~\ref{tab:usabilidade} está preparada para os
+dados consolidados.
+
+\begin{table}[H]
+\centering
+\caption{Síntese comparativa da inspeção heurística (a preencher).}
+\label{tab:usabilidade}
+\footnotesize
+\begin{tabular}{|p{6.8cm}|c|c|}
+\hline
+\textbf{Métrica} & \textbf{PWA} & \textbf{Móvel} \\ \hline
+Problemas registrados & --- & --- \\ \hline
+Índice médio de severidade & --- & --- \\ \hline
+Problemas de severidade 3--4 & --- & --- \\ \hline
+Heurísticas mais violadas & --- & --- \\ \hline
+\end{tabular}
+\end{table}
+
+A Figura~\ref{fig:usabilidade} ilustra a consolidação sobre registros
+\textbf{fictícios} de cinco avaliadores. \emph{Os números são ilustrativos} e não
+representam inspeções reais.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{fig_frente_c_inspecao_heuristica.png}
+\caption{Demonstração do método da Frente~C (dados sintéticos, a substituir pelas inspeções reais).}
+\label{fig:usabilidade}
+\end{figure}
+
+\subsection{Síntese: resultados obtidos $\times$ hipóteses}
+\label{sub:sintese}
+
+A Tabela~\ref{tab:sintese} relaciona os resultados às hipóteses do trabalho. A
+hipótese de \textbf{reuso arquitetural} (Frente~B) está empiricamente confirmada;
+as hipóteses de \textbf{desempenho} (A) e \textbf{usabilidade} (C) têm instrumentos
+validados e aguardam a coleta.
+
+\begin{table}[H]
+\centering
+\caption{Resultados obtidos frente às hipóteses de pesquisa.}
+\label{tab:sintese}
+\footnotesize
+\begin{tabular}{|p{5.6cm}|p{3.0cm}|p{5.0cm}|}
+\hline
+\textbf{Dimensão (hipótese)} & \textbf{Situação} & \textbf{Evidência} \\ \hline
+Artefato móvel funcional & Alcançado & Seção~\ref{sub:produto} \\ \hline
+Ganho de desempenho (A) & Instrumento pronto; dados pendentes & Seção~\ref{sub:frenteA} \\ \hline
+Reuso arquitetural API-first (B) & Alcançado (real) & Seção~\ref{sub:frenteB}: 100\% da lógica; $-$1.239 LOC de \emph{webview} \\ \hline
+Ganho de usabilidade (C) & Instrumento pronto; dados pendentes & Seção~\ref{sub:frenteC} \\ \hline
+\end{tabular}
+\end{table}
+
+\subsection{Validade, limitações e extensão}
+\label{sub:validade}
+
+A Frente~B baseia-se na inspeção direta do código-fonte, não sujeita a viés
+amostral. As Frentes~A e C controlam variáveis por desenho (dispositivo único e
+execução alternada em A; heurísticas consagradas e severidade padronizada em C).
+Como limitações: (i)~a Frente~A será medida em um único dispositivo de entrada,
+restringindo a generalização das métricas absolutas ao perfil testado e
+interessando o resultado relativo; (ii)~a Frente~B é uma reconstrução documental
+retrospectiva do mapa de migração; e (iii)~a Frente~C capta problemas de
+conformidade heurística por especialistas, não a aceitação subjetiva de usuários
+finais, com painel limitado a cinco avaliadores. As conclusões relativas sobre
+reuso e desempenho têm potencial de transferência para migrações arquiteturais
+correlatas na \emph{stack} adotada.
