@@ -473,6 +473,58 @@ Ganho de usabilidade (C) & Instrumento pronto; dados pendentes & Seção~\ref{su
 \end{tabular}
 \end{table}
 
+\subsection{Discussão: confronto com a literatura}
+\label{sub:discussao}
+
+Os resultados da Frente~B dialogam diretamente com os trabalhos relacionados
+(Seção~3) e permitem confrontar o observado com o esperado. De início, confirma-se
+a expectativa, derivada da literatura de arquitetura \emph{API-first}
+\cite{rampinelli2026}, de que a centralização da lógica no \emph{backend}
+minimizaria o custo de uma migração de paradigma: a hipótese de reuso não apenas se
+sustentou, como se mostrou integral (100\%) no núcleo funcional.
+
+Esse achado oferece uma contrapartida quantitativa ao estudo qualitativo de Zhou
+(2024). Enquanto os vinte desenvolvedores entrevistados por Zhou relataram a
+migração entre plataformas e a manutenção como desafios recorrentes do
+desenvolvimento \emph{cross-platform}, sem, contudo, quantificar o esforço nem
+documentar um caso real de transição \cite{zhou2024}, a Frente~B evidencia que esse
+atrito é fortemente modulado pela decisão arquitetural. No InterpreteLabBR, a
+arquitetura \emph{API-first} converteu o que a literatura descreve como
+``dificuldade de migração'' em um esforço mensurável e localizado --- 100\% de
+reuso da lógica de negócio, sem reescrita, e a eliminação de 1.239 linhas de
+código de contorno ---, deslocando o custo da transição da lógica crítica para a
+camada de apresentação. Em outras palavras, sob \emph{API-first}, a migração
+deixou de ameaçar o núcleo funcional e passou a ser, predominantemente, um
+exercício de portabilidade de interface.
+
+O mesmo resultado fornece uma evidência, no plano do código-fonte, para a tese de
+Karin (2025). Em revisão sistemática, Karin posiciona as soluções baseadas em
+\emph{WebView} --- incluindo PWAs --- como as de maior \emph{overhead}, atribuindo
+o custo à camada intermediária de DOM e do navegador \cite{karin2025}. As 1.239
+linhas de utilitários eliminadas na migração (\emph{polyfills}, detecção de
+dispositivo móvel e otimizações de rolagem) existiam exclusivamente para compensar
+limitações do \emph{WebView} em navegadores móveis e correspondiam a 49\% do código
+do cliente web. Sua supressão integral na arquitetura de renderização nativa
+materializa, no artefato, o \emph{overhead} que Karin descreve de forma agregada:
+além do custo de execução (energia e CPU), o paradigma \emph{WebView} impunha um
+\emph{custo de engenharia} --- quase metade da base de código do cliente dedicada a
+contornos ---, aqui suprimido. O achado, assim, corrobora empiricamente, e em um
+caso real de saúde pública, a conclusão da revisão de Karin.
+
+Por fim, os achados de Sokolov (2025) orientam a expectativa para a Frente~A, ainda
+em coleta. Em \emph{benchmark} controlado via ADB, Sokolov observou que a
+implementação nativa superou o React Native em eficiência de CPU e, sobretudo, no
+crescimento de memória ao longo do tempo em rotinas contínuas, com vantagens
+pontuais do React Native em cenários específicos \cite{sokolov2025}. Espera-se,
+portanto, que a vantagem do cliente nativo sobre o PWA seja mais nítida em métricas
+sensíveis à execução sustentada --- notadamente a memória RAM sob interação
+contínua (rolagem) --- e mais modesta em tarefas dominadas por I/O e rede, como a
+submissão do PDF, cuja latência é governada pela API. Diferentemente de Sokolov,
+cujo \emph{benchmark} é sintético (criptografia AES) e desvinculado de domínio, a
+Frente~A avaliará essas métricas em um fluxo real de uso clínico; a confirmação ou
+refutação desse padrão de consumo de RAM constituirá o contraste central entre o
+esperado pela literatura e o obtido em campo.
+
 \subsection{Validade, limitações e extensão}
 \label{sub:validade}
 
