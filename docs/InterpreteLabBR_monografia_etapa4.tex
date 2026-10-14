@@ -218,7 +218,7 @@ A avaliação empírica do artefato estrutura-se em três frentes metodológicas
 
 A Frente A, voltada aos ensaios de desempenho comparativo, adota a técnica de experimentação controlada, com protocolo inspirado no estudo de Oliveira et al. (2023) sobre o \emph{overhead} de recursos em \emph{frameworks} de desenvolvimento móvel \cite{oliveira2023}. O procedimento consiste na execução sequencial e alternada de um conjunto padronizado de tarefas críticas, tempo de inicialização da aplicação, submissão de um laudo em PDF, rolagem da listagem de analitos e renderização das tabelas de referência, em ambos os clientes, sob as mesmas condições de rede e no mesmo dispositivo físico (um único aparelho Android de entrada, conforme definido na Seção~4.2), de modo a neutralizar variáveis intervenientes como flutuações térmicas do processador, nível de bateria e instabilidades de sinal. As métricas coletadas incluem tempo total de resposta, uso percentual de CPU, memória RAM alocada, taxa de quadros por segundo (FPS) em rolagem e animações, e consumo energético estimado, obtidos via Android Debug Bridge (ADB) e ferramentas nativas de \emph{profiling}. Cada tarefa é repetida em dez execuções por cliente, número que permite a aplicação de estatística descritiva de tendência central e dispersão (média, mediana e desvio padrão) sem exigir tempo experimental incompatível com o cronograma do trabalho.
 
-A Frente B dedica-se à observação documental e retrospectiva do processo de engenharia da migração. Ao longo do desenvolvimento do cliente móvel, realizou-se uma análise documental comparativa das duas bases de código do cliente (PWA e móvel) e do serviço compartilhado, classificando cada componente pré-existente na PWA segundo três padrões de portabilidade adotados neste trabalho, reescrita completa, portabilidade estrutural com adaptação de elementos visuais, ou substituição por componente nativo equivalente. O detalhamento do mapa de migração resultante desta classificação é apresentado no capítulo de Resultados (Seção~\ref{sub:frenteB}), junto à caracterização da arquitetura do sistema. Os dados consolidados permitem quantificar a taxa de reuso do \emph{backend}, das interfaces TypeScript e dos serviços de comunicação com o servidor, caracterizando objetivamente o esforço de reengenharia viabilizado pela estratégia \emph{API-first}.
+A Frente B dedica-se à observação documental e retrospectiva do processo de engenharia da migração. Ao longo do desenvolvimento do cliente móvel, manteve-se um registro sistemático em diário de bordo das decisões de arquitetura tomadas para cada componente pré-existente na PWA, classificando cada elemento segundo três padrões de portabilidade adotados neste trabalho, reescrita completa, portabilidade estrutural com adaptação de elementos visuais, ou substituição por componente nativo equivalente. O detalhamento do mapa de migração resultante desta classificação será apresentado na etapa subsequente deste trabalho, junto à caracterização da arquitetura do sistema. Os dados consolidados permitem quantificar a taxa de reuso do \emph{backend}, das interfaces TypeScript e dos serviços de comunicação com o servidor, caracterizando objetivamente o esforço de reengenharia viabilizado pela estratégia \emph{API-first}.
 
 A Frente C abrange a inspeção heurística de usabilidade, fundamentada no método clássico proposto por Jakob Nielsen e aplicado à avaliação de interfaces móveis \cite{cardieri2018, nielsen1994}. Especialistas em usabilidade realizam inspeções independentes e estruturadas em ambos os clientes sobre os mesmos cenários de uso clínico, registrando violações a princípios de usabilidade e classificando a severidade de cada ocorrência em uma escala de 0 a 4. Os relatórios individuais são posteriormente consolidados em um inventário único de não conformidades, permitindo comparar a densidade de falhas e o índice médio de severidade entre a interface web encapsulada e a aplicação móvel dedicada.
 
@@ -312,14 +312,15 @@ em \emph{webview} só será confirmada ou refutada com as medições reais.
 \subsection{Frente B --- Engenharia da migração}
 \label{sub:frenteB}
 
-A Frente~B caracteriza, por \textbf{análise documental comparativa} das duas bases
-de código do cliente (PWA em React/TypeScript e aplicativo em React Native/Expo) e
-do serviço compartilhado (\emph{backend} FastAPI), o reuso arquitetural viabilizado
-pela estratégia \emph{API-first}. Cada artefato preexistente foi classificado
-segundo três padrões de portabilidade: \textbf{(i)}~reescrita completa;
-\textbf{(ii)}~portabilidade estrutural com adaptação de elementos visuais; e
-\textbf{(iii)}~substituição por componente nativo equivalente. As métricas de
-linhas de código (LOC) foram extraídas diretamente do repositório.
+A Frente~B caracteriza o reuso arquitetural viabilizado pela estratégia
+\emph{API-first}, a partir do mapeamento de migração das duas bases de código do
+cliente (PWA em React/TypeScript e aplicativo em React Native/Expo) e do serviço
+compartilhado (\emph{backend} FastAPI). Conforme o procedimento descrito na
+Seção~4.3, cada artefato preexistente foi classificado segundo três padrões de
+portabilidade: \textbf{(i)}~reescrita completa; \textbf{(ii)}~portabilidade
+estrutural com adaptação de elementos visuais; e \textbf{(iii)}~substituição por
+componente nativo equivalente. As métricas de linhas de código (LOC) foram
+extraídas diretamente do repositório.
 
 \subsubsection{Reuso do núcleo funcional via API-first}
 

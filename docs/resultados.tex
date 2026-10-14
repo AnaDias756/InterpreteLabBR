@@ -86,14 +86,15 @@ em \emph{webview} só será confirmada ou refutada com as medições reais.
 \subsection{Frente B --- Engenharia da migração}
 \label{sub:frenteB}
 
-A Frente~B caracteriza, por \textbf{análise documental comparativa} das duas bases
-de código do cliente (PWA em React/TypeScript e aplicativo em React Native/Expo) e
-do serviço compartilhado (\emph{backend} FastAPI), o reuso arquitetural viabilizado
-pela estratégia \emph{API-first}. Cada artefato preexistente foi classificado
-segundo três padrões de portabilidade: \textbf{(i)}~reescrita completa;
-\textbf{(ii)}~portabilidade estrutural com adaptação de elementos visuais; e
-\textbf{(iii)}~substituição por componente nativo equivalente. As métricas de
-linhas de código (LOC) foram extraídas diretamente do repositório.
+A Frente~B caracteriza o reuso arquitetural viabilizado pela estratégia
+\emph{API-first}, a partir do mapeamento de migração das duas bases de código do
+cliente (PWA em React/TypeScript e aplicativo em React Native/Expo) e do serviço
+compartilhado (\emph{backend} FastAPI). Conforme o procedimento descrito na
+Seção~4.3, cada artefato preexistente foi classificado segundo três padrões de
+portabilidade: \textbf{(i)}~reescrita completa; \textbf{(ii)}~portabilidade
+estrutural com adaptação de elementos visuais; e \textbf{(iii)}~substituição por
+componente nativo equivalente. As métricas de linhas de código (LOC) foram
+extraídas diretamente do repositório.
 
 \subsubsection{Reuso do núcleo funcional via API-first}
 
