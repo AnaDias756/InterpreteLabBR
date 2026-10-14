@@ -1,0 +1,493 @@
+% =====================================================================
+% InterpreteLabBR — Monografia/Artigo — ENTREGA ETAPA 4
+% Arquivo único e autossuficiente (texto atual + Capítulo de Resultados).
+% ---------------------------------------------------------------------
+% Para compilar no Overleaf, inclua também, no mesmo projeto:
+%   - sbc-template.cls/.sty e sbc-template.bib (os seus, já existentes);
+%   - as figuras: fig_frente_a_desempenho_adb.png e
+%     fig_frente_c_inspecao_heuristica.png (pasta figuras/ ou raiz).
+% Se as figuras ficarem em subpasta, descomente a linha \graphicspath abaixo.
+% =====================================================================
+\documentclass[12pt]{article}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, calc}
+
+\usepackage{sbc-template}
+\usepackage{graphicx,url}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{float}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+% \graphicspath{{figuras/}}  % descomente se as figuras estiverem em figuras/
+
+\sloppy
+
+\title{Migração de um Sistema de Apoio à Decisão em Saúde do Paradigma PWA para Aplicativo Móvel: Uma Análise de Engenharia de Software}
+
+\author{Ana Carolina Dias Faria\inst{1}, Diogo S. Martins\inst{1}}
+
+\address{Centro de Matemática, Computação e Cognição -- Universidade Federal do ABC (UFABC)\\
+  Santo André -- SP -- Brasil
+  \email{dias.ana@aluno.ufabc.edu.br, diogo.martins@ufabc.edu.br}
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+  This paper investigates the architectural paradigm shift in digital health by analyzing the migration of a Clinical Decision Support System (CDSS) from a Progressive Web App (PWA) to a dedicated mobile platform. Built on an API-first approach using FastAPI, the system performs text parsing and OCR on blood test reports to provide patient-centered explanations. While PWAs offer immediate access, web-view-based frameworks impose significant CPU and energy overhead during basic interactions. This case study evaluates the migration to React Native, characterizing software engineering benefits such as perceived performance, architectural reuse, and usability heuristics.
+\end{abstract}
+
+\begin{resumo}
+  Este artigo investiga a mudança de paradigma arquitetural em saúde digital por meio da análise da migração de um Sistema de Apoio à Decisão Clínica (SADC) de uma aplicação web progressiva (PWA) para uma plataforma móvel dedicada. Estruturado em uma abordagem API-first com FastAPI, o sistema realiza parsing de texto e OCR em laudos de hemogramas para fornecer briefings educativos aos pacientes. Embora PWAs ofereçam acesso imediato, frameworks baseados em web views impõem overhead severo de CPU e energia em interações básicas. Este estudo de caso avalia a migração para React Native, caracterizando empiricamente os benefícios de engenharia de software em termos de desempenho percebido, reuso arquitetural e heurísticas de usabilidade.
+\end{resumo}
+
+\section{Introdução}
+
+O hemograma é um dos exames laboratoriais mais requisitados no Brasil, mas sua interpretação por usuários comuns é difícil, sendo agravada pelo fato de os valores de referência impressos nos laudos derivarem, em geral, de populações estrangeiras \cite{rosenfeld2019}. O projeto-base deste trabalho, denominado InterpreteLabBR, foi concebido originalmente na graduação como uma \emph{Progressive Web App} (PWA). O sistema atua na extração de valores de hemogramas no padrão do SUS por meio de \emph{parsing} de texto e reconhecimento óptico de caracteres (OCR), classificando cada analito segundo as faixas estabelecidas pela Pesquisa Nacional de Saúde \cite{rosenfeld2019} e gerando um \emph{briefing} educativo ao paciente. Embora as PWAs ofereçam a vantagem de um acesso imediato, a literatura aponta limitações críticas de desempenho frente a soluções móveis dedicadas. Oliveira et al. (2023) demonstram que \emph{frameworks} baseados em \emph{web views} impõem um \emph{overhead} severo de CPU e energia em interações básicas, como a rolagem de tela, chegando a demandar até 8 vezes mais energia do que soluções estruturadas sobre componentes nativos \cite{oliveira2023}. Diante desse cenário, a motivação desta pesquisa é investigar e documentar, sob a ótica da Engenharia de Software, os impactos técnicos e operacionais de migrar esse artefato de um PWA encapsulado para uma arquitetura móvel dedicada \cite{oliveira2023}.
+
+A relevância social e científica desta transição reflete-se diretamente nos seus potenciais beneficiários. Por um lado, os pacientes usuários do SUS ganham uma interface mais responsiva e um canal de distribuição mais inclusivo por meio de um aplicativo instalável, alinhando-se ao eixo de cidadania e inclusão apontado pelo \emph{Brazilian Digital Health Index} (BDHI) \cite{cruz2022}. A dimensão desse impacto potencial torna-se evidente ao se considerar que, segundo o Sistema de Informações sobre Mortalidade (SIM/DataSUS), entre 2022 e 2024 foram registrados no Brasil mais de 1,6 milhão de óbitos por condições diretamente rastreáveis por marcadores laboratoriais: 1.186.936 por doenças do aparelho circulatório, 271.986 por doenças endócrinas e metabólicas --- categoria que inclui o diabetes mellitus ---, 176.941 por doenças do aparelho geniturinário, como a doença renal crônica, e 22.601 por doenças do sangue, como as anemias \cite{brasil2025sim}. Esses dados evidenciam que exames como o hemograma, a glicemia e o perfil lipídico não são procedimentos de rotina inócuos: são instrumentos diagnósticos cujos resultados, quando adequadamente interpretados, têm potencial de antecipar intervenções clínicas em condições de alta letalidade no âmbito do SUS. Por outro lado, a comunidade de Engenharia de Software aplicada à saúde beneficia-se com um estudo de caso empírico e rico em métricas computacionais, detalhando os benefícios, os custos e os desafios práticos de migrar um sistema de informação em saúde entre diferentes paradigmas de distribuição \cite{oliveira2023}. A partir desse contexto, estabelece-se o problema de pesquisa deste trabalho, que busca compreender quais são, e como podem ser medidos de forma reprodutível, os benefícios de Engenharia de Software especificamente em termos de desempenho percebido, reuso arquitetural e usabilidade decorrentes da migração de um sistema de apoio à decisão clínica do paradigma PWA para um aplicativo móvel dedicado, garantindo a preservação da integridade funcional do sistema \cite{rampinelli2026}.
+
+Ao analisar como esse problema é tratado atualmente na literatura, identificam-se frentes de soluções existentes que evidenciam a necessidade deste estudo. As ferramentas comerciais de leitura de exames operam majoritariamente em nuvem, dependem de parâmetros populacionais estrangeiros e desconsideram tanto o leiaute de impressão do SUS quanto a referência epidemiológica nacional. Similarmente, os leitores de OCR comerciais genéricos limitam-se a extrair o texto bruto do documento, sem realizar qualquer tipo de interpretação clínica ou contextualização para o entendimento do paciente leigo. Por fim, o próprio protótipo inicial do InterpreteLabBR em PWA, embora funcional, carece de uma validação formal e sofre com as restrições de encapsulamento e de acesso a hardware impostas pelos navegadores \cite{cardieri2018}. As soluções comerciais vigentes funcionam, em geral, como "caixas-pretas" inadequadas à realidade técnica do sistema público de saúde. Portanto, persiste na literatura uma lacuna de estudos de caso reais que quantifiquem e mapeiem de forma clara os efeitos práticos de uma migração de paradigma arquitetural sobre sistemas de informação em saúde, lacuna esta que este trabalho se propõe a preencher \cite{rampinelli2026}.
+
+\section{Revisão de Literatura}
+
+\subsection{Sistemas de Apoio à Decisão Clínica na Saúde Digital Brasileira}
+
+Os Sistemas de Apoio à Decisão Clínica (\emph{Clinical Decision Support Systems} - CDSS) são ferramentas computacionais projetadas para auxiliar profissionais de saúde e pacientes no processo de tomada de decisão, fornecendo informações baseadas em evidências em contextos clínicos específicos. De acordo com a literatura, essas ferramentas integram dados do paciente com bases de conhecimento estruturadas para gerar recomendações, alertas ou interpretações que auxiliam na triagem e no diagnóstico \cite{bauermann2024}. No contexto brasileiro, a saúde digital tem sido avaliada por iniciativas como o \emph{Brazilian Digital Health Index} (BDHI), instrumento desenvolvido para mensurar o nível de maturidade da saúde digital no país. Cruz et al. (2022) demonstram que o Brasil apresenta avanços significativos em alguns eixos, como conectividade e infraestrutura, mas ainda enfrenta lacunas expressivas no eixo de cidadania e inclusão, que abrange o acesso da população a ferramentas digitais de saúde \cite{cruz2022}. Esse diagnóstico evidencia a necessidade de soluções que priorizem a acessibilidade e a inclusão digital como critério de projeto, e não apenas como efeito secundário.
+
+No campo dos CDSS aplicados à saúde pública brasileira, destaca-se o trabalho de Bauermann et al. (2024), que desenvolveram um sistema de apoio à decisão clínica voltado a cuidadores de pacientes pediátricos hemofílicos \cite{bauermann2024}. Esse trabalho exemplifica como sistemas computacionais podem ser projetados para mediar o conhecimento clínico especializado e o leigo, reduzindo barreiras de interpretação para familiares e cuidadores sem formação na área da saúde, em uma proposta análoga à do InterpreteLabBR, que busca traduzir resultados laboratoriais de hemogramas para o paciente comum do SUS. A relevância de soluções móveis nesse contexto é reforçada por Torrente et al. (2024), que analisam a relação entre tecnologia e atendimento pré-hospitalar móvel, evidenciando que a adoção de aplicativos instaláveis no contexto de saúde pública contribui para a agilidade e a qualidade do atendimento \cite{torrente2024}. A disponibilização de sistemas de saúde em plataformas móveis instaláveis configura, portanto, não apenas uma decisão técnica, mas uma estratégia de alcance e equidade no acesso à informação clínica.
+
+\subsection{Hemograma e valores de referência populacionais brasileiros}
+
+O hemograma é um dos exames laboratoriais mais solicitados na rotina clínica do Sistema Único de Saúde (SUS), permitindo a avaliação de componentes do sangue como eritrócitos, leucócitos e plaquetas. Apesar de sua ampla utilização, a interpretação dos resultados por pacientes leigos é frequentemente dificultada pela ausência de contextualização adequada nos laudos e, sobretudo, pelo fato de que os valores de referência impressos na maioria dos laudos brasileiros derivam de estudos populacionais estrangeiros, que não refletem as especificidades demográficas, nutricionais e epidemiológicas da população brasileira.
+
+Essa lacuna foi endereçada de forma expressiva pela Pesquisa Nacional de Saúde (PNS), cujos resultados para exames laboratoriais de hemograma foram publicados por \cite{rosenfeld2019}. O estudo, de abrangência nacional, estabeleceu valores de referência para a população adulta brasileira estratificados por sexo e faixa etária, constituindo o primeiro levantamento paramétrico de grande escala conduzido com amostra representativa do Brasil \cite{rosenfeld2019}. A adoção desses parâmetros como base classificatória confere ao InterpreteLabBR validade epidemiológica superior às ferramentas que utilizam tabelas de referência importadas, tornando-o mais adequado à realidade do sistema público de saúde nacional. A importância de se utilizar valores de referência populacionalmente ajustados reside no fato de que a classificação equivocada de um analito como anormal, ou, inversamente, a não detecção de um valor limítrofe, pode gerar ansiedade desnecessária no paciente ou, em casos mais graves, retardar a busca por atendimento médico. A fundamentação do sistema na PNS representa, portanto, um diferencial de segurança e de relevância clínica para a população usuária do SUS, público-alvo primário do projeto.
+
+\subsection{Progressive Web Apps: Características e limitações}
+
+As \emph{Progressive Web Apps} (PWAs) constituem uma abordagem de desenvolvimento de software que busca combinar as vantagens das aplicações web --- acessibilidade via navegador, sem necessidade de instalação --- com características típicas de aplicativos nativos, como comportamento responsivo, suporte a notificações e capacidade de funcionamento offline por meio de \emph{Service Workers}. A proposta das PWAs é reduzir a fricção de acesso ao usuário, permitindo que uma aplicação seja utilizada diretamente por uma URL, sem as etapas de instalação em lojas de aplicativos.
+
+No contexto do InterpreteLabBR, a escolha inicial pela arquitetura PWA justificou-se pela praticidade de distribuição e pela dispensa de contas em plataformas comerciais. No entanto, essa abordagem impõe restrições estruturais que limitam o desempenho e a experiência do usuário. As PWAs executam sobre o motor de renderização do navegador (\emph{web view}), o que introduz uma camada de abstração entre o código da aplicação e os componentes nativos do sistema operacional. Essa camada adicional implica \emph{overhead} de processamento, especialmente em operações que demandam alta responsividade de interface, como rolagem de listas extensas, animações ou interações rápidas com o teclado. Adicionalmente, PWAs enfrentam limitações de integração com recursos de hardware do dispositivo de forma mais restrita do que aplicativos nativos, por estarem sujeitas às permissões e às políticas de segurança impostas pelo navegador. No contexto do InterpreteLabBR, onde o carregamento de documentos PDF via seletor de arquivos nativo é uma operação central, essas restrições impactam diretamente a experiência do usuário e motivam a evolução para uma arquitetura móvel dedicada.
+
+\subsection{Frameworks de desenvolvimento móvel e overhead de recursos}
+
+O desenvolvimento de aplicativos móveis pode ser realizado por meio de três abordagens principais: (i) desenvolvimento nativo, em que a aplicação é escrita nas linguagens oficiais da plataforma, com acesso irrestrito às APIs do sistema operacional; (ii) desenvolvimento híbrido baseado em \emph{web view}, em que o código web é encapsulado em um contêiner nativo e renderizado por um motor de navegador embutido; e (iii) frameworks de renderização nativa, como o React Native, que traduzem componentes escritos em JavaScript/TypeScript em componentes nativos da plataforma, sem o uso de \emph{web views}.
+
+A distinção entre essas abordagens tem implicações diretas no desempenho e no consumo de recursos do dispositivo. Oliveira et al. (2023) conduziram um estudo empírico sobre o \emph{overhead} de recursos em frameworks de desenvolvimento móvel, comparando soluções baseadas em \emph{web views} com aquelas baseadas em componentes nativos \cite{oliveira2023}. Os resultados demonstram que frameworks baseados em \emph{web views} podem demandar até 8 vezes mais energia do que soluções estruturadas sobre componentes nativos em interações básicas, como a rolagem de listas \cite{oliveira2023}. Esse \emph{overhead} impacta diretamente a experiência do usuário em dispositivos com recursos limitados de bateria e processamento, cenário comum entre usuários do SUS, que frequentemente utilizam aparelhos Android de entrada. O React Native, framework adotado no InterpreteLabBR para a camada móvel, posiciona-se como uma solução intermediária que combina a produtividade do desenvolvimento em JavaScript/TypeScript com a eficiência de renderização de componentes nativos. Ao contrário de soluções que encapsulam \emph{web views}, o React Native mapeia os componentes declarativos da aplicação diretamente para os componentes visuais do sistema operacional, favorecendo uma execução mais fluida e um menor consumo de recursos. O Expo fornece uma camada de abstração que simplifica o processo de build e distribuição, incluindo a geração de APKs por meio do serviço EAS Build sem a necessidade de ambiente nativo configurado localmente.
+
+\subsection{Arquitetura API-first e reuso arquitetural em migrações de software}
+
+A arquitetura \emph{API-first} é uma abordagem de design de software na qual a interface de programação de aplicações (API) é concebida e documentada antes da implementação dos clientes que a consomem. Nesse modelo, toda a lógica de negócio e processamento de dados é centralizada no servidor (backend), exposta por meio de endpoints REST ou GraphQL, e consumida por diferentes clientes de forma independente. Essa separação de responsabilidades constitui um princípio fundamental de Engenharia de Software, alinhado ao conceito de baixo acoplamento e alta coesão.
+
+No contexto de migrações de sistema, a arquitetura \emph{API-first} apresenta vantagem expressiva: ao concentrar a lógica clínica no backend, ela permite que a substituição ou a evolução da camada de apresentação de uma PWA para um aplicativo móvel ocorra sem que o núcleo funcional do sistema precise ser reescrito. No caso do InterpreteLabBR, todo o processamento crítico, incluindo a extração de valores via OCR e a classificação dos analitos segundo as faixas da PNS, reside no backend implementado em FastAPI (Python), exposto como serviço REST. Isso permite que tanto o cliente web (PWA) quanto o cliente móvel (React Native) consumam os mesmos endpoints, garantindo consistência nos resultados e eliminando a necessidade de duplicação de lógica clínica. Esse padrão arquitetural é também relevante do ponto de vista da manutenibilidade e da evolução do sistema. Rampinelli et al. (2026) propõem um framework de avaliação de sistemas de informação sob a perspectiva do usuário, destacando que sistemas bem estruturados arquiteturalmente tendem a apresentar maior facilidade de adaptação a novos contextos de uso e plataformas \cite{rampinelli2026}. A documentação e a caracterização formal do reuso arquitetural constituem, portanto, uma contribuição relevante deste trabalho para a literatura de Engenharia de Software aplicada à saúde.
+
+\subsection{Reconhecimento óptico de caracteres em documentos de saúde}
+
+O Reconhecimento Óptico de Caracteres (\emph{Optical Character Recognition} - OCR) é uma tecnologia que converte imagens de texto em texto digital estruturado, possibilitando o processamento computacional de documentos digitalizados ou gerados por impressão. No contexto de sistemas de saúde, o OCR viabiliza a extração automatizada de dados a partir de laudos, prescrições e prontuários, reduzindo a necessidade de entrada manual de informações e ampliando a escalabilidade de soluções de triagem e análise clínica.
+
+A qualidade da extração por OCR em documentos de saúde está sujeita a desafios específicos, incluindo variações no \emph{layout} de impressão, presença de ruídos gráficos, diferenças tipográficas entre unidades de saúde e inconsistências na qualidade de digitalização. Most et al. (2025) abordam estratégias baseadas em visão computacional para recuperação robusta de documentos, evidenciando que abordagens que combinam OCR com técnicas de pré-processamento de imagem tendem a apresentar maior resiliência a variações de qualidade \cite{most2025}. No contexto do InterpreteLabBR, o leiaute padronizado do laudo do SUS representa tanto uma vantagem, ao permitir o desenvolvimento de heurísticas de \emph{parsing} específicas para esse formato, quanto um desafio, dado que pequenas variações entre laboratórios da rede pública podem introduzir erros de extração.
+
+Lima (2024) comparou modelos de OCR de código aberto, como o Tesseract OCR e o EasyOCR, com a API comercial Google Cloud Vision na extração de informações em documentos médicos, avaliando precisão, velocidade e robustez em diferentes condições de digitalização e escrita \cite{lima2024}. Os resultados demonstraram que modelos de OCR tradicionais de código aberto apresentam elevada eficiência para textos impressos padronizados, enquanto documentos com ruídos gráficos ou escrita manual exigem tratamentos específicos ou motores treinados para caligrafias variadas \cite{lima2024}. Esse achado é diretamente relevante para o InterpreteLabBR, que adota o Tesseract OCR como estratégia de \emph{fallback} na extração de laudos hematológicos do SUS: laudos gerados por sistemas informatizados e impressos são processados com maior confiabilidade por modelos \emph{open-source}, enquanto documentos digitalizados por câmera de celular ou escaneados com baixa resolução demandam rotinas adicionais de pré-processamento de imagem e validação parametrizada.
+
+A questão do pós-processamento de texto extraído por OCR em língua portuguesa é endereçada por Osório e Cardoso (2025), que propõem recursos específicos para otimização de texto em português após extração por OCR \cite{osorio2025}. Essa contribuição é particularmente relevante para o contexto do InterpreteLabBR, cujos laudos são emitidos em português e podem conter termos técnicos da nomenclatura hematológica que ferramentas genéricas de OCR tendem a interpretar de forma equivocada.
+
+\subsection{Avaliação de usabilidade por inspeção heurística}
+
+A usabilidade é um atributo de qualidade de software que mede a facilidade com que usuários conseguem aprender e utilizar uma interface para alcançar seus objetivos, bem como o grau de satisfação proporcionado durante o uso. No contexto de sistemas de saúde voltados ao paciente leigo, a usabilidade assume dimensão crítica: interfaces confusas ou que exigem conhecimento técnico prévio podem resultar em interpretações equivocadas dos dados clínicos, comprometendo o propósito informativo do sistema.
+
+Entre os métodos de avaliação de usabilidade, a Avaliação Heurística, proposta por Jakob Nielsen, é amplamente utilizada na prática de Engenharia de Software por sua eficiência e pelo baixo custo de aplicação. O método consiste na inspeção sistemática da interface por especialistas em usabilidade ou interação humano-computador (IHC), que avaliam a adequação da interface a um conjunto de princípios estabelecidos, as heurísticas de Nielsen, registrando e classificando os problemas encontrados segundo uma escala de severidade de 0 a 4 \cite{cardieri2018}. A ausência de usuários reais no processo de avaliação, substituídos por especialistas que atuam como juízes inspetores, é uma característica que distingue a avaliação heurística dos testes de usabilidade com usuários, dispensando aprovação de comitê de ética e viabilizando a execução dentro de prazos acadêmicos mais curtos \cite{cardieri2018}.
+
+Cardieri e Zaina (2018) realizaram um estudo comparativo da experiência do usuário em aplicações \emph{web} móveis, nativas e PWAs, sob as perspectivas de usuários reais e especialistas em IHC \cite{cardieri2018}. Os resultados evidenciam diferenças perceptíveis de qualidade de interação entre os paradigmas, com aplicações nativas e PWAs bem implementadas tendendo a superar aplicações \emph{web} móveis em critérios como responsividade, fluidez e consistência de navegação \cite{cardieri2018}. Esse achado fundamenta a hipótese central deste trabalho, de que a migração do InterpreteLabBR para um aplicativo móvel resultará em ganhos mensuráveis de usabilidade, verificáveis pela inspeção heurística comparativa.
+
+Rampinelli et al. (2026) propõem um \emph{framework} de avaliação de sistemas de informação sob a perspectiva do usuário, reforçando a necessidade de metodologias estruturadas para a avaliação da qualidade percebida em sistemas de saúde digital \cite{rampinelli2026}. Nessa mesma direção, Vaz (2026) desenvolveu e avaliou a usabilidade do APScreening, um aplicativo móvel de apoio à decisão clínica para rastreamentos na Atenção Primária à Saúde no contexto do SUS, obtendo pontuação SUS de 91,25, classificada como excelente, evidenciando que SADCs móveis voltados ao ecossistema de saúde pública brasileiro podem atingir alta aceitabilidade em condições reais de uso \cite{vaz2026}.
+
+\subsection{Design Science Research como abordagem metodológica}
+
+A Design Science Research (DSR) é uma abordagem metodológica originada na área de Sistemas de Informação, utilizada para orientar a concepção, o desenvolvimento e a avaliação de artefatos que resolvem problemas práticos identificados. Diferentemente das metodologias de pesquisa baseadas em observação de fenômenos existentes, a DSR parte da construção de um artefato --- seja um sistema, um modelo, um método ou um constructo --- e avalia sua efetividade no contexto do problema que motivou sua criação.
+
+A DSR é especialmente adequada a trabalhos de pós-graduação em Tecnologia e Sistemas de Informação que envolvem o desenvolvimento de soluções computacionais, pois confere rigor científico ao processo de construção e validação do artefato, exigindo que o problema seja claramente identificado, que a solução seja fundamentada na literatura e que sua avaliação seja conduzida de forma sistemática e reprodutível. O Capítulo~4 detalha como essa abordagem é operacionalizada no caso do InterpreteLabBR, incluindo o modelo de atividades adotado e as três frentes metodológicas de avaliação do artefato.
+
+\section{Trabalhos relacionados}
+
+A presente seção situa o InterpreteLabBR em relação a trabalhos recentes que investigam desempenho, migração e desafios de desenvolvimento em \emph{frameworks} de aplicativos móveis \emph{cross-platform}, identificando as contribuições específicas que o diferenciam da literatura existente.
+
+Sokolov (2025) conduziu um estudo experimental quantitativo comparando o consumo de memória e a eficiência de tempo de execução entre uma aplicação React Native e seu equivalente nativo em Kotlin, utilizando criptografia e decriptografia AES como carga computacional de referência e o \emph{Android Debug Bridge} (ADB) como instrumento de coleta de métricas \cite{sokolov2025}. Os resultados demonstraram que a implementação nativa superou o React Native em eficiência de CPU e crescimento de memória ao longo do tempo, embora em determinados cenários de decriptografia o React Native tenha apresentado desempenho superior \cite{sokolov2025}. O trabalho contribui com evidências empíricas sobre o \emph{overhead} de execução do React Native em tarefas computacionalmente intensivas, mas restringe-se a um \emph{benchmark} sintético, criptografia de arquivos, sem qualquer vínculo com aplicações de domínio específico ou com o processo de migração de sistemas existentes \cite{sokolov2025}. O InterpreteLabBR complementa essa perspectiva ao avaliar o \emph{overhead} de desempenho em um cenário real de uso, com operações predominantemente I/O-bound e rede-bound (submissão de PDF e retorno de JSON da API), sobre dispositivos Android de entrada representativos do perfil de usuários do SUS.
+
+Zhou (2024) realizou um estudo qualitativo com 20 desenvolvedores experientes em React Native e Flutter, por meio de entrevistas semiestruturadas, para mapear os desafios e soluções em projetos de desenvolvimento \emph{cross-platform} \cite{zhou2024}. Entre os desafios mais recorrentes identificados, destacam-se a otimização de desempenho de renderização, a consistência da interface entre plataformas, a integração com módulos nativos e a curva de aprendizado associada às atualizações frequentes dos \emph{frameworks} \cite{zhou2024}. O trabalho oferece uma perspectiva valiosa sobre a experiência do desenvolvedor (DX), mas opera exclusivamente no plano qualitativo e não documenta o processo de migração de um sistema preexistente de um paradigma para outro \cite{zhou2024}. O InterpreteLabBR avança nessa direção ao registrar empiricamente o processo de migração de um PWA em produção para React Native, quantificando o reuso de componentes, identificando os padrões de portabilidade adotados e caracterizando o esforço de adaptação por categoria de artefato, informação ausente na literatura revisada por Zhou.
+
+Karin (2025) conduziu uma revisão sistemática da literatura sobre o impacto de \emph{frameworks cross-platform} no desempenho de aplicações móveis, sintetizando evidências que posicionam soluções baseadas em \emph{WebView}, incluindo PWAs, como as de maior \emph{overhead} dentre as abordagens analisadas, com médias de 30 a 60 quadros por segundo e consumo muito elevado de CPU, enquanto o React Native se mostrou mais eficiente para aplicações orientadas a dados, com 45 a 60 quadros por segundo \cite{karin2025}. A revisão conclui que, para 80\% das aplicações de negócio com perfil CRUD, a diferença de desempenho entre paradigmas é imperceptível ao usuário final \cite{karin2025}. Embora o trabalho consolide evidências comparativas relevantes, trata-se de uma síntese da literatura existente, sem coleta primária de dados e sem estudo de caso aplicado a um sistema real \cite{karin2025}. O InterpreteLabBR posiciona-se como um estudo de caso primário que instancia, em um sistema de saúde pública real, exatamente a transição de paradigma identificada por Karin como teoricamente vantajosa, de PWA para React Native, verificando empiricamente se os ganhos de desempenho previstos pela literatura se manifestam no contexto específico de laudos hematológicos no SUS.
+
+A Tabela~\ref{tab:trabalhos_relacionados} sintetiza o mapeamento comparativo entre as pesquisas analisadas e o presente estudo, evidenciando o posicionamento e a originalidade do InterpreteLabBR frente à literatura.
+
+\begin{table}[H]
+\centering
+\caption{Quadro comparativo entre trabalhos relacionados e o InterpreteLabBR.}
+\label{tab:trabalhos_relacionados}
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{|p{2.8cm}|p{2.4cm}|p{2.2cm}|p{2.4cm}|p{2.2cm}|p{2.4cm}|}
+\hline
+\textbf{Trabalho} & \textbf{Domínio de Saúde (SUS)} & \textbf{Migração PWA $\rightarrow$ Mobile} & \textbf{Desempenho (Frente A)} & \textbf{Reuso API-first (Frente B)} & \textbf{Usabilidade (Frente C)} \\ \hline
+\cite{sokolov2025} & Não (Benchmark sintético) & Não & Sim (ADB / Criptografia) & Não & Não \\ \hline
+\cite{zhou2024} & Não (Visão geral de apps) & Parcial (Qualitativo) & Não & Não & Parcial (Percepção DX) \\ \hline
+\cite{karin2025} & Não (Revisão sistemática) & Teórico (Revisão) & Teórico (Compilação) & Não & Não \\ \hline
+\textbf{InterpreteLabBR (Este trabalho)} & \textbf{Sim (Laudos SUS / PNS)} & \textbf{Sim (Estudo de caso)} & \textbf{Sim (Experimento ADB)} & \textbf{Sim (FastAPI / TS)} & \textbf{Sim (Inspeção Heurística)} \\ \hline
+\end{tabular}
+\end{table}
+
+Em síntese, os três trabalhos relacionados abordam, de formas complementares, questões de desempenho e experiência de desenvolvimento em \emph{frameworks cross-platform} \cite{sokolov2025, zhou2024, karin2025}, mas nenhum deles trata simultaneamente de: (i) um sistema real de apoio à decisão clínica como objeto de avaliação; (ii) o processo de migração de um PWA em produção para React Native como fenômeno de pesquisa; e (iii) a avaliação tripartite que integra desempenho técnico, caracterização da engenharia de migração e inspeção de usabilidade. A originalidade do InterpreteLabBR reside precisamente nessa intersecção, ao conduzir um estudo de caso empírico e reprodutível em um sistema de saúde pública nacional, utilizando ferramentas gratuitas e metodologia verificável, que possa servir de referência para migrações similares no contexto da saúde digital brasileira. Para investigar essa lacuna de forma sistemática e reprodutível, o capítulo a seguir apresenta a abordagem metodológica adotada neste trabalho.
+
+\section{Metodologia}
+
+\subsection{Abordagem metodológica}
+
+Conforme apresentado na Seção~2.8, este trabalho adota a Design Science Research (DSR) como abordagem metodológica norteadora. A escolha se justifica porque o problema de pesquisa não poderia ser respondido apenas por observação de um fenômeno já existente: era necessário primeiro construir o artefato, a versão móvel do InterpreteLabBR, inexistente até o início deste trabalho, para então avaliá-lo empiricamente, exatamente o tipo de investigação para o qual a DSR foi concebida \cite{hevner2004, dresch2015}. A opção pela DSR fundamenta-se, portanto, na própria natureza do problema investigado: o desenvolvimento e a avaliação empírica de um artefato de software aplicado à saúde digital, o InterpreteLabBR, e a análise de engenharia sobre a sua migração do paradigma de aplicação web progressiva (PWA) para uma plataforma móvel dedicada com renderização nativa.
+
+Para a operacionalização da pesquisa, adota-se o modelo de seis atividades proposto por Peffers et al. (2007) para a condução de investigações em DSR: identificação do problema, definição dos objetivos da solução, projeto e desenvolvimento do artefato, demonstração, avaliação e comunicação dos resultados \cite{peffers2007}, conforme ilustrado na Figura~\ref{fig:metodologia}. Neste estudo, a identificação do problema e a definição dos objetivos foram delineadas a partir da revisão de literatura e das lacunas identificadas em saúde digital e engenharia de software móvel (Seções~2 e 3). O projeto e o desenvolvimento do artefato materializam-se na implementação do cliente móvel do InterpreteLabBR em React Native e Expo, mantendo a interoperabilidade com o serviço já existente, cuja arquitetura e processo de migração serão detalhados na etapa subsequente deste trabalho. A demonstração ocorre por meio da instalação e execução controlada do aplicativo em dispositivos móveis representativos do público-alvo do sistema público de saúde. Por fim, a avaliação organiza-se de maneira tripartite e complementar em torno do desempenho comparativo (Frente A), da caracterização da engenharia da migração (Frente B) e da inspeção de usabilidade da interface (Frente C). Quanto à natureza, a pesquisa classifica-se como aplicada, combinando abordagem quantitativa na coleta de métricas computacionais, abordagem qualitativa na documentação de engenharia e abordagem mista na caracterização de severidade dos problemas de usabilidade.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance = 0.8cm and 0.6cm,
+    every node/.style = {font=\footnotesize},
+    box/.style = {
+        rectangle,
+        rounded corners=2pt,
+        draw=black!70,
+        fill=gray!10,
+        text width=3.2cm,
+        minimum height=0.9cm,
+        align=center
+    },
+    frontbox/.style = {
+        rectangle,
+        rounded corners=2pt,
+        draw=black!80,
+        fill=blue!5,
+        text width=3.1cm,
+        minimum height=1.1cm,
+        align=center
+    },
+    arrow/.style = {-{Stealth[length=2mm]}, thick, draw=black!70}
+]
+
+% Fases DSR (Peffers et al.)
+\node (f1) [box] {\textbf{1. Identificação do Problema}\\ Revisão \& Lacunas};
+\node (f2) [box, right=of f1] {\textbf{2. Definição dos Objetivos}\\ Migração PWA $\rightarrow$ Mobile};
+\node (f3) [box, right=of f2] {\textbf{3. Design e Desenvolvimento}\\ React Native, Expo \& FastAPI};
+
+\node (f4) [box, below=1.2cm of f3] {\textbf{4. Demonstração}\\ Execução em Dispositivo Android};
+\node (f5) [box, left=of f4, fill=gray!25] {\textbf{5. Avaliação}\\ Abordagem Tripartite};
+\node (f6) [box, left=of f5] {\textbf{6. Comunicação}\\ Análise \& Relatório Científico};
+
+% Conexões principais do DSR
+\draw [arrow] (f1) -- (f2);
+\draw [arrow] (f2) -- (f3);
+\draw [arrow] (f3) -- (f4);
+\draw [arrow] (f4) -- (f5);
+\draw [arrow] (f5) -- (f6);
+
+% Frentes de Avaliação (desdobramento da Fase 5)
+\node (fa) [frontbox, below=0.9cm of f6] {\textbf{Frente A: Desempenho}\\ Benchmark \& ADB\\ (CPU, RAM, FPS, Bateria)};
+\node (fb) [frontbox, below=0.9cm of f5] {\textbf{Frente B: Engenharia}\\ Análise Documental\\ (Reuso de API \& Código)};
+\node (fc) [frontbox, below=0.9cm of f4] {\textbf{Frente C: Usabilidade}\\ Avaliação Heurística\\ (Inspeção por Especialistas)};
+
+% Linhas desdobrando a Fase 5 nas Frentes A, B e C
+\draw [arrow, dashed] (f5.south) -- ++(0,-0.4) -| (fa.north);
+\draw [arrow, dashed] (f5.south) -- (fb.north);
+\draw [arrow, dashed] (f5.south) -- ++(0,-0.4) -| (fc.north);
+
+\end{tikzpicture}
+\caption{Fluxograma metodológico baseado nas etapas do DSR (Peffers et al., 2007) e no desdobramento tripartite de avaliação.}
+\label{fig:metodologia}
+\end{figure}
+
+\subsection{Universo da pesquisa}
+
+O universo desta pesquisa não é delimitado por uma amostragem populacional de pacientes ou profissionais de saúde, mas sim pelo próprio artefato de software em suas duas instâncias de distribuição e pelos elementos instrumentais e humanos necessários à sua experimentação comparativa. Definem-se três unidades de análise complementares para o desenho experimental.
+
+A primeira corresponde à unidade de análise técnica, compreendendo as duas implementações funcionais do cliente do InterpreteLabBR: a versão em PWA (React e TypeScript) e a versão móvel dedicada (React Native e Expo). Ambas as soluções consomem os mesmos \emph{endpoints} REST providos pelo \emph{backend} em FastAPI, o que assegura que quaisquer variações de comportamento decorram estritamente da camada de apresentação e da arquitetura de execução do cliente, preservando-se a integridade da lógica clínica subjacente. A segunda unidade consiste na análise instrumental: os ensaios de desempenho são conduzidos em um único dispositivo Android, selecionado por representar o perfil de \emph{hardware} de entrada mais prevalente entre os usuários do Sistema Único de Saúde (SUS), de modo a aproximar o ambiente experimental das condições operacionais reais; a padronização em um único aparelho elimina a variável de heterogeneidade de \emph{hardware} entre execuções, ao custo de restringir a generalização dos resultados absolutos a esse perfil específico de dispositivo (ver Seção~4.5). A terceira unidade de análise abrange os avaliadores responsáveis pela inspeção heurística na Frente C, constituída por cinco especialistas com formação em Interação Humano-Computador (IHC). Esse dimensionamento fundamenta-se nos princípios estabelecidos por Nielsen (1994), segundo os quais um grupo de três a cinco avaliadores especialistas é suficiente para identificar a expressiva maioria dos problemas de usabilidade de uma interface gráfica; adota-se o limite superior dessa faixa (cinco avaliadores) para maximizar a cobertura diagnóstica dentro do orçamento disponível \cite{nielsen1994}. Não há, portanto, coleta com usuários finais no presente estudo, o que direciona a pesquisa à robustez técnica e de engenharia.
+
+\subsection{Procedimentos de coleta e análise de dados por frente}
+
+A avaliação empírica do artefato estrutura-se em três frentes metodológicas complementares, que integram a aferição de métricas computacionais, o registro documental de engenharia e a inspeção analítica de interface.
+
+A Frente A, voltada aos ensaios de desempenho comparativo, adota a técnica de experimentação controlada, com protocolo inspirado no estudo de Oliveira et al. (2023) sobre o \emph{overhead} de recursos em \emph{frameworks} de desenvolvimento móvel \cite{oliveira2023}. O procedimento consiste na execução sequencial e alternada de um conjunto padronizado de tarefas críticas, tempo de inicialização da aplicação, submissão de um laudo em PDF, rolagem da listagem de analitos e renderização das tabelas de referência, em ambos os clientes, sob as mesmas condições de rede e no mesmo dispositivo físico (um único aparelho Android de entrada, conforme definido na Seção~4.2), de modo a neutralizar variáveis intervenientes como flutuações térmicas do processador, nível de bateria e instabilidades de sinal. As métricas coletadas incluem tempo total de resposta, uso percentual de CPU, memória RAM alocada, taxa de quadros por segundo (FPS) em rolagem e animações, e consumo energético estimado, obtidos via Android Debug Bridge (ADB) e ferramentas nativas de \emph{profiling}. Cada tarefa é repetida em dez execuções por cliente, número que permite a aplicação de estatística descritiva de tendência central e dispersão (média, mediana e desvio padrão) sem exigir tempo experimental incompatível com o cronograma do trabalho.
+
+A Frente B dedica-se à observação documental e retrospectiva do processo de engenharia da migração. Ao longo do desenvolvimento do cliente móvel, realizou-se uma análise documental comparativa das duas bases de código do cliente (PWA e móvel) e do serviço compartilhado, classificando cada componente pré-existente na PWA segundo três padrões de portabilidade adotados neste trabalho, reescrita completa, portabilidade estrutural com adaptação de elementos visuais, ou substituição por componente nativo equivalente. O detalhamento do mapa de migração resultante desta classificação é apresentado no capítulo de Resultados (Seção~\ref{sub:frenteB}), junto à caracterização da arquitetura do sistema. Os dados consolidados permitem quantificar a taxa de reuso do \emph{backend}, das interfaces TypeScript e dos serviços de comunicação com o servidor, caracterizando objetivamente o esforço de reengenharia viabilizado pela estratégia \emph{API-first}.
+
+A Frente C abrange a inspeção heurística de usabilidade, fundamentada no método clássico proposto por Jakob Nielsen e aplicado à avaliação de interfaces móveis \cite{cardieri2018, nielsen1994}. Especialistas em usabilidade realizam inspeções independentes e estruturadas em ambos os clientes sobre os mesmos cenários de uso clínico, registrando violações a princípios de usabilidade e classificando a severidade de cada ocorrência em uma escala de 0 a 4. Os relatórios individuais são posteriormente consolidados em um inventário único de não conformidades, permitindo comparar a densidade de falhas e o índice médio de severidade entre a interface web encapsulada e a aplicação móvel dedicada.
+
+Complementarmente às três frentes de avaliação, o ciclo de implementação do artefato seguiu etapas estruturadas de engenharia de software. No levantamento de requisitos, as necessidades funcionais e não funcionais foram derivadas das especificações já consolidadas na versão web e dos contratos de dados da API REST, fixando-se a paridade funcional como critério de aceitação. No desenvolvimento, a codificação seguiu o mapeamento sistemático de componentes descrito na Frente B, com controle de versionamento e testes incrementais. Por fim, na etapa de testes, cada módulo migrado foi validado contra cenários idênticos aos da versão PWA, garantindo a integridade dos dados retornados pelo servidor e a consistência de exibição antes da inclusão do componente nas rodadas de medição de desempenho e usabilidade.
+
+\subsection{Viabilidade da metodologia adotada}
+
+A viabilidade do desenho metodológico proposto sustenta-se em três fatores. Em primeiro lugar, todas as ferramentas empregadas, Android Debug Bridge, ferramentas de \emph{profiling} de navegador e os materiais de apoio à inspeção heurística, possuem licença de código aberto ou uso livre para fins acadêmicos, o que elimina barreiras orçamentárias e garante a reprodutibilidade dos ensaios. Em segundo lugar, a adoção da avaliação heurística conduzida por especialistas, em vez de testes com usuários leigos, adequa o cronograma da pesquisa ao horizonte temporal de um Trabalho de Conclusão de Curso, dispensando a submissão e os prazos de tramitação junto a Comitês de Ética em Pesquisa (CEP), conforme reconhecido na literatura de métodos de inspeção \cite{cardieri2018}. Em terceiro lugar, a centralização da lógica clínica no \emph{backend} FastAPI permite que todos os ensaios utilizem exclusivamente documentos sintéticos ou laudos previamente anonimizados, assegurando conformidade com diretrizes de privacidade de dados e eliminando riscos éticos no manuseio de registros clínicos durante a fase experimental.
+
+\subsection{Validade e ameaças à metodologia}
+
+A validade interna dos ensaios da Frente A é preservada pelo controle das principais variáveis de teste, mesmo ambiente físico, mesma versão do \emph{backend} e mesma rede de transmissão de dados, complementado pela execução alternada das tarefas entre clientes para mitigar o impacto de processos concorrentes do sistema operacional Android. Na Frente C, a consistência interna decorre do uso de heurísticas consagradas e de critérios unificados de severidade entre os avaliadores especialistas \cite{cardieri2018, nielsen1994}.
+
+Quanto à validade externa, reconhece-se como limitação o fato de o experimento concentrar-se em um sistema de domínio específico, interpretação de hemogramas no padrão do SUS, avaliado em um único dispositivo Android e por meio de dez execuções por tarefa. Embora esse recorte restrinja a generalização direta das métricas absolutas para outras classes de \emph{hardware} ou de aplicação, a escolha de tecnologias maduras e amplamente disseminadas no mercado (React Native, Expo, FastAPI e Python) confere potencial de transferibilidade das conclusões relativas, isto é, do sentido e da magnitude aproximada dos ganhos de desempenho, para projetos correlatos de migração arquitetural.
+
+Por fim, assumem-se explicitamente duas ameaças metodológicas inerentes ao escopo da pesquisa: a restrição do painel de inspeção heurística a cinco especialistas e dos ensaios de desempenho a um único dispositivo, o que pode não esgotar todas as nuances de interação nem toda a variabilidade de \emph{hardware} existente no parque tecnológico do SUS; e a não inclusão direta de pacientes reais nos testes de usabilidade, o que impede a mensuração de fatores subjetivos de aceitação no ponto de cuidado. Ambas as decisões foram planejadas conscientemente em função das restrições de prazo e escopo acadêmico, delimitando este trabalho como uma contribuição de engenharia e fundamentando as diretrizes para etapas futuras de validação clínica e populacional.
+
+% =====================================================================
+% CAPÍTULO DE RESULTADOS — ETAPA 4
+% =====================================================================
+
+\section{Resultados Obtidos}
+\label{sec:resultados}
+
+Este capítulo apresenta os resultados da avaliação tripartite do artefato. Por
+transparência metodológica, distinguem-se dois tipos de resultado: os
+\textbf{já apurados} --- a Frente~B (engenharia da migração), derivada da análise
+direta do código-fonte e, portanto, determinística e reprodutível --- e os
+\textbf{pendentes de coleta empírica} --- a Frente~A (desempenho), que depende dos
+ensaios com ADB em dispositivo físico, e a Frente~C (usabilidade), que depende das
+inspeções dos especialistas. Para as frentes pendentes, apresentam-se o
+instrumento de medição já construído, tabelas preparadas para os dados e uma
+demonstração do método com dados sintéticos, explicitamente rotulados como
+ilustrativos.
+
+\subsection{O produto: aplicativo móvel}
+\label{sub:produto}
+
+O primeiro resultado é o próprio artefato: o cliente móvel em React Native/Expo,
+que consome a mesma API FastAPI do PWA e preserva as funcionalidades da versão
+web (entrada manual de valores, envio de laudo em PDF, verificação de
+disponibilidade do servidor, exibição de resultados/\emph{briefing} e tabela de
+comparação de referências). A caracterização técnica dessa migração constitui a
+Frente~B (Seção~\ref{sub:frenteB}).
+
+\subsection{Frente A --- Desempenho comparativo (ADB)}
+\label{sub:frenteA}
+
+A Frente~A compara PWA e cliente móvel sobre as mesmas tarefas (T1 inicialização;
+T2 submissão de PDF; T3 rolagem; T4 renderização de tabelas), no mesmo
+dispositivo Android, com dez execuções por tarefa e cliente, alternadas para
+diluir efeitos térmicos e de processos concorrentes. As métricas --- tempo de
+resposta, uso de CPU, memória (RAM), taxa de quadros (FPS) e energia estimada ---
+são coletadas via Android Debug Bridge (ADB) e \texttt{dumpsys}, conforme o
+protocolo de Oliveira et al. (2023) \cite{oliveira2023}.
+
+Os ensaios em dispositivo físico ainda não foram executados; a
+Tabela~\ref{tab:desempenho} está preparada para receber os valores
+(média~$\pm$~desvio-padrão).
+
+\begin{table}[H]
+\centering
+\caption{Desempenho PWA $\times$ Móvel (a preencher).}
+\label{tab:desempenho}
+\footnotesize
+\begin{tabular}{|p{6.2cm}|c|c|c|}
+\hline
+\textbf{Métrica (direção)} & \textbf{PWA} & \textbf{Móvel} & \textbf{$\Delta$} \\ \hline
+Tempo de inicialização --- T1 (ms, $\downarrow$) & --- & --- & \\ \hline
+Tempo de submissão de PDF --- T2 (ms, $\downarrow$) & --- & --- & \\ \hline
+CPU em rolagem --- T3 (\%, $\downarrow$) & --- & --- & \\ \hline
+Memória --- T2 (MB, $\downarrow$) & --- & --- & \\ \hline
+FPS em rolagem --- T3 (fps, $\uparrow$) & --- & --- & \\ \hline
+Energia estimada --- T3 (mAh, $\downarrow$) & --- & --- & \\ \hline
+\end{tabular}
+\end{table}
+
+A Figura~\ref{fig:desempenho} ilustra o formato da apuração sobre um conjunto
+\textbf{fictício} de medições (um painel por métrica; barras = média, hastes =
+desvio-padrão). \emph{Os valores são ilustrativos e não constituem resultados do
+estudo}: a hipótese de ganho de desempenho do cliente nativo sobre o PWA baseado
+em \emph{webview} só será confirmada ou refutada com as medições reais.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{fig_frente_a_desempenho_adb.png}
+\caption{Demonstração do método da Frente~A (dados sintéticos, a substituir pelas medições reais).}
+\label{fig:desempenho}
+\end{figure}
+
+\subsection{Frente B --- Engenharia da migração}
+\label{sub:frenteB}
+
+A Frente~B caracteriza, por \textbf{análise documental comparativa} das duas bases
+de código do cliente (PWA em React/TypeScript e aplicativo em React Native/Expo) e
+do serviço compartilhado (\emph{backend} FastAPI), o reuso arquitetural viabilizado
+pela estratégia \emph{API-first}. Cada artefato preexistente foi classificado
+segundo três padrões de portabilidade: \textbf{(i)}~reescrita completa;
+\textbf{(ii)}~portabilidade estrutural com adaptação de elementos visuais; e
+\textbf{(iii)}~substituição por componente nativo equivalente. As métricas de
+linhas de código (LOC) foram extraídas diretamente do repositório.
+
+\subsubsection{Reuso do núcleo funcional via API-first}
+
+O resultado central é o \textbf{reuso integral (100\%) de toda a lógica
+clinicamente sensível}. O \emph{backend} FastAPI --- extração por OCR/\emph{parsing},
+classificação pelas faixas da PNS, seleção de especialidades e geração do
+\emph{briefing} --- foi reaproveitado \textbf{sem uma única linha reescrita}, sendo
+consumido pelo novo cliente pelos mesmos três \emph{endpoints} REST
+(Tabela~\ref{tab:endpoints}). A base de conhecimento (\texttt{data/*.csv}) também
+permaneceu inalterada. Em números, \textbf{1.654 linhas de Python} e \textbf{145
+linhas de regras em CSV} foram preservadas na íntegra \cite{rampinelli2026}.
+
+\begin{table}[H]
+\centering
+\caption{\emph{Endpoints} REST reaproveitados sem alteração pelos dois clientes.}
+\label{tab:endpoints}
+\footnotesize
+\begin{tabular}{|l|l|p{6.2cm}|}
+\hline
+\textbf{Endpoint} & \textbf{Método} & \textbf{Função (reusada por PWA e Mobile)} \\ \hline
+\texttt{/health} & GET & Verificação de disponibilidade do serviço \\ \hline
+\texttt{/interpret} & POST & Interpretação a partir de laudo em PDF (multipart) \\ \hline
+\texttt{/interpret-manual} & POST & Interpretação a partir de valores digitados (JSON) \\ \hline
+\end{tabular}
+\end{table}
+
+\subsubsection{Mapa de migração dos componentes}
+
+A Tabela~\ref{tab:mapa_migracao} apresenta o mapa de migração, artefato a
+artefato. A maioria dos componentes de interface enquadrou-se no padrão~(ii):
+estrutura declarativa e lógica de estado preservadas, com adaptação apenas das
+primitivas visuais (de \texttt{<div>}/\texttt{<input>} para
+\texttt{<View>}/\texttt{<TextInput>}/\texttt{StyleSheet}). As substituições
+nativas (iii) concentraram-se nos pontos de contato com \emph{hardware} e ambiente.
+
+\begin{table}[H]
+\centering
+\caption{Mapa de migração PWA $\rightarrow$ Mobile por artefato (LOC = linhas de código).}
+\label{tab:mapa_migracao}
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{|p{4.3cm}|p{4.0cm}|c|p{3.0cm}|}
+\hline
+\textbf{Artefato na PWA (LOC)} & \textbf{Contraparte no Mobile} & \textbf{LOC} & \textbf{Padrão} \\ \hline
+\emph{Backend} FastAPI + serviços (1.654) & idêntico (via REST) & 1.654 & Reuso integral \\ \hline
+Base de conhecimento \texttt{data/*.csv} (145) & idêntica (via REST) & 145 & Reuso integral \\ \hline
+\texttt{types/index.ts} (56) & \texttt{types.ts} (58) & 58 & (ii) Estrutural (contrato) \\ \hline
+\texttt{services/api.ts} (213) & \texttt{api.ts} (71) & 71 & (ii) Estrutural c/ adaptação de transporte \\ \hline
+\texttt{App.tsx} (323) & \texttt{App.tsx} (209) & 209 & (ii) Estrutural (orquestração/estado) \\ \hline
+\texttt{ManualEntryForm.tsx} (90) & \texttt{ManualEntryForm.tsx} & --- & (ii) Estrutural \\ \hline
+\texttt{ResultsDisplay.tsx} (196) & \texttt{Results.tsx} & --- & (ii) Estrutural \\ \hline
+\texttt{ReferenceComparison.tsx} (82) & \texttt{ReferenceComparisonTable.tsx} & --- & (ii) Estrutural \\ \hline
+\texttt{FileUpload.tsx} (56, \emph{react-dropzone}) & \texttt{PdfUpload.tsx} (\emph{expo-document-picker}) & --- & (iii) Substituição nativa \\ \hline
+\texttt{LoadingSpinner.tsx} (79) & \texttt{ActivityIndicator} (nativo) & --- & (iii) Substituição nativa \\ \hline
+\texttt{index.tsx} (66, \emph{ReactDOM}) & \texttt{index.ts} (8, Expo) & 8 & (iii) \emph{Bootstrap} de plataforma \\ \hline
+\texttt{utils/} (1.239: contorno de \emph{webview}) & --- (não portados) & 0 & Eliminados \\ \hline
+\end{tabular}
+\end{table}
+
+\subsubsection{Taxa de reuso e eliminação de código de contorno}
+
+A Tabela~\ref{tab:taxa_reuso} sintetiza a taxa de reuso por camada. Destaca-se um
+achado quantitativo relevante: a PWA mantinha três módulos utilitários
+(\texttt{polyfills.ts}, \texttt{mobileOptimizations.ts} e
+\texttt{mobileDetection.ts}), somando \textbf{1.239 linhas --- 49\% de todo o
+código do cliente web (2.525 LOC)} ---, que existiam exclusivamente para mitigar
+limitações do paradigma \emph{webview} em navegadores móveis. Na renderização
+nativa do React Native, esses contornos tornaram-se desnecessários e foram
+\textbf{integralmente eliminados}. Esse resultado é o correlato, no plano do
+código, do \emph{overhead} de recursos que a literatura atribui às soluções
+baseadas em \emph{webview} \cite{oliveira2023}.
+
+\begin{table}[H]
+\centering
+\caption{Taxa de reuso por camada na migração PWA $\rightarrow$ Mobile.}
+\label{tab:taxa_reuso}
+\footnotesize
+\begin{tabular}{|p{4.6cm}|c|p{5.2cm}|}
+\hline
+\textbf{Camada} & \textbf{Reuso} & \textbf{Observação} \\ \hline
+Lógica de negócio (\emph{backend} + regras) & 100\% & 1.654 LOC Python + 145 CSV, sem alteração \\ \hline
+Contrato de dados (interfaces TS) & $\approx$100\% & 5 interfaces de domínio migradas verbatim \\ \hline
+Serviços de comunicação (rede) & 3/3 operações & Semântica preservada; transporte adaptado \\ \hline
+Apresentação (componentes de UI) & Reescrita estrutural & Padrão (ii): estrutura/estado preservados \\ \hline
+Utilitários de contorno de \emph{webview} & 0\% (eliminados) & 1.239 LOC descartadas \\ \hline
+\end{tabular}
+\end{table}
+
+Confirma-se, assim, a hipótese de reuso: a separação de responsabilidades
+\emph{API-first} preservou o núcleo funcional (ativo de maior valor e risco) e
+localizou o esforço de reengenharia na camada de apresentação
+\cite{rampinelli2026, oliveira2023}.
+
+\subsection{Frente C --- Usabilidade (inspeção heurística)}
+\label{sub:frenteC}
+
+A Frente~C avalia a usabilidade por inspeção heurística \cite{nielsen1994,
+cardieri2018}: cinco especialistas em IHC inspecionam, de forma independente, os
+dois clientes sobre os mesmos cenários, registrando violações às dez heurísticas
+e classificando cada problema em uma escala de severidade de 0 a 4. As inspeções
+ainda não foram realizadas; a Tabela~\ref{tab:usabilidade} está preparada para os
+dados consolidados.
+
+\begin{table}[H]
+\centering
+\caption{Síntese comparativa da inspeção heurística (a preencher).}
+\label{tab:usabilidade}
+\footnotesize
+\begin{tabular}{|p{6.8cm}|c|c|}
+\hline
+\textbf{Métrica} & \textbf{PWA} & \textbf{Móvel} \\ \hline
+Problemas registrados & --- & --- \\ \hline
+Índice médio de severidade & --- & --- \\ \hline
+Problemas de severidade 3--4 & --- & --- \\ \hline
+Heurísticas mais violadas & --- & --- \\ \hline
+\end{tabular}
+\end{table}
+
+A Figura~\ref{fig:usabilidade} ilustra a consolidação sobre registros
+\textbf{fictícios} de cinco avaliadores. \emph{Os números são ilustrativos} e não
+representam inspeções reais.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{fig_frente_c_inspecao_heuristica.png}
+\caption{Demonstração do método da Frente~C (dados sintéticos, a substituir pelas inspeções reais).}
+\label{fig:usabilidade}
+\end{figure}
+
+\subsection{Síntese: resultados obtidos $\times$ hipóteses}
+\label{sub:sintese}
+
+A Tabela~\ref{tab:sintese} relaciona os resultados às hipóteses do trabalho. A
+hipótese de \textbf{reuso arquitetural} (Frente~B) está empiricamente confirmada;
+as hipóteses de \textbf{desempenho} (A) e \textbf{usabilidade} (C) têm instrumentos
+validados e aguardam a coleta.
+
+\begin{table}[H]
+\centering
+\caption{Resultados obtidos frente às hipóteses de pesquisa.}
+\label{tab:sintese}
+\footnotesize
+\begin{tabular}{|p{5.6cm}|p{3.0cm}|p{5.0cm}|}
+\hline
+\textbf{Dimensão (hipótese)} & \textbf{Situação} & \textbf{Evidência} \\ \hline
+Artefato móvel funcional & Alcançado & Seção~\ref{sub:produto} \\ \hline
+Ganho de desempenho (A) & Instrumento pronto; dados pendentes & Seção~\ref{sub:frenteA} \\ \hline
+Reuso arquitetural API-first (B) & Alcançado (real) & Seção~\ref{sub:frenteB}: 100\% da lógica; $-$1.239 LOC de \emph{webview} \\ \hline
+Ganho de usabilidade (C) & Instrumento pronto; dados pendentes & Seção~\ref{sub:frenteC} \\ \hline
+\end{tabular}
+\end{table}
+
+\subsection{Validade, limitações e extensão}
+\label{sub:validade}
+
+A Frente~B baseia-se na inspeção direta do código-fonte, não sujeita a viés
+amostral. As Frentes~A e C controlam variáveis por desenho (dispositivo único e
+execução alternada em A; heurísticas consagradas e severidade padronizada em C).
+Como limitações: (i)~a Frente~A será medida em um único dispositivo de entrada,
+restringindo a generalização das métricas absolutas ao perfil testado e
+interessando o resultado relativo; (ii)~a Frente~B é uma reconstrução documental
+retrospectiva do mapa de migração; e (iii)~a Frente~C capta problemas de
+conformidade heurística por especialistas, não a aceitação subjetiva de usuários
+finais, com painel limitado a cinco avaliadores. As conclusões relativas sobre
+reuso e desempenho têm potencial de transferência para migrações arquiteturais
+correlatas na \emph{stack} adotada.
+
+\bibliographystyle{sbc}
+\bibliography{sbc-template}
+
+\end{document}
