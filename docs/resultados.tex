@@ -49,8 +49,8 @@ resposta, uso de CPU, memória (RAM), taxa de quadros (FPS) e energia estimada -
 são coletadas via Android Debug Bridge (ADB) e \texttt{dumpsys}, conforme o
 protocolo de Oliveira et al. (2023) \cite{oliveira2023}.
 
-Os ensaios foram conduzidos em um tablet Android
-(\texttt{[inserir modelo; versão do Android]}), com dez repetições por medição.
+Os ensaios foram conduzidos em um tablet Samsung Galaxy Tab~S9~FE
+(modelo SM-X510), com Android~16, com dez repetições por medição.
 A Tabela~\ref{tab:desempenho} consolida os resultados obtidos. O achado mais
 expressivo diz respeito ao consumo de memória: o cliente móvel nativo utilizou,
 em média, \textbf{84,9~MB}, ante \textbf{235,0~MB} do PWA executado no
@@ -62,7 +62,7 @@ interação contínua encontram-se em coleta e serão incorporadas na versão fi
 
 \begin{table}[H]
 \centering
-\caption{Desempenho PWA $\times$ Móvel (tablet Android; $n=10$; média $\pm$ desvio-padrão).}
+\caption{Desempenho PWA $\times$ Móvel (Galaxy Tab~S9~FE, Android~16; $n=10$; média $\pm$ desvio-padrão).}
 \label{tab:desempenho}
 \footnotesize
 \begin{tabular}{|p{6.2cm}|c|c|c|}
@@ -84,7 +84,7 @@ real, a tese de que o paradigma \emph{WebView} impõe maior consumo de recursos
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.95\textwidth]{fig_frente_a_desempenho_adb.png}
-\caption{Desempenho PWA $\times$ Móvel por métrica (tablet Android; $n=10$; barras = média, hastes = desvio-padrão).}
+\caption{Desempenho PWA $\times$ Móvel por métrica (Galaxy Tab~S9~FE, Android~16; $n=10$; barras = média, hastes = desvio-padrão).}
 \label{fig:desempenho}
 \end{figure}
 
@@ -315,9 +315,11 @@ coleta.
 A Frente~B baseia-se na inspeção direta do código-fonte, não sujeita a viés
 amostral. As Frentes~A e C controlam variáveis por desenho (dispositivo único e
 execução alternada em A; heurísticas consagradas e severidade padronizada em C).
-Como limitações: (i)~a Frente~A será medida em um único dispositivo de entrada,
-restringindo a generalização das métricas absolutas ao perfil testado e
-interessando o resultado relativo; (ii)~a Frente~B é uma reconstrução documental
+Como limitações: (i)~a Frente~A foi medida em um único dispositivo --- um tablet
+de gama intermediária (Galaxy Tab~S9~FE), que não representa o aparelho de entrada
+típico do SUS ---, de modo que as métricas \emph{absolutas} não se generalizam a
+outros perfis de \emph{hardware}, preservando-se, contudo, a validade do resultado
+\emph{relativo} (PWA $\times$ nativo medidos no mesmo aparelho); (ii)~a Frente~B é uma reconstrução documental
 retrospectiva do mapa de migração; e (iii)~a Frente~C capta problemas de
 conformidade heurística por especialistas, não a aceitação subjetiva de usuários
 finais, com painel limitado a cinco avaliadores. As conclusões relativas sobre
