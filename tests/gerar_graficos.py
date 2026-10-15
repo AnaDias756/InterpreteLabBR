@@ -295,8 +295,11 @@ def fig_desempenho_adb():
         ax = axes[k]
         meta = metricas[metrica]
         tarefas = sorted(meta["por_tarefa"].keys())
-        pwa = [meta["por_tarefa"][t]["PWA"].get("media") or 0 for t in tarefas]
-        mov = [meta["por_tarefa"][t]["Móvel"].get("media") or 0 for t in tarefas]
+        nan = float("nan")
+        pwa = [meta["por_tarefa"][t]["PWA"].get("media")
+               if meta["por_tarefa"][t]["PWA"].get("media") is not None else nan for t in tarefas]
+        mov = [meta["por_tarefa"][t]["Móvel"].get("media")
+               if meta["por_tarefa"][t]["Móvel"].get("media") is not None else nan for t in tarefas]
         pwa_e = [meta["por_tarefa"][t]["PWA"].get("dp") or 0 for t in tarefas]
         mov_e = [meta["por_tarefa"][t]["Móvel"].get("dp") or 0 for t in tarefas]
         x = range(len(tarefas))

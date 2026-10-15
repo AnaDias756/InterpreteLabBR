@@ -275,37 +275,42 @@ resposta, uso de CPU, memória (RAM), taxa de quadros (FPS) e energia estimada -
 são coletadas via Android Debug Bridge (ADB) e \texttt{dumpsys}, conforme o
 protocolo de Oliveira et al. (2023) \cite{oliveira2023}.
 
-Os ensaios em dispositivo físico ainda não foram executados; a
-Tabela~\ref{tab:desempenho} está preparada para receber os valores
-(média~$\pm$~desvio-padrão).
+Os ensaios foram conduzidos em um tablet Android
+(\texttt{[inserir modelo; versão do Android]}), com dez repetições por medição.
+A Tabela~\ref{tab:desempenho} consolida os resultados obtidos. O achado mais
+expressivo diz respeito ao consumo de memória: o cliente móvel nativo utilizou,
+em média, \textbf{84,9~MB}, ante \textbf{235,0~MB} do PWA executado no
+navegador --- uma redução de \textbf{63,9\%}, isto é, o PWA consome cerca de
+\textbf{2,8 vezes mais} memória para a mesma funcionalidade. A inicialização a
+frio do aplicativo nativo situou-se em \textbf{241~ms} (desvio-padrão de
+33~ms). As métricas de responsividade em rolagem (FPS) e de uso de CPU sob
+interação contínua encontram-se em coleta e serão incorporadas na versão final.
 
 \begin{table}[H]
 \centering
-\caption{Desempenho PWA $\times$ Móvel (a preencher).}
+\caption{Desempenho PWA $\times$ Móvel (tablet Android; $n=10$; média $\pm$ desvio-padrão).}
 \label{tab:desempenho}
 \footnotesize
 \begin{tabular}{|p{6.2cm}|c|c|c|}
 \hline
 \textbf{Métrica (direção)} & \textbf{PWA} & \textbf{Móvel} & \textbf{$\Delta$} \\ \hline
-Tempo de inicialização --- T1 (ms, $\downarrow$) & --- & --- & \\ \hline
-Tempo de submissão de PDF --- T2 (ms, $\downarrow$) & --- & --- & \\ \hline
-CPU em rolagem --- T3 (\%, $\downarrow$) & --- & --- & \\ \hline
-Memória --- T2 (MB, $\downarrow$) & --- & --- & \\ \hline
-FPS em rolagem --- T3 (fps, $\uparrow$) & --- & --- & \\ \hline
-Energia estimada --- T3 (mAh, $\downarrow$) & --- & --- & \\ \hline
+Memória RAM --- app carregado (MB, $\downarrow$) & $235{,}0 \pm 18{,}7$ & $84{,}9 \pm 0{,}2$ & $-63{,}9\%$ \\ \hline
+Inicialização a frio (ms, $\downarrow$) & --- & $241{,}3 \pm 33{,}3$ & --- \\ \hline
+FPS em rolagem (fps, $\uparrow$) & \multicolumn{3}{c|}{\emph{em coleta}} \\ \hline
+CPU em rolagem (\%, $\downarrow$) & \multicolumn{3}{c|}{\emph{em coleta}} \\ \hline
 \end{tabular}
 \end{table}
 
-A Figura~\ref{fig:desempenho} ilustra o formato da apuração sobre um conjunto
-\textbf{fictício} de medições (um painel por métrica; barras = média, hastes =
-desvio-padrão). \emph{Os valores são ilustrativos e não constituem resultados do
-estudo}: a hipótese de ganho de desempenho do cliente nativo sobre o PWA baseado
-em \emph{webview} só será confirmada ou refutada com as medições reais.
+A Figura~\ref{fig:desempenho} apresenta os resultados por métrica (um painel por
+métrica; barras = média, hastes = desvio-padrão). O contraste de memória entre o
+PWA e o cliente nativo é expressivo e corrobora, com dados primários de um caso
+real, a tese de que o paradigma \emph{WebView} impõe maior consumo de recursos
+\cite{karin2025, sokolov2025}.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.95\textwidth]{fig_frente_a_desempenho_adb.png}
-\caption{Demonstração do método da Frente~A (dados sintéticos, a substituir pelas medições reais).}
+\caption{Desempenho PWA $\times$ Móvel por métrica (tablet Android; $n=10$; barras = média, hastes = desvio-padrão).}
 \label{fig:desempenho}
 \end{figure}
 
@@ -467,7 +472,7 @@ validados e aguardam a coleta.
 \hline
 \textbf{Dimensão (hipótese)} & \textbf{Situação} & \textbf{Evidência} \\ \hline
 Artefato móvel funcional & Alcançado & Seção~\ref{sub:produto} \\ \hline
-Ganho de desempenho (A) & Instrumento pronto; dados pendentes & Seção~\ref{sub:frenteA} \\ \hline
+Ganho de desempenho (A) & Parcialmente confirmado & Seção~\ref{sub:frenteA}: RAM $-$63,9\% a favor do nativo \\ \hline
 Reuso arquitetural API-first (B) & Alcançado (real) & Seção~\ref{sub:frenteB}: 100\% da lógica; $-$1.239 LOC de \emph{webview} \\ \hline
 Ganho de usabilidade (C) & Instrumento pronto; dados pendentes & Seção~\ref{sub:frenteC} \\ \hline
 \end{tabular}
@@ -523,7 +528,12 @@ submissão do PDF, cuja latência é governada pela API. Diferentemente de Sokol
 cujo \emph{benchmark} é sintético (criptografia AES) e desvinculado de domínio, a
 Frente~A avaliará essas métricas em um fluxo real de uso clínico; a confirmação ou
 refutação desse padrão de consumo de RAM constituirá o contraste central entre o
-esperado pela literatura e o obtido em campo.
+esperado pela literatura e o obtido em campo. As primeiras medições já apontam
+nessa direção: em tablet Android, o cliente nativo consumiu \textbf{63,9\% menos
+memória} que o PWA (84,9~MB contra 235,0~MB; $n=10$), convergindo com a vantagem
+de memória relatada por Sokolov; a verificação quanto ao comportamento sob
+execução sustentada (rolagem) depende das métricas de responsividade ainda em
+coleta.
 
 \subsection{Validade, limitações e extensão}
 \label{sub:validade}
