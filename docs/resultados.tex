@@ -60,7 +60,7 @@ frio do aplicativo nativo situou-se em \textbf{241~ms} (desvio-padrão de
 33~ms). A fluidez da rolagem foi aferida com o \texttt{dumpsys gfxinfo}: o cliente nativo
 manteve a rolagem praticamente sem travamentos, com apenas \textbf{0,2\%} de
 quadros com atraso (\emph{janky}) e tempo de renderização no 95º percentil em torno
-de 9--12~ms, dentro do orçamento do \emph{display}. A mesma medição não pôde ser
+de 9--12~ms, dentro do orçamento do \emph{display}. Esse resultado reproduziu-se em duas coletas independentes (0,2\% de quadros \emph{janky} em ambas; $n=20$ no total), reforçando sua robustez. A mesma medição não pôde ser
 obtida para o PWA: o Chrome realiza a composição gráfica por um \emph{pipeline}
 próprio, que não expõe essas estatísticas ao \texttt{gfxinfo} --- uma assimetria de
 medição já prevista para a comparação PWA $\times$ nativo. O uso de CPU durante a
