@@ -283,8 +283,9 @@ em média, \textbf{84,9~MB}, ante \textbf{235,0~MB} do PWA executado no
 navegador --- uma redução de \textbf{63,9\%}, isto é, o PWA consome cerca de
 \textbf{2,8 vezes mais} memória para a mesma funcionalidade. A inicialização a
 frio do aplicativo nativo situou-se em \textbf{241~ms} (desvio-padrão de
-33~ms). As métricas de responsividade em rolagem (FPS) e de uso de CPU sob
-interação contínua encontram-se em coleta e serão incorporadas na versão final.
+33~ms). A avaliação de responsividade em rolagem (FPS) e de uso de CPU sob
+interação contínua não integra o escopo deste trabalho, constituindo direção
+para trabalhos futuros.
 
 \begin{table}[H]
 \centering
@@ -296,8 +297,8 @@ interação contínua encontram-se em coleta e serão incorporadas na versão fi
 \textbf{Métrica (direção)} & \textbf{PWA} & \textbf{Móvel} & \textbf{$\Delta$} \\ \hline
 Memória RAM --- app carregado (MB, $\downarrow$) & $235{,}0 \pm 18{,}7$ & $84{,}9 \pm 0{,}2$ & $-63{,}9\%$ \\ \hline
 Inicialização a frio (ms, $\downarrow$) & --- & $241{,}3 \pm 33{,}3$ & --- \\ \hline
-FPS em rolagem (fps, $\uparrow$) & \multicolumn{3}{c|}{\emph{em coleta}} \\ \hline
-CPU em rolagem (\%, $\downarrow$) & \multicolumn{3}{c|}{\emph{em coleta}} \\ \hline
+FPS em rolagem (fps, $\uparrow$) & \multicolumn{3}{c|}{\emph{trabalho futuro}} \\ \hline
+CPU em rolagem (\%, $\downarrow$) & \multicolumn{3}{c|}{\emph{trabalho futuro}} \\ \hline
 \end{tabular}
 \end{table}
 
@@ -516,8 +517,7 @@ além do custo de execução (energia e CPU), o paradigma \emph{WebView} impunha
 contornos ---, aqui suprimido. O achado, assim, corrobora empiricamente, e em um
 caso real de saúde pública, a conclusão da revisão de Karin.
 
-Por fim, os achados de Sokolov (2025) orientam a expectativa para a Frente~A, ainda
-em coleta. Em \emph{benchmark} controlado via ADB, Sokolov observou que a
+Por fim, os achados de Sokolov (2025) orientam a leitura dos resultados da Frente~A. Em \emph{benchmark} controlado via ADB, Sokolov observou que a
 implementação nativa superou o React Native em eficiência de CPU e, sobretudo, no
 crescimento de memória ao longo do tempo em rotinas contínuas, com vantagens
 pontuais do React Native em cenários específicos \cite{sokolov2025}. Espera-se,
@@ -532,8 +532,7 @@ esperado pela literatura e o obtido em campo. As primeiras medições já aponta
 nessa direção: em tablet Android, o cliente nativo consumiu \textbf{63,9\% menos
 memória} que o PWA (84,9~MB contra 235,0~MB; $n=10$), convergindo com a vantagem
 de memória relatada por Sokolov; a verificação quanto ao comportamento sob
-execução sustentada (rolagem) depende das métricas de responsividade ainda em
-coleta.
+execução sustentada (rolagem) fica como direção para trabalhos futuros.
 
 \subsection{Validade, limitações e extensão}
 \label{sub:validade}
