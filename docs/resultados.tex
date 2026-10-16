@@ -57,9 +57,16 @@ em média, \textbf{84,9~MB}, ante \textbf{235,0~MB} do PWA executado no
 navegador --- uma redução de \textbf{63,9\%}, isto é, o PWA consome cerca de
 \textbf{2,8 vezes mais} memória para a mesma funcionalidade. A inicialização a
 frio do aplicativo nativo situou-se em \textbf{241~ms} (desvio-padrão de
-33~ms). A avaliação de responsividade em rolagem (FPS) e de uso de CPU sob
-interação contínua não integra o escopo deste trabalho, constituindo direção
-para trabalhos futuros.
+33~ms). A fluidez da rolagem foi aferida com o \texttt{dumpsys gfxinfo}: o cliente nativo
+manteve a rolagem praticamente sem travamentos, com apenas \textbf{0,2\%} de
+quadros com atraso (\emph{janky}) e tempo de renderização no 95º percentil em torno
+de 9--12~ms, dentro do orçamento do \emph{display}. A mesma medição não pôde ser
+obtida para o PWA: o Chrome realiza a composição gráfica por um \emph{pipeline}
+próprio, que não expõe essas estatísticas ao \texttt{gfxinfo} --- uma assimetria de
+medição já prevista para a comparação PWA $\times$ nativo. O uso de CPU durante a
+rolagem manteve-se baixo em ambos os clientes, porém o instrumento
+(\texttt{dumpsys cpuinfo}) não produziu variação apreciável entre repetições, não
+permitindo comparação conclusiva nesse ponto.
 
 \begin{table}[H]
 \centering
@@ -71,8 +78,8 @@ para trabalhos futuros.
 \textbf{Métrica (direção)} & \textbf{PWA} & \textbf{Móvel} & \textbf{$\Delta$} \\ \hline
 Memória RAM --- app carregado (MB, $\downarrow$) & $235{,}0 \pm 18{,}7$ & $84{,}9 \pm 0{,}2$ & $-63{,}9\%$ \\ \hline
 Inicialização a frio (ms, $\downarrow$) & --- & $241{,}3 \pm 33{,}3$ & --- \\ \hline
-FPS em rolagem (fps, $\uparrow$) & \multicolumn{3}{c|}{\emph{trabalho futuro}} \\ \hline
-CPU em rolagem (\%, $\downarrow$) & \multicolumn{3}{c|}{\emph{trabalho futuro}} \\ \hline
+Fluidez em rolagem --- quadros \emph{janky} (\%, $\downarrow$) & n/d (ver texto) & $0{,}2$ & --- \\ \hline
+CPU em rolagem (\%, $\downarrow$) & \multicolumn{3}{c|}{baixo em ambos; sem diferença conclusiva} \\ \hline
 \end{tabular}
 \end{table}
 
@@ -247,7 +254,7 @@ validados e aguardam a coleta.
 \hline
 \textbf{Dimensão (hipótese)} & \textbf{Situação} & \textbf{Evidência} \\ \hline
 Artefato móvel funcional & Alcançado & Seção~\ref{sub:produto} \\ \hline
-Ganho de desempenho (A) & Parcialmente confirmado & Seção~\ref{sub:frenteA}: RAM $-$63,9\% a favor do nativo \\ \hline
+Ganho de desempenho (A) & Confirmado (parcial) & Seção~\ref{sub:frenteA}: RAM $-$63,9\%; rolagem nativa fluida (0,2\% \emph{janky}) \\ \hline
 Reuso arquitetural API-first (B) & Alcançado (real) & Seção~\ref{sub:frenteB}: 100\% da lógica; $-$1.239 LOC de \emph{webview} \\ \hline
 Ganho de usabilidade (C) & Instrumento pronto; dados pendentes & Seção~\ref{sub:frenteC} \\ \hline
 \end{tabular}
@@ -305,8 +312,9 @@ refutação desse padrão de consumo de RAM constituirá o contraste central ent
 esperado pela literatura e o obtido em campo. As primeiras medições já apontam
 nessa direção: em tablet Android, o cliente nativo consumiu \textbf{63,9\% menos
 memória} que o PWA (84,9~MB contra 235,0~MB; $n=10$), convergindo com a vantagem
-de memória relatada por Sokolov; a verificação quanto ao comportamento sob
-execução sustentada (rolagem) fica como direção para trabalhos futuros.
+de memória relatada por Sokolov; a rolagem do cliente nativo mostrou-se fluida (apenas 0,2\% de quadros
+\emph{janky}), ao passo que a aferição equivalente no PWA esbarrou em uma limitação
+do instrumento, já que o Chrome não expõe essas estatísticas ao \texttt{gfxinfo}.
 
 \subsection{Validade, limitações e extensão}
 \label{sub:validade}
