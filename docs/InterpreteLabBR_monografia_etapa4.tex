@@ -210,7 +210,7 @@ Para a operacionalização da pesquisa, adota-se o modelo de seis atividades pro
 
 O universo desta pesquisa não é delimitado por uma amostragem populacional de pacientes ou profissionais de saúde, mas sim pelo próprio artefato de software em suas duas instâncias de distribuição e pelos elementos instrumentais e humanos necessários à sua experimentação comparativa. Definem-se três unidades de análise complementares para o desenho experimental.
 
-A primeira corresponde à unidade de análise técnica, compreendendo as duas implementações funcionais do cliente do InterpreteLabBR: a versão em PWA (React e TypeScript) e a versão móvel dedicada (React Native e Expo). Ambas as soluções consomem os mesmos \emph{endpoints} REST providos pelo \emph{backend} em FastAPI, o que assegura que quaisquer variações de comportamento decorram estritamente da camada de apresentação e da arquitetura de execução do cliente, preservando-se a integridade da lógica clínica subjacente. A segunda unidade consiste na análise instrumental: os ensaios de desempenho são conduzidos em um único dispositivo Android --- um tablet Samsung Galaxy Tab~S9~FE (modelo SM-X510, Android~16) disponível para o estudo ---, de modo a eliminar a variável de heterogeneidade de \emph{hardware} entre execuções e a manter o foco na comparação \emph{relativa} entre os dois clientes (PWA $\times$ nativo) sob condições idênticas; reconhece-se que esse aparelho, de gama intermediária, não corresponde ao perfil de \emph{hardware} de entrada mais prevalente entre os usuários do Sistema Único de Saúde (SUS), o que restringe a generalização dos resultados absolutos a esse perfil de dispositivo (ver Seção~4.5). A terceira unidade de análise abrange os avaliadores responsáveis pela inspeção heurística na Frente C, constituída por cinco especialistas com formação em Interação Humano-Computador (IHC). Esse dimensionamento fundamenta-se nos princípios estabelecidos por Nielsen (1994), segundo os quais um grupo de três a cinco avaliadores especialistas é suficiente para identificar a expressiva maioria dos problemas de usabilidade de uma interface gráfica; adota-se o limite superior dessa faixa (cinco avaliadores) para maximizar a cobertura diagnóstica dentro do orçamento disponível \cite{nielsen1994}. Não há, portanto, coleta com usuários finais no presente estudo, o que direciona a pesquisa à robustez técnica e de engenharia.
+A primeira corresponde à unidade de análise técnica, compreendendo as duas implementações funcionais do cliente do InterpreteLabBR: a versão em PWA (React e TypeScript) e a versão móvel dedicada (React Native e Expo). Ambas as soluções consomem os mesmos \emph{endpoints} REST providos pelo \emph{backend} em FastAPI, o que assegura que quaisquer variações de comportamento decorram estritamente da camada de apresentação e da arquitetura de execução do cliente, preservando-se a integridade da lógica clínica subjacente. A segunda unidade consiste na análise instrumental: os ensaios de desempenho são conduzidos em um único dispositivo Android --- um tablet Samsung Galaxy Tab~S9~FE (modelo SM-X510, Android~16) disponível para o estudo ---, de modo a eliminar a variável de heterogeneidade de \emph{hardware} entre execuções e a manter o foco na comparação \emph{relativa} entre os dois clientes (PWA $\times$ nativo) sob condições idênticas; reconhece-se que esse aparelho, de gama intermediária, não corresponde ao perfil de \emph{hardware} de entrada mais prevalente entre os usuários do Sistema Único de Saúde (SUS), o que restringe a generalização dos resultados absolutos a esse perfil de dispositivo (ver Seção~4.5). A terceira unidade de análise abrange os avaliadores responsáveis pela inspeção heurística na Frente C, com formação ou experiência em Interação Humano-Computador (IHC). O dimensionamento segue a faixa de três a cinco avaliadores recomendada por Nielsen (1994), suficiente para identificar a expressiva maioria dos problemas de usabilidade de uma interface gráfica \cite{nielsen1994}. Na prática, reuniu-se um painel reduzido, de modo que a Frente~C é reportada como \textbf{estudo-piloto} exploratório (ver Seção~\ref{sub:frenteC}). Não há, portanto, coleta com usuários finais no presente estudo, o que direciona a pesquisa à robustez técnica e de engenharia.
 
 \subsection{Procedimentos de coleta e análise de dados por frente}
 
@@ -234,7 +234,7 @@ A validade interna dos ensaios da Frente A é preservada pelo controle das princ
 
 Quanto à validade externa, reconhece-se como limitação o fato de o experimento concentrar-se em um sistema de domínio específico, interpretação de hemogramas no padrão do SUS, avaliado em um único dispositivo Android e por meio de dez execuções por tarefa. Embora esse recorte restrinja a generalização direta das métricas absolutas para outras classes de \emph{hardware} ou de aplicação, a escolha de tecnologias maduras e amplamente disseminadas no mercado (React Native, Expo, FastAPI e Python) confere potencial de transferibilidade das conclusões relativas, isto é, do sentido e da magnitude aproximada dos ganhos de desempenho, para projetos correlatos de migração arquitetural.
 
-Por fim, assumem-se explicitamente duas ameaças metodológicas inerentes ao escopo da pesquisa: a restrição do painel de inspeção heurística a cinco especialistas e dos ensaios de desempenho a um único dispositivo, o que pode não esgotar todas as nuances de interação nem toda a variabilidade de \emph{hardware} existente no parque tecnológico do SUS; e a não inclusão direta de pacientes reais nos testes de usabilidade, o que impede a mensuração de fatores subjetivos de aceitação no ponto de cuidado. Ambas as decisões foram planejadas conscientemente em função das restrições de prazo e escopo acadêmico, delimitando este trabalho como uma contribuição de engenharia e fundamentando as diretrizes para etapas futuras de validação clínica e populacional.
+Por fim, assumem-se explicitamente duas ameaças metodológicas inerentes ao escopo da pesquisa: a restrição do painel de inspeção heurística a um estudo-piloto com poucos avaliadores e dos ensaios de desempenho a um único dispositivo, o que pode não esgotar todas as nuances de interação nem toda a variabilidade de \emph{hardware} existente no parque tecnológico do SUS; e a não inclusão direta de pacientes reais nos testes de usabilidade, o que impede a mensuração de fatores subjetivos de aceitação no ponto de cuidado. Ambas as decisões foram planejadas conscientemente em função das restrições de prazo e escopo acadêmico, delimitando este trabalho como uma contribuição de engenharia e fundamentando as diretrizes para etapas futuras de validação clínica e populacional.
 
 % =====================================================================
 % CAPÍTULO DE RESULTADOS — ETAPA 4
@@ -430,38 +430,74 @@ localizou o esforço de reengenharia na camada de apresentação
 \subsection{Frente C --- Usabilidade (inspeção heurística)}
 \label{sub:frenteC}
 
-A Frente~C avalia a usabilidade por inspeção heurística \cite{nielsen1994,
-cardieri2018}: cinco especialistas em IHC inspecionam, de forma independente, os
-dois clientes sobre os mesmos cenários, registrando violações às dez heurísticas
-e classificando cada problema em uma escala de severidade de 0 a 4. As inspeções
-ainda não foram realizadas; a Tabela~\ref{tab:usabilidade} está preparada para os
-dados consolidados.
+A Frente~C avaliou a usabilidade por inspeção heurística \cite{nielsen1994,
+cardieri2018}: avaliadores inspecionaram, de forma independente, os dois clientes
+(PWA e aplicativo) sobre os mesmos cenários, registrando violações às dez
+heurísticas e classificando cada problema em uma escala de severidade de 0 a 4, no
+modelo de \emph{um registro por problema}. Em razão do número de avaliadores
+efetivamente reunido, esta frente é reportada como \textbf{estudo-piloto} de
+caráter exploratório: participaram \textbf{quatro avaliadores}, dos quais três
+registraram problemas de usabilidade (severidade $\geq 1$) e um registrou uma
+observação classificada como severidade~0 (não contabilizada como problema);
+registros de teste foram descartados.
+
+A Tabela~\ref{tab:usabilidade} sintetiza os resultados, a
+Tabela~\ref{tab:inventario_c} detalha os problemas e a
+Figura~\ref{fig:usabilidade} mostra a distribuição por heurística.
 
 \begin{table}[H]
 \centering
-\caption{Síntese comparativa da inspeção heurística (a preencher).}
+\caption{Síntese comparativa da inspeção heurística (estudo-piloto; $n=3$ problemas).}
 \label{tab:usabilidade}
 \footnotesize
 \begin{tabular}{|p{6.8cm}|c|c|}
 \hline
 \textbf{Métrica} & \textbf{PWA} & \textbf{Móvel} \\ \hline
-Problemas registrados & --- & --- \\ \hline
-Índice médio de severidade & --- & --- \\ \hline
-Problemas de severidade 3--4 & --- & --- \\ \hline
-Heurísticas mais violadas & --- & --- \\ \hline
+Problemas registrados (severidade $\geq 1$) & 2 & 1 \\ \hline
+Índice médio de severidade & 1,5 & 2,0 \\ \hline
+Problemas de severidade 3--4 & 0 & 0 \\ \hline
+Heurísticas violadas & H7, H8 & H7 \\ \hline
 \end{tabular}
 \end{table}
 
-A Figura~\ref{fig:usabilidade} ilustra a consolidação sobre registros
-\textbf{fictícios} de cinco avaliadores. \emph{Os números são ilustrativos} e não
-representam inspeções reais.
+\begin{table}[H]
+\centering
+\caption{Inventário dos problemas de usabilidade identificados (estudo-piloto).}
+\label{tab:inventario_c}
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{|c|c|c|c|p{4.9cm}|p{4.0cm}|}
+\hline
+\textbf{\#} & \textbf{Cliente} & \textbf{Heur.} & \textbf{Sev.} & \textbf{Problema (resumo)} & \textbf{Recomendação} \\ \hline
+1 & PWA & H8 & 1 & Tela de resultados poluída: \emph{tag} ``Normal'' redundante em todos os \emph{cards}; faltam unidades e valores de referência; dados de infraestrutura visíveis; sem divisão por séries. & Limpar os \emph{cards}; incluir unidades e referências; agrupar por séries. \\ \hline
+2 & PWA & H7 & 2 & Achado que diverge apenas da referência clássica (não da PNS) não é explicado ao usuário. & Explicar o achado também nesse caso de divergência. \\ \hline
+3 & Móvel & H7 & 2 & Após anexar o PDF, a aba de digitação manual permanece habilitada, permitindo entrada redundante. & Desabilitar a digitação manual quando há PDF anexado. \\ \hline
+\end{tabular}
+\end{table}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.9\textwidth]{fig_frente_c_inspecao_heuristica.png}
-\caption{Demonstração do método da Frente~C (dados sintéticos, a substituir pelas inspeções reais).}
+\caption{Frente~C --- problemas por heurística, PWA $\times$ Móvel (estudo-piloto; $n=3$ problemas).}
 \label{fig:usabilidade}
 \end{figure}
+
+Não se identificou nenhum problema de severidade alta (3--4): as ocorrências
+situaram-se entre cosmética (1) e menor (2), sugerindo ausência de barreiras
+graves de usabilidade nos fluxos inspecionados. Os achados concentraram-se na
+\textbf{tela de apresentação de resultados} e em aspectos de \textbf{fluxo}:
+poluição visual e ausência de informações essenciais de leitura, como unidades e
+valores de referência --- heurística de estética e design minimalista (H8) ---, e
+comportamentos pouco flexíveis, como a falta de explicação para achados que
+divergem apenas da referência clássica e a permanência da digitação manual após o
+anexo do PDF --- heurística de flexibilidade e eficiência de uso (H7). Registrou-se
+ainda, no aplicativo, uma observação de severidade~0 (a tela de resultados abrir no
+rodapé em vez do topo), não contabilizada como problema. Embora o índice médio de
+severidade tenha sido ligeiramente maior no aplicativo (2,0 contra 1,5 do PWA), o
+número reduzido de registros não autoriza comparação quantitativa conclusiva entre
+os clientes; no formato piloto, o valor desta frente reside na natureza
+\textbf{qualitativa e acionável} dos achados, que apontam melhorias concretas de
+interface e pavimentam uma inspeção heurística mais ampla como trabalho futuro.
 
 \subsection{Síntese: resultados obtidos $\times$ hipóteses}
 \label{sub:sintese}
@@ -482,7 +518,7 @@ validados e aguardam a coleta.
 Artefato móvel funcional & Alcançado & Seção~\ref{sub:produto} \\ \hline
 Ganho de desempenho (A) & Confirmado (parcial) & Seção~\ref{sub:frenteA}: RAM $-$63,9\%; rolagem nativa fluida (0,2\% \emph{janky}) \\ \hline
 Reuso arquitetural API-first (B) & Alcançado (real) & Seção~\ref{sub:frenteB}: 100\% da lógica; $-$1.239 LOC de \emph{webview} \\ \hline
-Ganho de usabilidade (C) & Instrumento pronto; dados pendentes & Seção~\ref{sub:frenteC} \\ \hline
+Ganho de usabilidade (C) & Explorado (estudo-piloto) & Seção~\ref{sub:frenteC}: 3 problemas (sev. 1--2); achados qualitativos \\ \hline
 \end{tabular}
 \end{table}
 
@@ -555,7 +591,7 @@ outros perfis de \emph{hardware}, preservando-se, contudo, a validade do resulta
 \emph{relativo} (PWA $\times$ nativo medidos no mesmo aparelho); (ii)~a Frente~B é uma reconstrução documental
 retrospectiva do mapa de migração; e (iii)~a Frente~C capta problemas de
 conformidade heurística por especialistas, não a aceitação subjetiva de usuários
-finais, com painel limitado a cinco avaliadores. As conclusões relativas sobre
+finais, e foi conduzida como estudo-piloto com painel reduzido, o que limita a generalização dos achados. As conclusões relativas sobre
 reuso e desempenho têm potencial de transferência para migrações arquiteturais
 correlatas na \emph{stack} adotada.
 
