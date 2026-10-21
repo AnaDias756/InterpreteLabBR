@@ -261,11 +261,14 @@ def fig_inspecao_heuristica():
     ax.legend(frameon=False, loc="upper right")
     pc = resumo["por_cliente"]
     ax.set_title("Frente C — Problemas por heurística (PWA × Móvel)", fontweight="bold", loc="left")
-    fig.text(0.01, -0.04,
-             f"PWA: {pc['PWA']['problemas']} problemas (sev. média {pc['PWA']['severidade_media']}) · "
-             f"Móvel: {pc['Móvel']['problemas']} (sev. média {pc['Móvel']['severidade_media']}). "
-             f"ILUSTRATIVO/SINTÉTICO — substituir pelos dados reais.",
-             fontsize=7.5, color=LARANJA, fontweight="bold")
+    nota = (f"PWA: {pc['PWA']['problemas']} problemas (sev. média {pc['PWA']['severidade_media']}) · "
+            f"Móvel: {pc['Móvel']['problemas']} (sev. média {pc['Móvel']['severidade_media']}). "
+            f"n = {resumo.get('n_avaliadores', '?')} avaliadores (estudo-piloto).")
+    if resumo.get("natureza") == "sintético":
+        nota += "  ILUSTRATIVO/SINTÉTICO — substituir pelos dados reais."
+    fig.text(0.01, -0.04, nota, fontsize=7.5,
+             color=LARANJA if resumo.get("natureza") == "sintético" else CINZA,
+             fontweight="bold" if resumo.get("natureza") == "sintético" else "normal")
     _salvar(fig, "fig_frente_c_inspecao_heuristica.png")
 
 

@@ -51,6 +51,8 @@ def main():
     p = argparse.ArgumentParser(description="Consolidação da inspeção heurística (Frente C).")
     p.add_argument("--entrada", required=True, help="CSV unificado dos avaliadores.")
     p.add_argument("--relatorio-json", default=None, help="(Opcional) resumo JSON para gráficos.")
+    p.add_argument("--natureza", default="real", choices=["real", "sintético"],
+                   help="Marca a origem dos dados (rotula o gráfico quando sintético).")
     args = p.parse_args()
 
     if not os.path.exists(args.entrada):
@@ -114,6 +116,7 @@ def main():
 
     resumo = {
         "frente": "C — Usabilidade (inspeção heurística)",
+        "natureza": args.natureza,
         "clientes": CLIENTES,
         "por_cliente": {c: {
             "problemas": por_cliente[c]["n"],
