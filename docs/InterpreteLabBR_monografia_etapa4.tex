@@ -243,16 +243,11 @@ Por fim, assumem-se explicitamente duas ameaças metodológicas inerentes ao esc
 \section{Resultados Obtidos}
 \label{sec:resultados}
 
-Este capítulo apresenta os resultados da avaliação tripartite do artefato. Por
-transparência metodológica, distinguem-se dois tipos de resultado: os
-\textbf{já apurados} --- a Frente~B (engenharia da migração), derivada da análise
-direta do código-fonte e, portanto, determinística e reprodutível --- e os
-\textbf{pendentes de coleta empírica} --- a Frente~A (desempenho), que depende dos
-ensaios com ADB em dispositivo físico, e a Frente~C (usabilidade), que depende das
-inspeções dos especialistas. Para as frentes pendentes, apresentam-se o
-instrumento de medição já construído, tabelas preparadas para os dados e uma
-demonstração do método com dados sintéticos, explicitamente rotulados como
-ilustrativos.
+Este capítulo apresenta os resultados da avaliação tripartite do artefato: a
+caracterização da engenharia da migração e do reuso de código (Frente~B), as
+medições controladas de desempenho computacional em dispositivo físico via ADB
+(Frente~A) e os achados qualitativos de usabilidade obtidos por meio de um
+estudo-piloto de inspeção heurística (Frente~C).
 
 \subsection{O produto: aplicativo móvel}
 \label{sub:produto}
@@ -283,7 +278,10 @@ em média, \textbf{84,9~MB}, ante \textbf{235,0~MB} do PWA executado no
 navegador --- uma redução de \textbf{63,9\%}, isto é, o PWA consome cerca de
 \textbf{2,8 vezes mais} memória para a mesma funcionalidade. A inicialização a
 frio do aplicativo nativo situou-se em \textbf{241~ms} (desvio-padrão de
-33~ms). A fluidez da rolagem foi aferida com o \texttt{dumpsys gfxinfo}: o cliente nativo
+33~ms). Não se reporta tempo de inicialização a frio para o PWA porque, executado
+continuamente sobre a \emph{sandbox} do navegador, ele não possui um \emph{cold
+start} diretamente comparável ao do aplicativo nativo --- por isso a
+Figura~\ref{fig:desempenho} exibe, nesse painel, apenas a barra do cliente nativo. A fluidez da rolagem foi aferida com o \texttt{dumpsys gfxinfo}: o cliente nativo
 manteve a rolagem praticamente sem travamentos, com apenas \textbf{0,2\%} de
 quadros com atraso (\emph{janky}) e tempo de renderização no 95º percentil em torno
 de 9--12~ms, dentro do orçamento do \emph{display}. Esse resultado reproduziu-se em duas coletas independentes (0,2\% de quadros \emph{janky} em ambas; $n=20$ no total), reforçando sua robustez. A mesma medição não pôde ser
@@ -496,10 +494,12 @@ interface e pavimentam uma inspeção heurística mais ampla como trabalho futur
 \subsection{Síntese: resultados obtidos $\times$ hipóteses}
 \label{sub:sintese}
 
-A Tabela~\ref{tab:sintese} relaciona os resultados às hipóteses do trabalho. A
-hipótese de \textbf{reuso arquitetural} (Frente~B) está empiricamente confirmada;
-as hipóteses de \textbf{desempenho} (A) e \textbf{usabilidade} (C) têm instrumentos
-validados e aguardam a coleta.
+A Tabela~\ref{tab:sintese} relaciona os resultados apurados às hipóteses originais
+do trabalho. A hipótese de \textbf{reuso arquitetural} (Frente~B) confirmou-se
+plenamente; a hipótese de \textbf{ganho de desempenho} (Frente~A) obteve confirmação
+parcial, sustentada pela expressiva redução de memória; e os aspectos de
+\textbf{usabilidade} (Frente~C) foram explorados em caráter piloto, apontando
+melhorias acionáveis de interface.
 
 \begin{table}[H]
 \centering
