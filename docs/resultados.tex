@@ -149,7 +149,7 @@ nativas (iii) concentraram-se nos pontos de contato com \emph{hardware} e ambien
 \label{tab:mapa_migracao}
 \scriptsize
 \setlength{\tabcolsep}{3pt}
-\begin{tabular}{|p{4.3cm}|p{4.0cm}|c|p{3.0cm}|}
+\begin{tabular}{|p{4.2cm}|p{4.4cm}|c|p{2.7cm}|}
 \hline
 \textbf{Artefato na PWA (LOC)} & \textbf{Contraparte no Mobile} & \textbf{LOC} & \textbf{Padrão} \\ \hline
 \emph{Backend} FastAPI + serviços (1.654) & idêntico (via REST) & 1.654 & Reuso integral \\ \hline
@@ -157,10 +157,10 @@ Base de conhecimento \texttt{data/*.csv} (145) & idêntica (via REST) & 145 & Re
 \texttt{types/index.ts} (56) & \texttt{types.ts} (58) & 58 & (ii) Estrutural (contrato) \\ \hline
 \texttt{services/api.ts} (213) & \texttt{api.ts} (71) & 71 & (ii) Estrutural c/ adaptação de transporte \\ \hline
 \texttt{App.tsx} (323) & \texttt{App.tsx} (209) & 209 & (ii) Estrutural (orquestração/estado) \\ \hline
-\texttt{ManualEntryForm.tsx} (90) & \texttt{ManualEntryForm.tsx} & --- & (ii) Estrutural \\ \hline
-\texttt{ResultsDisplay.tsx} (196) & \texttt{Results.tsx} & --- & (ii) Estrutural \\ \hline
-\texttt{ReferenceComparison.tsx} (82) & \texttt{ReferenceComparisonTable.tsx} & --- & (ii) Estrutural \\ \hline
-\texttt{FileUpload.tsx} (56, \emph{react-dropzone}) & \texttt{PdfUpload.tsx} (\emph{expo-document-picker}) & --- & (iii) Substituição nativa \\ \hline
+\texttt{ManualEntryForm.tsx} (90) & \texttt{ManualEntryForm.tsx} & 123 & (ii) Estrutural \\ \hline
+\texttt{ResultsDisplay.tsx} (196) & \texttt{Results.tsx} & 155 & (ii) Estrutural \\ \hline
+\texttt{ReferenceComparison.tsx} (82) & \texttt{ReferenceComparisonTable.tsx} & 109 & (ii) Estrutural \\ \hline
+\texttt{FileUpload.tsx} (56, \emph{react-dropzone}) & \texttt{PdfUpload.tsx} (\emph{expo-document-picker}) & 88 & (iii) Substituição nativa \\ \hline
 \texttt{LoadingSpinner.tsx} (79) & \texttt{ActivityIndicator} (nativo) & --- & (iii) Substituição nativa \\ \hline
 \texttt{index.tsx} (66, \emph{ReactDOM}) & \texttt{index.ts} (8, Expo) & 8 & (iii) \emph{Bootstrap} de plataforma \\ \hline
 \texttt{utils/} (1.239: contorno de \emph{webview}) & --- (não portados) & 0 & Eliminados \\ \hline
