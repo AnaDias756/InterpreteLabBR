@@ -1,0 +1,47 @@
+% =====================================================================
+% Seção "Conclusão" — RASCUNHO para o autor REESCREVER na própria voz.
+% Inserir APÓS a Seção 5 (Resultados/Discussão) e ANTES de "Uso de IA".
+% ATENÇÃO: não submeta como está — reescreva com suas palavras (política
+% de IA + checagem de plágio). Confira também os números com o seu texto.
+% =====================================================================
+
+\section{Conclusão}
+\label{sec:conclusao}
+
+Este trabalho investigou, sob a ótica da Engenharia de Software, a migração do
+InterpreteLabBR --- um sistema de apoio à decisão clínica para interpretação de
+hemogramas fundamentado nos valores de referência da PNS --- do paradigma de
+aplicação web progressiva (PWA) para um aplicativo móvel dedicado em React Native.
+A avaliação organizou-se em três frentes complementares: a caracterização da
+engenharia da migração (Frente~B), as medições de desempenho em dispositivo físico
+via ADB (Frente~A) e a inspeção heurística de usabilidade (Frente~C).
+
+Os resultados sustentam a hipótese central de reuso arquitetural. A estratégia
+\emph{API-first} permitiu reaproveitar integralmente (100\%) a lógica clinicamente
+sensível do \emph{backend}, sem reescrita, confinando o esforço de migração à
+camada de apresentação; adicionalmente, a transição eliminou 1.239 linhas de código
+de contorno de \emph{WebView} --- cerca de 49\% do código do cliente web ---,
+evidenciando, no plano do código-fonte, o \emph{overhead} que a literatura atribui
+a esse paradigma. Quanto ao desempenho, as medições indicaram vantagem expressiva
+do cliente nativo, com redução de 63,9\% no consumo de memória e rolagem fluida
+(0,2\% de quadros com atraso), confirmando parcialmente a hipótese de ganho de
+desempenho. A inspeção heurística, conduzida como estudo-piloto, não revelou
+barreiras graves de usabilidade e produziu achados qualitativos acionáveis,
+sobretudo na tela de apresentação de resultados.
+
+Como contribuição, este trabalho oferece um estudo de caso empírico e reprodutível
+de migração de paradigma em um sistema real de saúde pública brasileira, conduzido
+com ferramentas gratuitas e metodologia verificável, que pode servir de referência
+para transições arquiteturais semelhantes no contexto da saúde digital nacional.
+Entre as limitações, destacam-se a medição de desempenho em um único dispositivo de
+gama intermediária, o caráter retrospectivo do mapeamento de migração e o painel
+reduzido da inspeção de usabilidade, o que confere aos achados dessa frente natureza
+exploratória.
+
+Como trabalhos futuros, propõe-se ampliar a inspeção de usabilidade para um painel
+maior e incluir as métricas de rolagem ainda pendentes (FPS, CPU e consumo
+energético), em dispositivos representativos do perfil de \emph{hardware} dos
+usuários do SUS; estender o suporte de extração a leiautes de laudo da rede privada
+e à população pediátrica; e evoluir o sistema de uma arquitetura baseada em regras
+para uma abordagem híbrida com aprendizado de máquina, mantendo os valores de
+referência da PNS como padrão-ouro de rotulagem.
