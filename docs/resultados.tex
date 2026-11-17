@@ -54,14 +54,23 @@ navegador --- uma redução de \textbf{63,9\%}, isto é, o PWA consome cerca de
 frio do aplicativo nativo situou-se em \textbf{241~ms} (desvio-padrão de
 33~ms). Não se reporta tempo de inicialização a frio para o PWA porque, executado
 continuamente sobre a \emph{sandbox} do navegador, ele não possui um \emph{cold
-start} diretamente comparável ao do aplicativo nativo --- por isso a
-Figura~\ref{fig:desempenho} exibe, nesse painel, apenas a barra do cliente nativo. A fluidez da rolagem foi aferida com o \texttt{dumpsys gfxinfo}: o cliente nativo
-manteve a rolagem praticamente sem travamentos, com apenas \textbf{0,2\%} de
-quadros com atraso (\emph{janky}) e tempo de renderização no 95º percentil em torno
-de 9--12~ms, dentro do orçamento do \emph{display}. Esse resultado reproduziu-se em duas coletas independentes (0,2\% de quadros \emph{janky} em ambas; $n=20$ no total), reforçando sua robustez. A mesma medição não pôde ser
-obtida para o PWA: o Chrome realiza a composição gráfica por um \emph{pipeline}
-próprio, que não expõe essas estatísticas ao \texttt{gfxinfo} --- uma assimetria de
-medição já prevista para a comparação PWA $\times$ nativo. O uso de CPU durante a
+start} diretamente comparável ao do aplicativo nativo --- de modo que essa métrica
+é apresentada apenas para o cliente nativo na Tabela~\ref{tab:desempenho}, sem painel
+correspondente na figura. A fluidez da rolagem foi aferida nos dois clientes, por
+instrumentos distintos. No cliente nativo, o \texttt{dumpsys gfxinfo} indicou rolagem
+praticamente sem travamentos, com apenas \textbf{0,2\%} de quadros com atraso
+(\emph{janky}) e tempo de renderização no 95º percentil em torno de 9--12~ms, dentro
+do orçamento do \emph{display}; esse resultado reproduziu-se em duas coletas
+independentes (0,2\% de quadros \emph{janky} em ambas; $n=20$ no total). Para o PWA,
+cujo \emph{pipeline} gráfico (Blink) não é capturado pelo \texttt{gfxinfo}, a fluidez
+foi medida por via independente: a taxa de quadros do Chrome DevTools (\emph{Frame
+Rate meter}), coletada remotamente por ADB enquanto a mesma tela de resultados era
+rolada. O PWA sustentou cerca de \textbf{60~fps}, sem quedas perceptíveis. Ambos os
+clientes, portanto, apresentaram rolagem fluida e equivalente ($\sim$60~fps),
+concentrando a diferença de desempenho entre os paradigmas no consumo de memória, e
+não na fluidez. Ressalva-se que as duas aferições empregam métricas e instrumentos
+diferentes --- taxa de quadros no PWA; proporção de quadros lentos no nativo ---, o
+que recomenda cautela na comparação numérica direta. O uso de CPU durante a
 rolagem manteve-se baixo em ambos os clientes, porém o instrumento
 (\texttt{dumpsys cpuinfo}) não produziu variação apreciável entre repetições, não
 permitindo comparação conclusiva nesse ponto. O consumo energético estimado,
@@ -78,13 +87,13 @@ trabalho futuro.
 \textbf{Métrica (direção)} & \textbf{PWA} & \textbf{Móvel} & \textbf{$\Delta$} \\ \hline
 Memória RAM --- app carregado (MB, $\downarrow$) & $235{,}0 \pm 18{,}7$ & $84{,}9 \pm 0{,}2$ & $-63{,}9\%$ \\ \hline
 Inicialização a frio (ms, $\downarrow$) & --- & $241{,}3 \pm 33{,}3$ & --- \\ \hline
-Fluidez em rolagem --- quadros \emph{janky} (\%, $\downarrow$) & n/d (ver texto) & $0{,}2$ & --- \\ \hline
-CPU em rolagem (\%, $\downarrow$) & \multicolumn{3}{c|}{baixo em ambos; sem diferença conclusiva} \\ \hline
+Fluidez na rolagem (FPS, $\uparrow$) & $\sim$60 & $\sim$60 & $\approx 0$ \\ \hline
+\multicolumn{4}{|p{11.6cm}|}{\scriptsize Fluidez por instrumentos distintos: no PWA, taxa de quadros (Chrome DevTools \emph{Frame Rate meter}, remoto por ADB), $\sim$60~fps sem quedas; no nativo, 0,2\% de quadros lentos (\texttt{gfxinfo}), equivalente a $\sim$60~fps. CPU em rolagem: baixa em ambos, sem diferença conclusiva.} \\ \hline
 \end{tabular}
 \end{table}
 
 A Figura~\ref{fig:desempenho} apresenta os resultados por métrica (um painel por
-métrica; barras = média, hastes = desvio-padrão). O contraste de memória entre o
+métrica; barras = média, hastes = desvio-padrão apenas no painel de memória). O contraste de memória entre o
 PWA e o cliente nativo é expressivo e corrobora, com dados primários de um caso
 real, a tese de que o paradigma \emph{WebView} impõe maior consumo de recursos
 \cite{karin2025, sokolov2025}.
@@ -92,7 +101,7 @@ real, a tese de que o paradigma \emph{WebView} impõe maior consumo de recursos
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.95\textwidth]{fig_frente_a_desempenho_adb.png}
-\caption{Desempenho PWA $\times$ Móvel por métrica (Galaxy Tab~S9~FE, Android~16; $n=10$; barras = média, hastes = desvio-padrão).}
+\caption{Desempenho PWA $\times$ Móvel na Frente~A (Galaxy Tab~S9~FE, Android~16). Painel de memória: média $\pm$ desvio-padrão, $n=10$. Painel de fluidez: taxa de quadros na rolagem ($\sim$60~fps em ambos; PWA via Chrome DevTools por ADB, nativo via \texttt{gfxinfo}).}
 \label{fig:desempenho}
 \end{figure}
 
@@ -343,8 +352,9 @@ esperado pela literatura e o obtido em campo. As primeiras medições já aponta
 nessa direção: em tablet Android, o cliente nativo consumiu \textbf{63,9\% menos
 memória} que o PWA (84,9~MB contra 235,0~MB; $n=10$), convergindo com a vantagem
 de memória relatada por Sokolov; a rolagem do cliente nativo mostrou-se fluida (apenas 0,2\% de quadros
-\emph{janky}), ao passo que a aferição equivalente no PWA esbarrou em uma limitação
-do instrumento, já que o Chrome não expõe essas estatísticas ao \texttt{gfxinfo}.
+\emph{janky}), ao passo que a fluidez do PWA, medida por outra via (taxa de quadros
+do Chrome DevTools por ADB), manteve-se igualmente em torno de 60~fps, indicando
+paridade de fluidez entre os clientes neste dispositivo.
 
 \subsection{Validade, limitações e extensão}
 \label{sub:validade}
