@@ -1,0 +1,85 @@
+% =====================================================================
+% RASCUNHOS para os pontos do orientador (REESCREVER na sua voz).
+% 1) Apresentação do app (Seção 5.1) com screenshots
+% 2) Seção "Dificuldades encontradas"
+% 3) Parágrafo de limitação sobre a fluidez do PWA
+% ATENÇÃO: são rascunhos — reescreva com suas palavras (política de IA +
+% checagem de plágio). Confira números e insira as capturas de tela reais.
+% =====================================================================
+
+% ---------------------------------------------------------------------
+% (1) SEÇÃO 5.1 — APRESENTAÇÃO DO APLICATIVO (substitui/expande a atual)
+% Tire 4 capturas de tela no app/PWA e salve no projeto do Overleaf.
+% ---------------------------------------------------------------------
+\subsection{O produto: o aplicativo InterpreteLabBR}
+\label{sub:produto}
+
+O artefato resultante é o cliente móvel do InterpreteLabBR, desenvolvido em React
+Native/Expo e consumindo a mesma API FastAPI do PWA. O fluxo de uso é direto. Na
+tela inicial, o usuário informa sexo e idade e escolhe entre dois modos de entrada:
+a digitação manual dos valores do hemograma (Figura~\ref{fig:tela-manual}) ou o
+envio do laudo em PDF, do qual o sistema extrai automaticamente os analitos
+(Figura~\ref{fig:tela-pdf}). Após a análise, o aplicativo exibe a tela de
+resultados, com a classificação de cada analito segundo a referência da PNS, as
+especialidades sugeridas e um \emph{briefing} educativo ao paciente
+(Figura~\ref{fig:tela-resultados}). O sistema apresenta ainda uma tabela que
+compara, lado a lado, a classificação pela referência da PNS e pela referência
+clássica impressa no laudo, sinalizando divergências
+(Figura~\ref{fig:tela-comparacao}). Essa apresentação contextualiza as telas e as
+interações que são discutidas nas seções seguintes.
+
+% Substitua os 4 arquivos de imagem pelos nomes das suas capturas de tela.
+\begin{figure}[H]\centering
+\includegraphics[width=0.32\textwidth]{tela_manual.png}
+\caption{Entrada manual dos valores do hemograma.}\label{fig:tela-manual}
+\end{figure}
+\begin{figure}[H]\centering
+\includegraphics[width=0.32\textwidth]{tela_pdf.png}
+\caption{Envio do laudo em PDF para extração automática.}\label{fig:tela-pdf}
+\end{figure}
+\begin{figure}[H]\centering
+\includegraphics[width=0.32\textwidth]{tela_resultados.png}
+\caption{Tela de resultados, com classificação, especialidades e \emph{briefing}.}\label{fig:tela-resultados}
+\end{figure}
+\begin{figure}[H]\centering
+\includegraphics[width=0.32\textwidth]{tela_comparacao.png}
+\caption{Comparação entre a referência da PNS e a referência clássica do laudo.}\label{fig:tela-comparacao}
+\end{figure}
+
+% ---------------------------------------------------------------------
+% (2) NOVA SEÇÃO — DIFICULDADES ENCONTRADAS (coloque perto da Conclusão)
+% ---------------------------------------------------------------------
+\section{Dificuldades Encontradas}
+\label{sec:dificuldades}
+
+O desenvolvimento e a avaliação do artefato enfrentaram percalços que exigiram
+ajustes de rota. Na extração de dados, o \emph{parser}, originalmente validado para
+o leiaute do SUS, falhava ao processar a série vermelha de laudos de rede privada,
+cujo texto extraído apresentava o nome do analito colado ao valor; o problema foi
+diagnosticado por inspeção do texto extraído e corrigido tornando os padrões de
+reconhecimento tolerantes à ausência de espaço. Na Frente~A, a medição da fluidez
+de rolagem revelou uma assimetria entre os clientes: o \texttt{dumpsys gfxinfo} não
+captura os quadros do Chrome (que utiliza o \emph{pipeline} Blink), o que impediu
+uma comparação direta de FPS; optou-se por reportar com rigor a métrica
+comparável (memória) e documentar a limitação. Na Frente~C, a dificuldade de
+reunir, no prazo, um painel de cinco especialistas levou à condução da inspeção
+como estudo-piloto, com um painel reduzido. Houve ainda desafios operacionais, como
+a geração e a distribuição do aplicativo aos avaliadores (via \emph{build} em nuvem
+e instalação fora da loja oficial) e a sincronização entre a correção do
+\emph{backend} e a sua publicação em produção. Esses contratempos, além de
+superados, orientaram decisões metodológicas e ampliaram o aprendizado ao longo da
+pesquisa.
+
+% ---------------------------------------------------------------------
+% (3) LIMITAÇÃO — FLUIDEZ DO PWA (acrescente na Seção 5.7 / limitações)
+% ---------------------------------------------------------------------
+% Parágrafo para colar junto às limitações da Frente A:
+Reconhece-se como limitação relevante a ausência de medição da fluidez da interface
+do PWA. O instrumento empregado (\texttt{dumpsys gfxinfo}) não expõe os quadros do
+Chrome; existiriam, contudo, alternativas para aferi-la --- por exemplo, as
+\emph{DevTools} do Chrome, cujas métricas de desempenho podem ser coletadas
+remotamente via ADB; a API \texttt{requestAnimationFrame} para telemetria em
+JavaScript; e ferramentas dedicadas como o Perfetto, que cobrem tanto o PWA quanto
+o cliente nativo. A não adoção dessas alternativas decorreu do escopo e do prazo
+desta etapa, concentrados na comparação já viável (memória e inicialização), e
+constitui direção imediata de trabalho futuro.

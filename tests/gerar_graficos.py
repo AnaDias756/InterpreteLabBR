@@ -288,7 +288,14 @@ def fig_desempenho_adb():
         print("  [pulado] Frente A (ADB): sem métricas no resumo.")
         return
 
-    nomes_m = list(metricas.keys())
+    # só métricas com dados para AMBOS os clientes (evita painel de 1 dado só)
+    def _tem(metrica, cliente):
+        return any(metricas[metrica]["por_tarefa"][t][cliente].get("media") is not None
+                   for t in metricas[metrica]["por_tarefa"])
+    nomes_m = [m for m in metricas if _tem(m, "PWA") and _tem(m, "Móvel")]
+    if not nomes_m:
+        print("  [pulado] Frente A (ADB): nenhuma métrica com os dois clientes.")
+        return
     ncols = 2
     nrows = math.ceil(len(nomes_m) / ncols)
     fig, axes = plt.subplots(nrows, ncols, figsize=(9.0, 2.6 * nrows))
